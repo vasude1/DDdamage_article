@@ -1,0 +1,617 @@
+%\documentclass[12pt,twoside,letterpaper]{article}
+\documentclass[12pt]{elsarticle}
+\usepackage{geometry} % Load the geometry package
+
+% Set the margins
+\geometry{
+	left=0.5cm,   % Left margin
+	right=0.5cm,  % Right margin
+	top=0.5cm,    % Top margin
+	bottom=0.5cm, % Bottom margin
+	footskip=1cm  % Space between the bottom of the text and the footer
+}
+%NOTE: This report format is 
+
+%\usepackage{manuscript}
+\renewcommand{\baselinestretch}{0.9} 
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{lipsum}
+\usepackage{graphics}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{siunitx}
+\usepackage{caption}
+\usepackage{subcaption} % For subfigures
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.17}
+\usepackage{tikz} % TikZ package for drawing
+\usetikzlibrary{external} % Enable externalization
+\tikzexternalize[prefix=tikzfigs_pdf/] % Folder where the figures will be stored
+\tikzexternalize % Activate externalization
+\usepackage[super]{nth}
+\newtheorem*{remark}{Remark}
+
+\newcommand{\reporttitle}{Project: Report title}
+\newcommand{\reportauthorOne}{Student 1}
+\newcommand{\cidOne}{your id number}
+\newcommand{\reportauthorTwo}{Student 2}
+\newcommand{\cidTwo}{your id number}
+\newcommand{\reporttype}{Coursework}
+\bibliographystyle{plain}
+
+\newcommand{\ext}{\mathrm{ext}}
+
+% include files that load packages and define macros
+\input{conco.tex} % various packages needed for maths etc.
+%\usepackage[a4paper, total={7.5in, 8in}]{geometry}
+
+\journal{CMAME}
+
+\begin{document}
+	
+\begin{frontmatter}
+	
+	%% Title, authors and addresses
+	
+	%% use the tnoteref command within \title for footnotes;
+	%% use the tnotetext command for theassociated footnote;
+	%% use the fnref command within \author or \address for footnotes;
+	%% use the fntext command for theassociated footnote;
+	%% use the corref command within \author for corresponding author footnotes;
+	%% use the cortext command for theassociated footnote;
+	%% use the ead command for the email address,
+	%% and the form \ead[url] for the home page:
+	%% \title{Title\tnoteref{label1}}
+	%% \tnotetext[label1]{}
+	%% \author{Name\corref{cor1}\fnref{label2}}
+	%% \ead{email address}
+	%% \ead[url]{home page}
+	%% \fntext[label2]{}
+	%% \cortext[cor1]{}
+	%% \affiliation{organization={},
+		%%             addressline={},
+		%%             city={},
+		%%             postcode={},
+		%%             state={},
+		%%             country={}}
+	%% \fntext[label3]{}
+	
+	\title{Exact Data Driven Computational Damage Mechanics - Introduction of a length scale through the relaxed Lipschitz constraint}
+	
+	%% use optional labels to link authors explicitly to addresses:
+	%% \author[label1,label2]{}
+	%% \affiliation[label1]{organization={},
+		%%             addressline={},
+		%%             city={},
+		%%             postcode={},
+		%%             state={},
+		%%             country={}}
+	%%
+	%% \affiliation[label2]{organization={},
+		%%             addressline={},
+		%%             city={},
+		%%             postcode={},
+		%%             state={},
+		%%             country={}}
+	
+	\author[label1]{Vasudevan Kamasamudram}
+	\author[label1]{Laurent Stainier}
+	
+	\affiliation[label1]{organization={Centrale Nantes},%Department and Organization
+		addressline={1 rue de la noe}, 
+		city={Nantes},
+		postcode={44321}, 
+		%state={},
+		country={France}}
+	
+	\begin{abstract}
+		%% Text of abstract
+		
+	\end{abstract}
+	
+	%%Graphical abstract
+	\begin{graphicalabstract}
+		%\includegraphics{grabs}
+	\end{graphicalabstract}
+	
+	%%Research highlights
+	\begin{highlights}
+		\item Research highlight 1
+		\item Research highlight 2
+	\end{highlights}
+	
+	\begin{keyword}
+		%% keywords here, in the form: keyword \sep keyword
+		
+		%% PACS codes here, in the form: \PACS code \sep code
+		
+		%% MSC codes here, in the form: \MSC code \sep code
+		%% or \MSC[2008] code \sep code (2000 is the default)
+		
+	\end{keyword}
+	
+\end{frontmatter}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%\begin{document}
+
+%The distance function is defined as
+%\begin{equation}
+%	d = \frac{C}{2}(\epsilon - \epsilon^*)^2 + \frac{1}{2C}(\sigma - \sigma^*)^2 + \frac{D}{2}(\epsilon_{,x} - \gamma^*)^2 + \frac{1}{2D}( \tau - \tau^* )^2 .
+%\end{equation}
+%$C$ and $D$ denote the quantities used to normalize the corresponding stress and strain quantities. 
+%\begin{equation}
+%	\Pi = \int d(\sigma,\epsilon,\sigma^*,\epsilon^*,\tau,\tau^*,\gamma^*) \diff x + \int \eta \left( \sigma - \tau_{,x}  \right)_{,x} \diff x,
+%\end{equation}
+	
+	
+\section{Introduction}
+
+The paradigm of Data Driven Computational Mechanics has been introduced in \cite{KO}, where the constitutive model that describes the material behavior has been replaced by a database of stress-strain pairs obtained, for instance, from experimental measurements or multi-scale simulations. The technique has been applied to the problems of plasticity, viscoelasticity, non-standard continuum in various references. In this article, the methodology will be extended to the case where the material undergoes softening as a consequence of damage. 
+
+The main challenge for such an extension is the introduction of length scale. The local models of damage result in spurious localization of strain and damage in a region that depends on the mesh size. This is a consequence of the lack of a length scale in such models. Different techniques exist in the literature to prevent this mesh dependence and regularize the problem. One of these techniques rely on the gradient of the strain to introduce the length scale onto the problem~\cite{Peerlings1999}. In this case, the equivalent strain that is used to evaluate the damage variable is computed using the strain as well as its gradient. This results in the implicit and explicit gradient models. Another approach relies on the computation of a non-local equivalent strain as a weighted integral of the strain variable~\cite{Peerlings2001,Peerlings2002}. In~\cite{Pijaudier-Cabot1987}, a non-local driving force has been defined to compute the evolution of the damage variable. On the other hand, the gradient of strain can be included in the stain energy functional directly. The result is the class of strain gradient (\emph{SG}) models, presented in~\cite{Mindlin1968,Xia1996} and references therein. The introduction of the gradient of the strain in the strain energy functional precludes the localization of strain by introducing a length scale into the model. An analysis of the \emph{SG} models in the presence of damage can be found in~\cite{Le2018}. In that study, various cases were considered, where the damage is considered to affect just the elastic (non-gradient) modulus in some cases and both the moduli in some other cases.
+
+The difference between the two approaches in including the \emph{SG} into the analysis is that in the approach by~\cite{Peerlings2001}, the \emph{SG} is used to compute an effective strain, which in turn affects only the computation of damage. The strain energy density function remains unchanged. This can be seen to be an instance of \emph{uncoupled regularization} with strain regularization in the context of~\cite{Lorentz2003}. The \emph{SG} models in~\cite{Mindlin1968,Xia1996, Le2018}, for instance, include the \emph{SG} in the definition of the strain energy itself. In the latter case, the inclusion of gradient effects affects the solution even during the elastic phase before the material undergoes damage. Also, an analysis performed in~\cite{Le2018} reveals that the \emph{SG} models, even though they prevent the localization of damage, result in dissipation that depends on the geometry of the analyzed specimen. In short, for infinitely long specimens, using a \emph{SG} model results in an infinite dissipation.
+
+Other methods of regularizing the problem include introducing the gradient of the damage variable in the strain energy functional, which introduces a characteristic length into the problem~\cite{Pham2011, Marigo2016}. This approach can also be compared to the \emph{Phase Field models}, see for instance~\cite{Miehe2014,Miehe2015}. The Thick Level Set method introduced in~\cite{Moes2011} makes the damage a function of the level set, the zero of which is identified to be the damage front. The norm of the gradient of the level set function is restricted to be equal to 1, which introduces the length scale into the problem.~A different approach to introducing non-locality into the model has been introduced in~\cite{Valoroso2022,Moes2021}. In~\cite{Valoroso2022}, the gradient of the damage variable has been constrained to be smaller than (a possibly damage-dependent) value. This prevents the damage from localizing in one element when using a local damage model. In~\cite{Moes2021}, the damage variable is instead constrained to be Lipschitz continuous. This introduces a length scale into the model and prevents the mesh dependence of the solution as in the previous case.
+
+The standard Finite Element techniques obtain the solution of the equations of equilibrium and in this process, a constitutive model is used to describe the behavior of the material. In~\cite{Kirchdoerfer2016}, the material behavior is instead taken to be described by the stress-strain data, ideally obtained from the experiments, thereby eliminating the need for a constitutive model. The methodology is described as \emph{Data Driven Computational Mechanics, DDCM}. The problem is described as obtaining the \emph{mechanical state} - pair of strains and stress, $(\epsilon,\sigma)$, that satisfies the equations of equilibrium and the strain-displacement relations. A \emph{distance} is defined between the mechanical state and the \emph{material states} - the strain-stress data that describes the behavior of the material. In addition to satisfying the equilibrium and compatibility equations, the mechanical states also minimize the distance functional to the set of the material states. An extension of the DDCM to inelastic cases has been performed in~\cite{Eggersmann2019,Karapiperis2021,Karapiperis2021a}. In~\cite{Karapiperis2021, Karapiperis2021a}, the DDCM has been used to describe the behavior of granular materials and a formulation equivalent to the Cosserat media has been used in~\cite{Karapiperis2021a} to prevent the spurious (shear) strain localization in the numerical simulations.
+
+
+However, the use of the Cosserat model to regularize the problem requires the presence of shear effects. Hence, they may not be effective in regularizing the spurious localization encountered under mode-I loading (see~\cite[page~30]{Peerlings1999}) as the rotational degrees of freedom do not become active under such loading. Also, the \emph{internal variables} such as damage typically used in the regularization are not explicitly introduced in DDCM. Hence, the current study intends to introduce the notion of length scale into the problem by modifying the space of displacement functions from where the solution is sought. The search space is modified to include only such functions whose second gradients are between $-1/\ell_c$ and $1/\ell_c$. In other words, the gradient of strains is restricted to lie in the interval $[-1/\ell_c,1/\ell_c]$. During the minimization of the strain energy density functional, the second displacement gradients are constrained by using Lagrange multipliers. This can also be interpreted as limiting the energy associated with the gradients of strain to a certain value. This leads to some resemblance of the method presented to the \emph{SG} models.
+
+This article presents the continuum version of the regularization technique where the behavior of the material will be described by a constitutive function. It shall be noted that the intent is to use this methodology with the DDCM, where the FE simulations are performed entirely using the database without any model. Thus, the constitutive model presented in the next section will be replaced by a database of stress-strain pairs. This can be seen as using DDCM for inelastic materials, for instance as in~\cite{Eggersmann2019}, but with the regularization presented in this article. This will be the focus of the future work. Since the regularization is applied on the strains rather than internal variables, the proposed methodology indeed remains valid even in the context of DDCM.
+
+
+\section{Data driven solver}
+In this section, the dara driven solver will be introduced briefly. For this purpose, the notions of mechanical and material states are introduced as below. A stress-strain state, $(\sigma,\epsilon)$, is called a mechanical state if the stress state, $\sigma$, satisfies the conditions of equilibrium and the strain state, $\epsilon$, satisfies the compatibility conditions, where the displacement fields satisfy the Dirichlet boundary conditions. At each point in the body, the material state, $(\sigma^*,\epsilon^*)$, belongs to the material manifold, $\mathcal{D}$, typically obtained from experiments or from simulations performed at lower scales. The equilibrium manifold is defined as 
+\begin{equation}
+	\mathcal{E} = \{ (\sigma,\epsilon) \text{ }|\text{ } \sigma,\epsilon \text{ are sufficiently smooth, } \divop \sigma = 0 \text{ and } \epsilon=\sym\nabla u, u=u_D \text{ on } \partial \Omega_d  \}.
+\end{equation}
+The solution is sought as the intersection of the two manifolds.
+\begin{equation}
+	\text{Sol} \in \mathcal{D} \cap \mathcal{E}.
+\end{equation}
+In case where the material behavior is defined by a discrete collection of stress-strain pairs, a strict intersection may not exist between the two manifolds. In such a case, the solution is sought as the mechanical-material states that are closest to each other with respect to a certain distance. In discrete case, the distance is defined as  
+\begin{equation}
+	d(\bfeps,\bfsig,\bfeps^*,\bfsig^*) = \frac{1}{2}(\bfeps - \bfeps^*)^T\mathcal{C} \bfw(\bfeps - \bfeps^*) + \frac{1}{2}(\bfsig - \bfsig^*)^T\mathcal{C}^{-1}\bfw(\bfsig - \bfsig^*),
+\end{equation}
+The discrete equilibrium manifold is defined as  
+\begin{equation}
+	\mathcal{E} = \{ (\bfsig,\bfeps) \quad | \bfB^T \bfw\bfsig = \boldsymbol{0} \text{ and } \bfeps=\bfB \bfu, \bfu=\bfu_D \text{ on } \partial \Omega_d  \}.
+\end{equation}
+In the above, $\bfB$ denotes the discrete strain-displacement operator. Thus, $\bfeps = \bfB \bfu$. Thus, the solution is the minimizer of the distance functional.
+\begin{equation}
+	\text{Sol} \in \arg \min d(\bfeps,\bfsig,\bfeps^*,\bfsig^*) \text{ } \stoper \text{ } (\bfsig , \bfeps) \in  \mathcal{E} \text{ and } (\bfsig^* , \bfeps^*) \in  \mathcal{D}.
+\end{equation}
+The minimization can be carried out by imposing the constraints using Lagrange multipliers. The minimization process is divided into mechanical and material updates. During the mechanical update, the material states, denoted by the asterisked quantities are held fixed. The minimization is carried out wrt the mechanical states. During the material update, the mechanical states are held fixed and the minimization is carried out wrt material states.
+The corresponding Euler Lagrange equations during the mechanical update can be seen to be:
+
+\begin{gather}
+	\bfB^T \mathcal{C}\bfw \bfB \bfu = \bfB^T \mathcal{C}\bfw \bfeps^*, \\
+	\bfsig - \bfsig^* =  \mathcal{C} \bfB \bfeta, \\
+	\bfB^T \bfw\bfsig = \mathbf{0}.
+\end{gather}
+
+\section{1D case check : Garbage in - Garbage out}
+To begin with, it is necessary to determine if the DD algorithm results in mesh dependence if there is no regularization introduced into the problem. The database in this scenario is a collection of stress-strain pairs that include the softening scenario. The problem examined is that of a 1D bar subjected to a body force with displacement imposed on its ends. It is expected that the body force results in strain localization in the (left end of the) bar, which depends on the mesh size when there is no regularization. See Figure \ref{1D_bar_bf}.
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.5\linewidth]{Images/1D_bar_bf.pdf}
+	\caption{1D bar with a body force \label{1D_bar_bf}}
+\end{figure}
+
+The set of equations that govern the data driven solution can be found in the previous section. The database looks like in figure \ref{database_actual}. To prevent the possible effects of insufficient data, it will be assumed that the database can be approximated by a series of piecewise affine relations. For instance, $\sigma=E \epsilon$ describes the \textit{elastic part}, $\sigma = m\epsilon + c$, the \textit{softening part}, $\sigma = E_i \epsilon$, the $i$th softening branch. This corresponds to the case where the database size tends to infinity (in the sense of ). In such a case, the material update can be performed analytically, as demonstrated in the appendix. 
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.4\linewidth]{Images/database_actual.pdf}
+	\caption{Stress strain database \label{database_actual}}
+\end{figure}
+
+\subsection{Method and Results}
+
+An arc-length solver has been used to capture the (possible) snapback response of the bar. The kind of the solver used will be described in the appendix in detail. The bar is meshed with piecewise linear and continuous displacement elements. The mechanical stresses are taken to be piecewise constant. The mesh size is homogeneous. The problem is examined for two mesh sizes (say $\ell_e$, $0.5 \ell_e$) to determine the effect of the mesh size on the response of the bar.
+
+The force at the right end of the bar vs the displacement (at the right end as well) of the bar, until complete failure (where some element in the bar is fully damaged), for the two mesh sizes can be seen in Figure \ref{force_disp_local}. The mesh dependence of the response, together with the snapback response, can be clearly seen once the \textit{damage begins to increase}. At the first step, a compressive force is developed as a consequence of the body force, which gradually becomes positive as the displacement is increased. The initial negative displacement is a consequence of the arc-length constraint that the strain increment in the left most element is equal to a certain (user specified) value. As the load is increased further, the damage initiates at the left end of the bar (just at the left end because of the applied body force). The strain and the damage localize in the element at the left end in the subsequent steps until the element undergoes a complete failure ($d=1$). A small compressive load can again be seen at the end as a consequence of the applied body force. The corresponding strain distributions, at complete failure, for the two mesh sizes can be seen in figure \ref{strain_dist_local}. The mesh dependence of the solution is obvious.
+
+\begin{figure}[ht]
+	\begin{subfigure}{0.45\textwidth}
+		\centering
+		\input{./tikz_figs/force_disp_local.tex}
+		\caption{Force vs Displacement curves for two mesh sizes.}
+		\label{force_disp_local}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}{0.45\textwidth}
+		\centering
+		\input{./tikz_figs/strain_dist_local.tex}
+		\caption{Strain distribution along the bar.}
+		\label{strain_dist_local}
+	\end{subfigure}
+	\caption{Results without regularization}
+	\label{fig:Results_without_regularization}
+\end{figure}
+
+
+
+Thus, with the ingredients presented (the arc length solver and the choice of metric), the data driven solver is able to exhibit the mesh dependence of the solution as expected when there is no regularization.
+
+
+\section{Introduction of a length scale}
+
+In the previous section, it was demonstrated that the Data Driven algorithm with no regularization (and a \textit{local} database) results in mesh dependence of the solution (as expected). Here, the strain based Lipschitz regularization, introduced in \cite{Kamasamudram}, will first be developed for the Data driven case (for 1D). It will then be applied for the problem introduced in the previous section. A relaxed version of the method will then be developed and presented for the 2D case.
+
+\subsection{The method}
+The regularization technique was introduced in \cite{mylipsc}, where it was tested with a constitutive model. Here, it will first be extended for use with the DDCM methodology.
+
+To begin with, a length scale is introduced into the problem by restricting the gradient of the strain variable to lie in a certain interval. More precisely, it is required that $\epsilon_{,x} \in [-1/{\ell_c}, 1/{\ell_c} ]$, where $\ell_c$ is a length parameter. It is expected that the introduction of this constraint prevents the spurious strain localization and dependence of the solution on the Finite Element mesh size. 
+
+
+The introduction of the Lipschitz constraint on the strain variable modifies the equation of equilibrium (in 1D) to 
+\begin{equation}
+	\sigma_{,x}- \lambda_{,xx}=0,\label{equil_couple_1D}
+\end{equation}
+see equation 37 of \cite{myref}, where $\lambda$ is the Lagrange multiplier that is dual to the Lipschitz constraint. Also, $\lambda \neq 0$ only in the regions of the body where the constraint is active. The equations of equilibrium used in DDCM should thus take this into account. 
+
+Beginning with the distance functional,
+\begin{equation}
+	d(\bfeps,\bfsig,\bfeps^*,\bfsig^*) = \frac{1}{2}(\bfB \bfu - \bfeps^*)^T\mathcal{C}\bfw(\bfB \bfu - \bfeps^*) + \frac{1}{2}(\bfsig - \bfsig^*)^T\mathcal{C}^{-1}\bfw(\bfsig - \bfsig^*),
+\end{equation}
+the objective now is to see the minimizers of the above functional so that the strain field satisfies the Lipschitz constraint. As already mentioned, the Lagrange multipliers that enforce the constraint on the strain field act as couple stresses.
+\begin{equation}
+	\text{Sol } \in \arg \min_{(\bfeps,\bfsig) \in \mathcal{E}, (\bfeps^*,\bfsig^*) \in \mathcal{D}} d(\bfeps,\bfsig,\bfeps^*,\bfsig^*),
+\end{equation}
+where, the equilibrium manifold is now defined as (in discrete form)
+ 
+
+\begin{equation}
+	\mathcal{E} = \{(\bfeps,\bfsig) : \bfeps = \bfB \bfu, \bfeps \text{ is such that } |\bfB' \bfeps|  \leq 1/{\ell_c} ,\bfu = \bfu_D \text{ on } \partial \Omega_d,
+	\text{ and } \bfB ^T\bfw \bfsig + \bfP^T \bflam = 0     \},
+\end{equation}
+where $\bflam$ is the Lagrange multiplier. $\bfB'$ is the discrete gradient operator on the strain variable, and $\bfP = \bfB \bfB'$ is the discrete second gradient operator. To facilitate things, the Lagrangian will be redefined as follows:
+\begin{equation}
+	\Pi = d(\bfeps,\bfsig,\bfeps^*,\bfsig^*) - \bfeta^T \bfB ^T \bfw\bfsig + \sum_{i=1}^{N_c} \lambda^u_i \left( (\bfP \bfu)_i - \frac{1}{\ell_c}   \right) + \sum_{i=1}^{N_c} \lambda^{\eta u}_i \left( (\bfP (\bfu + \bfeta))_i - \frac{1}{\ell_c}   \right).
+\end{equation}
+Here, $N_c$ denotes the number of active constraints and $\lambda^u_i \geq 0$ are the Lagrange multipliers dual to the constraint on the gradient of strain, and $(\bullet)_i$ denotes the $i$th component of the vector $\bullet$. The solution is defined the collection that renders the Lagrangian stationary.
+\begin{equation}
+	\Pi  \leftarrow \statop!
+\end{equation}
+
+\begin{remark}
+	The third and the fourth terms in the Lagrangian warrant some discussion. It is clear that the third term, together with the condition that $\lambda^u\geq0$, enforces the inequality constraint $\epsilon_{,x} \leq 1/\ell_c$. Treating $\bfeta$ as the virtual displacement, the fourth term enforces the constraint that in the regions where the inequality constraint is satisfied as an equality, the perturbed field, $\bfu+\bfeta$, must also satisfy the constraint as an equality. It shall be noted that there is a priori no restriction on the sign of $\lambda_{\eta u}$. However, as will be demonstrated below, at convergence, $\lambda^{\eta u}_i = -\lambda^{ u}_i$. Thus, owing to the restriction on $\lambda_u$, determines the sign of $\lambda_{\eta u}$.
+\end{remark}
+
+ 
+
+
+The Euler Lagrange equations can be seen to be
+\begin{gather}
+	\bfr_{\bfu} = \bfB^T \mathcal{C}\bfw \bfB \bfu - \bfB^T \mathcal{C}\bfw \bfeps ^* + \bfP^T \bflam^u +\bfP^T \bflam^{\eta u}  =0, \label{residual_u_1D_DD} \\
+	\bfr_{\bfeta} = -\bfB^T\bfw \mathcal{C} \bfB \bfeta - \bfB^T\bfw \bfsig ^* +\bfP^T \bflam^{\eta u} =0, \\
+	r_{\lambda^u_i} =  (\bfP \bfu)_i - \frac{1}{\ell_c}  =0, \\
+	r_{\lambda^{\eta u}_i} =  (\bfP (\bfu + \bfeta))_i - \frac{1}{\ell_c}  =0. 
+\end{gather}
+
+At convergence, $\bfeps=\bfeps^*$ and $\bfeta=0$. Thus, from equation \ref{residual_u_1D_DD}, it can be seen that $\lambda^u_i = -\lambda^{\eta u}_i$, as mentioned earlier. The equations of equilibrium can be recovered as $\bfB^T \bfw \bfsig +\bfP^T \bflam^{u} =0$, since $\bfsig = \bfsig^*$ at convergence.
+
+\subsection{Application and results}
+The regularization technique is now applied to the DDCM case tested in the previous section with no regularization. The value of $\ell_c$ is taken to be $0.1\si{\meter}$. Arc length solver has been used like in the previous case with similar loading conditions. A piecewise linear and continuous interpolation has been used for displacement and a piecewise constant for the mechanical stress. A dual mesh had been used to impose the constraint on the strain gradient. The strain is taken to be piecewise linear and continuous on the dual mesh. See figure \ref{mesh_dual_1d}. In this case, the discrete gradient operator $\bfB'$ is calculated on the dual (red) mesh.
+
+\begin{figure}[ht]
+	\centering
+	\includegraphics[width=0.5\linewidth]{./mesh_dual_1d.pdf}
+	\caption{Mesh for displacement and strain}
+	\label{mesh_dual_1d}
+\end{figure}
+
+
+
+\begin{figure}[ht]
+	\begin{subfigure}{0.45\textwidth}
+		\centering
+		\input{./tikz_figs/force_disp_nonlocal.tex}
+		\caption{Force vs Displacement curves for two mesh sizes.}
+		\label{force_disp_nonlocal}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}{0.45\textwidth}
+		\centering
+		\input{./tikz_figs/strain_dist_nonlocal.tex}
+		\caption{Strain distribution along the bar.}
+		\label{strain_dist_nonlocal}
+	\end{subfigure}
+	\caption{Results with regularization}
+	\label{fig:Results_with_regularization}
+\end{figure}
+
+The load displacement curves and the strain distribution at failure can be seen in figures \ref{force_disp_nonlocal} and \ref{strain_dist_nonlocal} for two different mesh sizes. A couple of observations warrant a closer look. First, as discussed in \cite{oldart}, the constraint shall be removed from the elements that are fully damaged to allow for the strains to localize in the fully damaged element and prevent the expansion of damage further into the body. The black dot in figure \ref{force_disp_nonlocal} corresponds to the case when the constraint is deactivated - the force displacement curve suddenly jumps to zero force. This situation is trivial in 1D, but is susceptible to cause convergence issues in 2D case \cite{geersarticle}. Second, taking a closer look at the force-displacement curve as in figure \ref{force_disp_nonlocal_zoom}, a number of smaller snapbacks can be observed. It can be explained as follows: since the regularization is introduced through an inequality constraint, and this constraint is numerically resolved with a finite mesh size, the regularization is inactive until strain localizes in the some region of the body. The strains thus grow locally till the constraint becomes active. Once activated, the constraint expands the damage zone further into the neighboring elements, where the strains again begin to localize. This process carries on until some part of the body is fully damaged. Thus, the problem switches between a local (albeit with a varying length scale) and non-local problem as the constraint is activated and the damage spreads into other elements. The snapback occurs when the strains localize and the recovery corresponds to the activation of the constraint. It can also be seen that the amplitude of this sawtooth like pattern decreases as the mesh is refined, but the number of tooth increases.
+
+
+\begin{remark}
+	In hindsight, deactivating the constraint only after an element is fully damaged does indeed cause convergence issues in 2D. This issue has been discussed in the context of non-local damage models in \cite{geersarticle}. Thus, for the 2D case, the constraint is gradually weakened as the damage value increases. Also, to reduce the impact of sawtooth like pattern, the inequality constraint is weakened and a log-barrier-like function is used instead. More details can be found in the sections below.
+\end{remark}
+
+
+\begin{figure}[ht]
+	\centering
+	\input{./tikz_figs/force_disp_nonlocal_zoom.tex}
+	\caption{Force vs Displacement curves for two mesh sizes zoomed in.}
+	\label{force_disp_nonlocal_zoom}
+\end{figure}
+
+\section{2D Case}
+
+As mentioned in the previous section, the strain based Lipschitz constraint introduces a length scale into the problem and renders the solution mesh independent. However, as was seen, the inequality constraint introduces a saw-tooth like pattern in the force-displacement response. This, combined with the arc-length method, would render the method tedious and expensive?? Thus, two modifications will be introduced in this section in its extension to 2D. First, the constraint will be gradually weakened as the damage level increases. Second, the inequality constraint will be replaced by a log-barrier-like function. The EL equations corresponding to the regularization technique will be derived in the appendix.
+
+In DDCM, the distance functional remains as
+\begin{equation}
+	d(\bfeps,\bfsig,\bfeps^*,\bfsig^*) = \frac{1}{2}(\bfB \bfu - \bfeps^*)^T\mathcal{C}\bfw(\bfB \bfu - \bfeps^*) + \frac{1}{2}(\bfsig - \bfsig^*)^T\mathcal{C}^{-1}\bfw(\bfsig - \bfsig^*).
+\end{equation}
+The solution is then defined as the one that renders the following functional stationary.
+\begin{equation}
+	\Pi  = d -\bfeta ^T \bfB^T \bfw \bfsig - \mu \bfw' \ln \bfs_u + \mu \bfw' \ln \bfs_\eta + \bflam_u\left\{ \bfs_u  - \left[ \frac{1}{\ell_c}- \psi(\bfu) \right]  \right\} 
+	+ \bflam_\eta \left\{ \bfs_\eta  - \left[ \frac{1}{\ell_c}- \psi(\bfu+\bfeta) \right]  \right\}.
+\end{equation}
+
+When the constraints are to be relaxed gradually, the functional becomes
+\begin{equation}
+	\Pi  = d -\bfeta ^T \bfB^T \bfw \bfsig - \mu \bfw' \ln \bfs_u + \mu \bfw' \ln \bfs_\eta + \bflam_u\left\{ \bfs_u  - \left[ \frac{1}{\ell_c}- \bfg(\bfd)\psi(\bfu) \right]  \right\} 
+	+ \bflam_\eta \left\{ \bfs_\eta  - \left[ \frac{1}{\ell_c}- \bfg(\bfd)\psi(\bfu+\bfeta) \right]  \right\},
+\end{equation}
+where $\bfg$ is a function such that $g(0)=1$ and $g(1)=0$.
+
+\begin{remark}
+	A couple of observations are warranted. First, the function $g$ is selected so that $g(0)=1$ and $g(1)=0$. This means that when there is no damage, the regularization is fully effective, and when fully damaged, the regularization is removed. The transition between the two states is gradual if $g$ is smooth. Second, in this study, the parameter $\mu$ is fixed to be a finite positive value. It shall be noted that the method resembles the interior point method of resolving inequality constraints in the standard optimization setting, where successive problems are solved with decreasing $\mu$, $\mu \to 0$. Thus, as the parameter $\mu$ is made smaller, the method presented here boils down to the inequality case and the problems/ features about snapback that were observd in the 1D case return. It is expected that taking $\mu$ to be finite and fixed prevents this issue. 
+\end{remark}
+
+Now, the Euler Lagrange equations can be obtained by taking the variations of the above potential energy functional.
+\begin{gather}
+	content...
+\end{gather}
+
+\begin{figure}[ht]
+	\begin{subfigure}{\textwidth}
+		\centering
+		\includegraphics[width=\linewidth]{./Images/2d_1d_bar/damage_coarse.pdf}
+		\caption{Coarse mesh}
+		\label{2d_1d_bar_damage_coarse}
+	\end{subfigure}
+	\begin{subfigure}{\textwidth}
+		\centering
+		\includegraphics[width=\linewidth]{./Images/2d_1d_bar/damage_inter.pdf}
+		\caption{Intermediate mesh}
+		\label{2d_1d_bar_damage_inter}
+	\end{subfigure}
+	\begin{subfigure}{\textwidth}
+		\centering
+		\includegraphics[width=\linewidth]{./Images/2d_1d_bar/damage_fine.pdf}
+		\caption{Fine mesh}
+		\label{2d_1d_bar_damage_fine}
+	\end{subfigure}
+	\begin{subfigure}{\textwidth}
+		\centering
+		\vfill
+		\includegraphics[width=0.4\linewidth]{./Images/2d_1d_bar/cb.pdf}
+	\end{subfigure}
+	\caption{Results with regularization - A 2D-1D bar}
+	\label{2d_1d_bar_damage}
+\end{figure}
+
+
+\begin{figure}[ht]
+	\centering
+	\input{./tikz_figs/1D_comparison_x.tex}
+	\caption{Variation of damage along the center of the bar, $y=0$, $x \in [-0.02,0.02]$ \unit{\meter}.}
+	\label{1D_comparison_x}
+\end{figure}
+
+\begin{figure}[ht]
+	\centering
+	\input{./tikz_figs/1D_force_displacement.tex}
+	\caption{Force displacement curves of the 2D-1D bar for three different meshes.}
+	\label{1D_force_displacement}
+\end{figure}
+
+
+
+
+\subsection{L Beam}
+
+\begin{figure}[ht]
+	\begin{subfigure}{0.32\textwidth}
+		\centering
+		\includegraphics[width=0.9\textwidth]{./Images/L/damage_coar.pdf}
+		\caption{Coarse mesh}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}{0.32\textwidth}
+		\centering
+		\includegraphics[width=0.9\textwidth]{./Images/L/damage_inter.pdf}
+		\caption{Intermediate mesh}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}{0.32\textwidth}
+		\centering
+		\includegraphics[width=0.9\textwidth]{./Images/L/damage_fine.pdf}
+		\caption{Fine mesh}
+	\end{subfigure}
+	\begin{subfigure}{\textwidth}
+		\centering
+		\vfill
+		\includegraphics[width=0.4\linewidth]{./Images/L/cb.pdf}
+	\end{subfigure}
+	\caption{Results with regularization}
+	\label{fig:Results_with_ration}
+\end{figure}
+
+\begin{figure}[ht]
+	\centering
+	\input{./tikz_figs/L_comparison_y.tex}
+	\caption{Variation of damage along the ar, $y=0$, $x \in [-0.02,0.02]$ \unit{\meter}.}
+	\label{L_comparison_y}
+\end{figure}
+
+
+\begin{figure}[ht]
+	\centering
+	\input{./tikz_figs/L_force_displacement.tex}
+	\caption{Force displacement curves of the 2D-1D bar for three different meshes.}
+	\label{L_force_displacement}
+\end{figure}
+
+\appendix
+
+
+\section{With a model}
+Finding the solution of the boundary value problems consists of minimizing the potential energy functional which is defined as
+\begin{equation}
+	\Pi(\bfu) = \int_\Omega \psi(\bfeps) \diff v - W_{\ext}(\bfu).
+\end{equation}
+Here, $\psi$ denotes the strain energy density functional, $\bfeps$ is the symmetric part of the gradient of displacement $\bfu$, and $W_{\ext}$ denotes the potential of the external forces. In the case of material that undergoes damage, the strain energy function is made to depend on the damage as well, $\psi(\epsilon,d)$, where $d$ denotes the damage variable. $d$ takes the values in the interval $[0,1]$, where the value of $0$ indicates a pristine material and $1$ indicates a fully damaged material. In this case, the potential energy becomes
+\begin{equation}
+	\Pi(u,d) = \int_\Omega \psi(\bfeps,d) \diff v - W_{\ext}(\bfu) + \int_{0}^{t} D \diff t,
+\end{equation}
+where $D$ denotes the dissipation function~\cite{Mielke2005}. An evolution equation for damage can be specified using the notion of standard general materials~\cite{Nguyen1975}. The solution to the problem is the one that minimizes the potential energy over all the admissible functions.
+\begin{equation}
+	\left(\bfu^*,d^*\right) \in \arg \min_{(\bfu,d)\,\in\,\left(\cc^u \times \cc^d_n;d_{n-1}\right)} \Pi(\bfu,d),
+\end{equation}
+where $\cc^u$ and $\cc^d$ denote the space of admissible displacements and damages, respectively. They are defined as
+\begin{gather}
+	\cc^u = \left\{ \bfu \in H^2(\Omega)\, \middle| \, \bfu=\bfu_d \quad\text{on }\; \partial \Omega_d \right\}, \\
+	\cc^d_n = \left\{ d \in L^\infty(\Omega)\, \middle| \, d(\bfx) \geq d_{n-1}(\bfx) \quad\text{and}\quad d(\bfx) \in [0,1] \, \forall \bfx \in \Omega \right\}.
+\end{gather}
+The definition of the space $\cc^d$ ensures the irreversibility of the damage. 
+
+It is well known that the formulation just presented is devoid of any length scale and as such, the solution in the FE simulations become mesh dependent. In \cite{Kamasam}, the length scale is introduced by constraining the gradient of the strain to lie in a certain interval in 1D case. Here, the regularization will be introduced by weakening the constraint by using a log-barrier-like function. Thus, the functional to be minimized becomes
+\begin{equation}
+	\Pi(u,d;\ell_c) = \int_\Omega \psi(\bfeps,d) \diff v +  \int_\Omega \hat{\psi}(\nabla \bfeps,d;\ell_c) \diff v  - W_{\ext}(\bfu) + \int_{0}^{t} D \diff t,
+\end{equation}
+where, 
+\begin{equation} \label{energy_constraint_gradient}
+	\hat{\psi}(\nabla \bfeps,d;\ell_c) = -\mu \ln \left( \frac{1}{\ell_c} - g(d) \tilde{\psi}(\nabla \epsilon)  \right),
+\end{equation}
+where $g$ is the degradation function that depends on the damage, that is used to gradually remove the regularization as the damage increases. $\hat{\psi}$ is the quadratic functional that depends on the gradient of strain, which is defined as 
+\begin{equation} \label{energy_constraint_gradient}
+	\tilde{\psi}(\nabla \bfeps) = a_1 k_{iik}k_{kjj} + a_2 k_{ijj}k_{ikk} + a_3 k_{iik}k_{jjk} + a_4 k_{ijk}k_{ijk} + a_5 k_{ijk}k_{kji},
+\end{equation}
+where $k_{pqr} = \epsilon_{qr,p}$.
+
+A couple of observations are warranted. First, the function $g$ is selected so that $g(0)=1$ and $g(1)=0$. This means that when there is no damage, the regularization is fully effective, and when fully damaged, the regularization is removed, and the transition is gradual if $g$ is smooth. Second, in this study, the parameter $\mu$ is fixed tp be a finite positive value. It shall be noted that the method resembles the interior point method of resolving inequality constraints in the standard optimization setting, where successive problems are solved with decreasing $\mu$, $\mu \to 0$. Thus, as the parameter $\mu$ is made smaller, the method presented here boils down to the inequality case and the problems/ features about snapback that were observd in the 1D case return. It is expected that taking $\mu$ to be finite and fixed prevents this issue. 
+
+
+The equations of equilibrium can now be obtained by taking the variation of the potential energy functional in equation \ref{Total_potential_energy_model} and equating it to zero. For notational simplicity, the slack quantity, $s$, is defined as $s = \frac{1}{\ell_c} - g(d) \tilde{\psi}(\nabla \epsilon)$. Taking the variations with respect to the displacement,
+\begin{equation}
+	\delta^{\bfu} \tilde{\Pi}(\bfu,d,\lambda) = \int_\Omega \left( \bfsig : \delta \bfeps + \bftau . \nabla \delta \bfeps \right) \diff v = 0,
+\end{equation}
+where $\bfsig = \psi'(\bfeps;d)$, $\bftau = \frac{\mu}{s}\tilde{\psi}'(\nabla\bfeps;d)$, prime denotes taking a derivative with respect to the argument.
+Written in index form, 
+\begin{equation}
+	\int_\Omega \left( \sigma_{ij}  \delta \epsilon_{ij} + \tau_{ijk}  \delta k_{ijk} \right) \diff v = 0. \label{equilibruim_in_index}
+\end{equation}
+It can be seen that $\bftau$ is the couple stress that is normally encountered in the strain gradient elasticity. Integrating equation \ref{equilibruim_in_index} by parts and gathering like terms together, the following equation can be obtained
+\begin{equation}
+	-\int_\Omega \left( \sigma_{kj,j} - \tau_{ijk,ij} \right) \delta u_{k} \diff v + \int_\Omega \left[  (\sigma_{ij} -\tau_{pij,p}) \delta u_{i,j} + (\tau_{ijk} \delta u_{j,k})_{,i} \right] \diff v  = 0. \label{equilibruim_in_index_parts}
+\end{equation}
+Dividing the domain $\Omega$ into regions where the constraints are active, $\Omega_a$, and where the constraints are inactive, $\Omega \setminus \Omega_a$, and realizing that $\lambda=0$ and hence $\bftau = 0$ in $\Omega \setminus \Omega_a$, the above integral can be written as 
+\begin{equation}
+	-\int_\Omega \left( \sigma_{kj,j} - \tau_{ijk,ij} \right) \delta u_{k} \diff v + \int_\Omega \left[  (\sigma_{ij} -\tau_{pij,p}) \delta u_{i,j} + (\tau_{ijk} \delta u_{j,k})_{,i} \right] \diff v  = 0.
+\end{equation}
+This leads to the equations of equilibrium in the bulk as 
+\begin{equation}
+	(\sigma_{kj} - \tau_{ijk,i})_{,j} = 0.
+\end{equation}
+It shall be noted that the above set of equations are similar to what is encountered in the case of first strain gradient theories in \cite{Mindlin and Toupin}, with the couple stress analogous to the strain gradient theory. ....Similarly, the equations on the surface can be obtained....
+
+\subsection{Discrete version of the constraint}
+To impose the constraint on the strain variable, a dual mesh (also called the lip mesh) is defined along with the FE mesh as has been done in \cite{Moes and Chevaugeon}. It shall be noted that the constraint on the strain variable requires its derivative. In discrete formulation, the gradient of the strain variable is computed on the lip mesh by using the strain variables computed from the FE mesh. The strain variables, computed from the displacements can be expressed as $\bfeps = \bfB \bfu$, where $\bfB$ is the discrete gradient operator, computed on the FE mesh. Likewise, defining the discrete gradient operator on the lip mesh and representing it in a matrix form as $\bfG$, the gradients of strain can be expressed in terms of the displacements as 
+\begin{equation}
+	\bfk = \nabla \bfeps = \bfG \bfB \bfu = \bfP \bfu.
+\end{equation}
+Where, $\bfk$ is the matrix containing the gradients of strain as $\begin{bmatrix}
+	k_{111} & k_{211} & k_{122} & k_{222} & k_{112} & k_{212}
+\end{bmatrix}^T$.
+
+The constraint on the strain gradient can thus be written as 
+\begin{equation} \label{discrete_constraint}
+	(\bfLam \bfk )^T \bfLam \bfk \leq \frac{1}{\ell_c^2},
+\end{equation}
+where $\bfLam$ is a matrix composed of the coefficients $a_i$ from equation \ref{energy_constraint_gradient}. Hence, there will be as many (not necessarily active) constraints as the number of elements in the lip mesh.
+
+\begin{figure}[ht]
+	\centering
+	\input{./tikz_figs/comparison_log_quadratic.tex}
+	\caption{Log barrier function vs quadratic functional}
+	\label{comparison_log_quadratic}
+\end{figure}
+
+
+
+% \section{Trash Appendix}
+%The notion of Data Driven Computational Mechanics has been introduced in \cite{KO}, where the constitutive model for the material is replaced by a database of stresses and strains (material states). The solution for the boundary value problem is sought as the stress-strain pair that satisfy the equations of equilibrium and compatibility conditions (mechanical states) while being as close as possible to the database (material states). Formally, the distance functional between the mechanical and material states is introduced as 
+%\begin{equation}
+%	d(\bfeps,\bfsig,\bfeps^*,\bfsig^*) = \frac{\mathcal{C}}{2}(\bfeps - \bfeps^*):(\bfeps - \bfeps^*) + \frac{\mathcal{C}^{-1}}{2}(\bfsig - \bfsig^*):(\bfsig - \bfsig^*).
+%\end{equation}
+%The solution to the BVP then becomes
+%\begin{equation}
+%	\text{Sol } \in \arg \min_{(\bfeps,\bfsig) \in \mathcal{E}, (\bfeps^*,\bfsig^*) \in \mathcal{D}} d(\bfeps,\bfsig,\bfeps^*,\bfsig^*),
+%\end{equation}
+%where 
+%\begin{equation}
+%	\mathcal{E} = \{(\bfeps,\bfsig) \text{ sufficiently regular }: \bfeps = \sym \nabla \bfu, \bfu = \bfu_D \text{ on } \partial \Omega_d \text{ and } \divop \bfsig = 0     \},
+%\end{equation}
+%and $\mathcal{D}$ denotes the material database. Compatibility can be ensured by directly using $\bfeps = \sym \nabla\bfu$ in the distance functional, while the equilibrium constraints can be imposed by using Lagrange multipliers. The discrete version of the above equations can be seen as (with the compatibility conditions used directly in the distance functional and imposing equilibrium through Lagrange multipliers)
+%\begin{equation}
+%	\Pi(\bfeps,\bfsig,\bfeps^*,\bfsig^*) = \frac{1}{2}(\bfB \bfu - \bfeps^*)^T\mathcal{C}(\bfB \bfu - \bfeps^*) + \frac{1}{2}(\bfsig - \bfsig^*)^T\mathcal{C}^{-1}(\bfsig - \bfsig^*) - \bfeta^T \bfB^T \bfsig .
+%\end{equation}
+%Assuming the material states to be given, taking the variations of the Lagrangian with respect to the mechanical states results in the Euler-Lagrange equations as
+%\begin{gather}
+%	\bfB ^T \bfD \bfB \bfu = \bfB \bfD \bfeps^*, \\
+%	\bfsig  = \bfsig^* + \bfD \bfB \bfeta, \\
+%	\bfB ^T \bfsig = 0.
+%\end{gather}
+%The second and third of the above equations result in
+%\begin{equation}
+%	\bfB ^T \bfD \bfB \bfeta = -\bfB ^T \bfsig^*.
+%\end{equation}
+%The material states are then found as the points in the database that minimize the distance functional, given the mechanical states.
+%
+%\subsection{Inclusion of the constraint}
+%The Lipschitz constraint on the strain variable can be introduced in data driven case as described below. It shall be noted that the inclusion of constraints modifies the equations of equilibrium, where the Lagrange multipliers take the place of couple stress. As in the earlier case, the distance functional is defined as 
+%\begin{equation}
+%	d(\bfeps,\bfsig,\bfeps^*,\bfsig^*) = \frac{1}{2}(\bfB \bfu - \bfeps^*)^T\mathcal{C}(\bfB \bfu - \bfeps^*) + \frac{1}{2}(\bfsig - \bfsig^*)^T\mathcal{C}^{-1}(\bfsig - \bfsig^*).
+%\end{equation}
+%The objective now is to see the minimizers of the above functional so that the strain field satisfies the Lipschitz constraint. The Lagrange multipliers that enforce the constraint on the strain field act as couple stresses.
+%\begin{equation}
+%	\text{Sol } \in \arg \min_{(\bfeps,\bfsig) \in \mathcal{E}, (\bfeps^*,\bfsig^*) \in \mathcal{D}} d(\bfeps,\bfsig,\bfeps^*,\bfsig^*),
+%\end{equation}
+%where, the equilibrium manifold is now defined as (in discrete form)
+%
+%\begin{equation}
+%	\mathcal{E} = \{(\bfeps,\bfsig) : \bfeps = \bfB \bfu, \bfeps \text{ satisfies equation \ref{discrete_constraint}},\bfu = \bfu_D \text{ on } \partial \Omega_d,
+%	\text{ and } \bfB ^T \bfsig - \bfP^T \bftau = 0     \},
+%\end{equation}
+%where $\bftau$ is as defined in equation \ref{couple_stress}. Euler Lagrange equations can be obtained by taking the variation of the following Lagrangian and equating the corresponding variations to $0$. The Lagrangian can be defined to be
+%\begin{multline}
+%	\Pi = d(\bfeps,\bfsig,\bfeps^*,\bfsig^*) - \bfeta^T \bfB ^T \bfsig + \sum_{i=1}^{N_c} \lambda^u_i \left( (\bfP \bfu )_i^T \bfLam (\bfP \bfu)_i - \frac{1}{\ell_c^2}   \right) + \sum_{i=1}^{N_c} \lambda^{\eta u}_i \left( (\bfP (\bfu + \bfeta) )_i^T \bfLam (\bfP (\bfu + \bfeta))_i - \frac{1}{\ell_c^2}   \right).
+%\end{multline}
+%Here, $N_c$ denotes the number of active constraints and $\lambda_i \geq 0$ are the Lagrange multipliers dual to the constraint on the gradient of strain. $\lambda^{\eta u}_i = -\lambda^{ u}_i$ at convergence, take the role of the couple stresses as in equation \ref{equilibruim_in_index}. Plainly stating, the above equation states that the displacement field satisfies the inequality constraints, and in the places where the constraint is satisfied as an equality, the \textit{perturbed solution (with $\bfeta$)} should also satisfy the constraints.
+%
+%
+%
+%The EL equations can be seen to be
+%\begin{gather}
+%	\bfr_{\bfu} = \bfB^T \mathcal{C} \bfB \bfu - \bfB^T \mathcal{C} \bfeps ^* + \sum_{i=1}^{N_c} \lambda_i^u \left( 2 \bfP_i ^T \bfLam \bfP_i \bfu \right) + \sum_{i=1}^{N_c} \lambda_i^{\eta u} \left( 2 \bfP_i ^T \bfLam \bfP_i (\bfu+\bfeta) \right) =0, \\
+%	\bfr_{\bfeta} = -\bfB^T \mathcal{C} \bfB \bfeta - \bfB^T \bfsig ^* + \sum_{i=1}^{N_c} \lambda_i^{\eta u} \left( 2 \bfP_i ^T \bfLam \bfP_i (\bfu+\bfeta) \right) =0, \\
+%	r_{\lambda^u_i} = (\bfP \bfu )_i^T \bfLam (\bfP \bfu)_i - \frac{1}{\ell_c^2}  =0, \\
+%	r_{\lambda^{\eta u}_i} = \bfP (\bfu + \bfeta) )_i^T \bfLam (\bfP (\bfu + \bfeta))_i - \frac{1}{\ell_c^2}  =0. 
+%\end{gather}
+%
+
+
+\end{document}
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% End: 
