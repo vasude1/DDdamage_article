@@ -214,6 +214,77 @@ The set of equations that govern the data driven solution can be found in the pr
 	\caption{Stress strain database \label{database_actual}}
 \end{figure}
 
+\subsection{Rate of convergence}
+The rate of convergence of the method can be analyzed by looking at the spectral radius of the matrix $\bfC \bfA $, as stated in \ref{appx_convergence}. It has been assumed that there is no body force and that all but one elements are on the elastic (unloading) branch and only one element moves on the damage branch. This case corresponds to picking one of several possible bifurcation states from the homogeneous state. Two cases can thus be considered (depending on the mesh size): the case where there is no snapback and the other when a snap back is to be expected. 
+
+\subsubsection*{No snapback}
+In the case when a snapback isn't expected, direct displacement control can be used. In such a case, the assumptions made above (regarding the elements belonging to the loading and unloading branches) are valid and the analysis above can be used to judge the rate of convergence. 
+
+An analysis has been made by setting $N=10, E=100, m=-0.0667, c=100.0667$. When $C_1=C_2=E$, the spectral radius of the matrix $\bfC \bfA $ in equation \ref{combined_equn} has been found to be $0.993$. However, when $C_2$ is taken equal to $m$, $C_2=m$, the spectral radius became $0.5$. The value of $N$ was then changed to $100$, $N=100$. In this case, using $C_1=C_2=E$ resulted in a spectral radius of $0.9999$. When $C_2=m$, the spectral radius was still $0.5$. Thus, in some scenarios, using an \textit{incorrect} value for the metric can result in a need for a very large number of iterations for convergence.
+
+\subsubsection*{With snapback}
+The case with snapback occurs when the mesh and thus, the size of the damage zone, is refined. In this case, an arc length solver is needed to track the full damage evolution in the element. So, this case will first be presented and the effect of metric on the rate of convergence will be studied.
+
+Using an arc length solver corresponds to when the displacement at the end of the bar, $u_D$, is treated as an unknown. This results in the number of unknowns increasing by $1$. The additional equation that is needed to fully resolve the system is the arc length constraint, stated in equation \ref{onedarclength}. This changes the equations to be resolved in \ref{appx_convergence} to 
+
+
+\begin{equation}
+	\begin{bmatrix}
+		\epsilon_1 \\
+		\epsilon_2 \\
+		\sigma
+	\end{bmatrix}
+	=
+	\begin{bmatrix}
+		C_1/(C_1+NC_2) & -C_2/(C_1+NC_2) & 0 & 0 \\
+		-NC_1/(C_1+NC_2) & NC_2/(C_1+NC_2) & 0 & 0 \\
+		0 & 0 & \frac{NC_2}{C_1+N C_2} & \frac{C_1}{C_1+N C_2}
+	\end{bmatrix}
+	\begin{bmatrix}
+		\epsilon_1^* \\
+		\epsilon_2^* \\
+		\sigma_1^* \\
+		\sigma_2^* 
+	\end{bmatrix}
+	+
+	\begin{bmatrix}
+		C_2 u_D/(C_1+NC_2)/\ell_e \\
+		C_1 u_D/(C_1+NC_2)/\ell_e  \\
+		0	
+	\end{bmatrix}
+	.
+\end{equation}
+The material states can be found by taking the variations with respect to $\epsilon_1^*, \epsilon_2^*$, while realizing that $\sigma_1^*=E\epsilon_1^*$, and $\sigma_2^*=m\epsilon_2^*+c$. Thus,
+\begin{equation}
+	\begin{bmatrix}
+		\epsilon_1^* \\
+		\epsilon_2^* \\
+		\sigma_1^* \\
+		\sigma_2^* 
+	\end{bmatrix} 
+	= 
+	\begin{bmatrix}
+		C_1^2/(E^2 + C_1^2) & 0 & E/(E^2 + C_1^2) \\
+		0 & C_2^2/(m^2 + C_2^2)  & m/(m^2 + C_2^2) \\
+		E C_1^2/(E^2 + C_1^2) & 0 & E^2/(E^2 + C_1^2)\\
+		0 & mC_2^2/(m^2 + C_2^2)  & m^2/(m^2 + C_2^2) 
+	\end{bmatrix} 
+	\begin{bmatrix}
+		\epsilon_1 \\
+		\epsilon_2 \\
+		\sigma
+	\end{bmatrix} + 
+	\begin{bmatrix}
+		0 \\
+		-mc/(m^2+C_2^2) \\
+		0 \\
+		cC_2^2/(m^2+C_2^2)
+	\end{bmatrix} .
+\end{equation}
+
+An analysis has been made by setting $N=10, E=100, m=-0.0667, c=100.0667$. When $C_1=C_2=E$, the spectral radius of the matrix $\bfC \bfA $ in equation \ref{combined_equn} has been found to be $0.993$. However, when $C_2$ is taken equal to $m$, $C_2=m$, the spectral radius became $0.5$. The value of $N$ was then changed to $100$, $N=100$. In this case, using $C_1=C_2=E$ resulted in a spectral radius of $0.9999$. When $C_2=m$, the spectral radius was still $0.5$. Thus, in some scenarios, using an \textit{incorrect} value for the metric can result in a need for a very large number of iterations for convergence.
+
+
 \subsection{Method and Results}
 
 An arc-length solver has been used to capture the (possible) snapback response of the bar. The kind of the solver used will be described in the appendix in detail. The bar is meshed with piecewise linear and continuous displacement elements. The mechanical stresses are taken to be piecewise constant. The mesh size is homogeneous. The problem is examined for two mesh sizes (say $\ell_e$, $0.5 \ell_e$) to determine the effect of the mesh size on the response of the bar.
@@ -533,14 +604,14 @@ The regularization technique has also been applied to the case of an L-beam subj
 \appendix
 
 \section{Analysis of convergence \label{appx_convergence}}
-Consider the case of a 1D bar with an element in the middle already on the damaged branch while the other elements undergoing unloading on the elastic branch, see Figure \ref{1D_bar_dam_elem}. It is the intent to check the effect of the metric in data driven case on the (rate of) convergence of the solution in this case. In this case, if the material behavior is described by a local damage model (without any regularization), a snapback is expected in the load displacement curve of the body.
+Consider the case of a 1D bar with an element in the middle already on the damaged branch while the other elements undergo unloading on the elastic branch, see Figure \ref{1D_bar_dam_elem}. It is the intent to check the effect of the metric in data driven case on the (rate of) convergence of the solution in this case. If the material behavior is described by a local damage model (without any regularization), a snapback is expected in the load displacement response of the body in some scenarios, depending on the mesh size.
 \begin{figure}
 	\centering
 	\includegraphics[scale=1.2]{1D_bar_dam_elem.pdf}
 	\caption{1D bar with damaged element\label{1D_bar_dam_elem}}
 \end{figure}
 
-In this case, the stress state is homogeneous in the entire bar as a consequence of equilibrium. The strain is localized in the element undergoing damage (in blue). In this case, the mechanical state of the bar is described by a scalar stress $\sigma \in \mathbb{R}$ and strains $\epsilon_1, \epsilon_2 \in \mathbb{R}$ ($\epsilon_1$ for the undamaged elements and $\epsilon_2$ for the damaged element). The material state is described by $(\epsilon_1^*, \sigma_1^*) \in \mathbb{R}^{1\times 1}$ and $(\epsilon_2^*, \sigma_2^*) \in \mathbb{R}^{1\times 1}$. The loading is driven by prescribing $u_D$, the displacement at the right end of the bar. The distance function in this is given by 
+The stress state is homogeneous in the entire bar as a consequence of equilibrium. The strain is localized in the element undergoing damage (in blue), while the other elements are unloading (in red). Thus, the mechanical state of the bar is described by a scalar stress $\sigma \in \mathbb{R}$ and strains $\epsilon_1, \epsilon_2 \in \mathbb{R}$ ($\epsilon_1$ for the undamaged elements and $\epsilon_2$ for the damaged element). The material state is described by $(\epsilon_1^*, \sigma_1^*) \in \mathbb{R}^{1\times 1}$ and $(\epsilon_2^*, \sigma_2^*) \in \mathbb{R}^{1\times 1}$. The loading is driven by prescribing $u_D$, the displacement at the right end of the bar. The distance function in this is given by 
 \begin{equation}
 	d(\sigma,\sigma_1^*,\sigma_2^*,\epsilon_1,\epsilon_2;u_g) = \frac{N \ell_e}{2} \left[ \frac{(\sigma - \sigma_1^*)^2}{C_1} +  C_1(\epsilon_1 - \epsilon_1^*)^2 \right] + \frac{\ell_e}{2}  \left[ \frac{(\sigma - \sigma_2^*)^2}{C_2} +  C_2(\epsilon_2 - \epsilon_2^*)^2 \right].
 \end{equation}
@@ -571,9 +642,9 @@ Now, taking the variations with respect to the compatibility equation as a const
 		C_1 u_D/(C_1+NC_2)/\ell_e  \\
 		0	
 	\end{bmatrix}
-	,
+	.
 \end{equation}
-and 
+The material states can be found by taking the variations with respect to $\epsilon_1^*, \epsilon_2^*$, while realizing that $\sigma_1^*=E\epsilon_1^*$, and $\sigma_2^*=m\epsilon_2^*+c$. Thus,
 \begin{equation}
 	\begin{bmatrix}
 		\epsilon_1^* \\
@@ -601,18 +672,20 @@ and
 	\end{bmatrix} .
 \end{equation}
 
-The system of equations corresponding to the mechanical and material updates can be written in short as $\bfa = \bfA \bfb + \bfc$, and $\bfb = \bfC \bfa + \bfd$. Thus, the alternating minimization can be written as
+The system of equations corresponding to the mechanical and material updates can be written in short as $\bfa = \bfA \bfb + \bfc$, and $\bfb = \bfC \bfa + \bfd$. The alternating minimization can then be written as
 \begin{gather}
 	\bfa^{n+1} = \bfA \bfb^{n} + \bfc, \\
 	\bfb^{n+1} = \bfC \bfa^{n+1} + \bfd.
 \end{gather}
 Combining them together, 
 \begin{equation}
-	\bfb^{n+1} = \bfC \bfA \bfb^{n} +\bfC \bfc + \bfd.
+	\bfb^{n+1} = \bfC \bfA \bfb^{n} +\bfC \bfc + \bfd. \label{combined_equn}
 \end{equation}
 At convergence, $\bfb^{n+1} \approx \bfb^{n} \approx \bfb$. Thus, $\bfe^{n+1} = \bfC \bfA \bfe^{n}$, where $\bfe^{n+1} = \bfb^{n+1} - \bfb$ is the error at the iteration $n+1$. The rate of convergence of the method depends on the spectral radius of the matrix $\bfC \bfA$, which in turn depends on the metric chosen. 
 
-\section{With a model}
+
+
+\section{Euler Lagrange equations}
 Finding the solution of the boundary value problems consists of minimizing the potential energy functional which is defined as
 \begin{equation}
 	\Pi(\bfu) = \int_\Omega \psi(\bfeps) \diff v - W_{\ext}(\bfu).
@@ -697,7 +770,7 @@ where $\bfLam$ is a matrix composed of the coefficients $a_i$ from equation \ref
 \section{Arc length constraint}
 The arc length constraint is simpler in 1D case than in 2D case as it involves selecting degrees of freedom where a certain quantity is monotone increasing. For instance, in \cite{}, the damage variables are used to write the arc length constraint. In the current case, for the 1D bar, the mechanical strain variable at the left end of the bar is chosen to impose the arc length constraint. The constraint can be expressed as
 \begin{equation}
-	\epsilon^{n+1} - \epsilon^{n} = \Delta,
+	\epsilon^{n+1} - \epsilon^{n} = \Delta, \label{onedarclength}
 \end{equation}
 where $n+1$ and $n$ denote the load steps. $\Delta$ is the arc length, which in the current case is the strain increment for the element at the extreme left between two steps. Expressing the displacements as $\bfu = \bfC_f \bfu_f + \lambda \bfu_g$, where $\bfu_f$ denotes the unknown/free degrees of freedom and $\lambda$, in the current case, is the displacement applied at the right end with $u_g$ as the corresponding degree of freedom. For instance, if the bar contains $N$ nodes numbered $1$ to $N$, $\bfu_f$ contains the DOFs of the nodes $2$ to $N-1$. $\bfC_f \in \mathbb{R}^{N \times N-2}$ and $\bfu_g \in \mathbb{R}^N = \{0,0,0,\dots 1\}^T$.
 
