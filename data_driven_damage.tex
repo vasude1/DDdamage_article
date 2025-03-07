@@ -1,5 +1,5 @@
 %\documentclass[12pt,twoside,letterpaper]{article}
-\documentclass[12pt]{elsarticle}
+\documentclass[11pt]{elsarticle}
 \usepackage{geometry} % Load the geometry package
 
 % Set the margins
@@ -223,67 +223,81 @@ In the case when a snapback isn't expected, direct displacement control can be u
 An analysis has been made by setting $N=10, E=100, m=-0.0667, c=100.0667$. When $C_1=C_2=E$, the spectral radius of the matrix $\bfC \bfA $ in equation \ref{combined_equn} has been found to be $0.993$. However, when $C_2$ is taken equal to $m$, $C_2=m$, the spectral radius became $0.5$. The value of $N$ was then changed to $100$, $N=100$. In this case, using $C_1=C_2=E$ resulted in a spectral radius of $0.9999$. When $C_2=m$, the spectral radius was still $0.5$. Thus, in some scenarios, using an \textit{incorrect} value for the metric can result in a need for a very large number of iterations for convergence.
 
 \subsubsection*{With snapback}
-The case with snapback occurs when the mesh and thus, the size of the damage zone, is refined. In this case, an arc length solver is needed to track the full damage evolution in the element. So, this case will first be presented and the effect of metric on the rate of convergence will be studied.
-
-Using an arc length solver corresponds to when the displacement at the end of the bar, $u_D$, is treated as an unknown. This results in the number of unknowns increasing by $1$. The additional equation that is needed to fully resolve the system is the arc length constraint, stated in equation \ref{onedarclength}. This changes the equations to be resolved in \ref{appx_convergence} to 
-
-
-\begin{equation}
-	\begin{bmatrix}
-		\epsilon_1 \\
-		\epsilon_2 \\
-		\sigma
-	\end{bmatrix}
-	=
-	\begin{bmatrix}
-		C_1/(C_1+NC_2) & -C_2/(C_1+NC_2) & 0 & 0 \\
-		-NC_1/(C_1+NC_2) & NC_2/(C_1+NC_2) & 0 & 0 \\
-		0 & 0 & \frac{NC_2}{C_1+N C_2} & \frac{C_1}{C_1+N C_2}
-	\end{bmatrix}
-	\begin{bmatrix}
-		\epsilon_1^* \\
-		\epsilon_2^* \\
-		\sigma_1^* \\
-		\sigma_2^* 
-	\end{bmatrix}
-	+
-	\begin{bmatrix}
-		C_2 u_D/(C_1+NC_2)/\ell_e \\
-		C_1 u_D/(C_1+NC_2)/\ell_e  \\
-		0	
-	\end{bmatrix}
-	.
-\end{equation}
-The material states can be found by taking the variations with respect to $\epsilon_1^*, \epsilon_2^*$, while realizing that $\sigma_1^*=E\epsilon_1^*$, and $\sigma_2^*=m\epsilon_2^*+c$. Thus,
-\begin{equation}
-	\begin{bmatrix}
-		\epsilon_1^* \\
-		\epsilon_2^* \\
-		\sigma_1^* \\
-		\sigma_2^* 
-	\end{bmatrix} 
-	= 
-	\begin{bmatrix}
-		C_1^2/(E^2 + C_1^2) & 0 & E/(E^2 + C_1^2) \\
-		0 & C_2^2/(m^2 + C_2^2)  & m/(m^2 + C_2^2) \\
-		E C_1^2/(E^2 + C_1^2) & 0 & E^2/(E^2 + C_1^2)\\
-		0 & mC_2^2/(m^2 + C_2^2)  & m^2/(m^2 + C_2^2) 
-	\end{bmatrix} 
-	\begin{bmatrix}
-		\epsilon_1 \\
-		\epsilon_2 \\
-		\sigma
-	\end{bmatrix} + 
-	\begin{bmatrix}
-		0 \\
-		-mc/(m^2+C_2^2) \\
-		0 \\
-		cC_2^2/(m^2+C_2^2)
-	\end{bmatrix} .
-\end{equation}
 
 An analysis has been made by setting $N=10, E=100, m=-0.0667, c=100.0667$. When $C_1=C_2=E$, the spectral radius of the matrix $\bfC \bfA $ in equation \ref{combined_equn} has been found to be $0.993$. However, when $C_2$ is taken equal to $m$, $C_2=m$, the spectral radius became $0.5$. The value of $N$ was then changed to $100$, $N=100$. In this case, using $C_1=C_2=E$ resulted in a spectral radius of $0.9999$. When $C_2=m$, the spectral radius was still $0.5$. Thus, in some scenarios, using an \textit{incorrect} value for the metric can result in a need for a very large number of iterations for convergence.
 
+
+\begin{figure}[]
+	\begin{subfigure}{0.45\textwidth}
+		\centering
+		\includegraphics[scale=0.7]{./conv_figs/bad_metric_no_snap.pdf}
+		\caption{Bad metric, no snapback, and without the arc length constraint.}
+		%\label{force_disp_local}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}{0.45\textwidth}
+		\centering
+		\includegraphics[scale=0.7]{./conv_figs/good_metric_no_snap.pdf}
+		\caption{Good metric, no snapback, and without the arc length constraint.}
+		%\label{sn_dist_local}
+	\end{subfigure}
+	\begin{subfigure}{0.45\textwidth}
+		\centering
+		\includegraphics[scale=0.7]{./conv_figs/bad_metric_no_snap_arc_length.pdf}
+		\caption{Bad metric, no snapback, and with the arc length constraint.}
+		%\label{force_disp_local}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}{0.45\textwidth}
+		\centering
+		\includegraphics[scale=0.7]{./conv_figs/good_metric_no_snap_arc_length.pdf}
+		\caption{Good metric, no snapback, and with the arc length constraint.}
+		%\label{sn_dist_local}
+	\end{subfigure}
+\end{figure}
+\begin{figure}\ContinuedFloat
+	\begin{subfigure}{0.45\textwidth}
+		\centering
+		\includegraphics[scale=0.7]{./conv_figs/bad_metric_snap_arc_length.pdf}
+		\caption{Bad metric, snapback, and with the arc length constraint.}
+		%\label{force_disp_local}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}{0.45\textwidth}
+		\centering
+		\includegraphics[scale=0.7]{./conv_figs/good_metric_snap_arc_length.pdf}
+		\caption{Good metric, snapback, and with the arc length constraint.}
+		%\label{sn_dist_local}
+	\end{subfigure}
+	\begin{subfigure}{0.45\textwidth}
+		\centering
+		\includegraphics[scale=0.7]{./conv_figs/bad_metric_snap_no_arclength.pdf}
+		\caption{Bad metric, snapback, and without the arc length constraint.}
+		%\label{force_disp_local}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}{0.45\textwidth}
+		\centering
+		\includegraphics[scale=0.7]{./conv_figs/good_metric_snap_no_arclength.pdf}
+		\caption{Good metric, snapback, and without the arc length constraint.}
+		%\label{sn_dist_local}
+	\end{subfigure}
+	\begin{subfigure}{0.45\textwidth}
+		\centering
+		\includegraphics[scale=0.7]{./conv_figs/bad_metric_snap_no_arclength_add.pdf}
+		\caption{Bad metric, snapback, different initiation, and without the arc length constraint.}
+		%\label{force_disp_local}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}{0.45\textwidth}
+		\centering
+		\includegraphics[scale=0.7]{./conv_figs/good_metric_snap_no_arclength_add.pdf}
+		\caption{Good metric, snapback, different initiation, and without the arc length constraint.}
+		%\label{sn_dist_local}
+	\end{subfigure}
+	\caption{Results from the analysis various cases in 1D}
+	%\label{fig:ut_regularization}
+\end{figure}
 
 \subsection{Method and Results}
 
@@ -683,7 +697,77 @@ Combining them together,
 \end{equation}
 At convergence, $\bfb^{n+1} \approx \bfb^{n} \approx \bfb$. Thus, $\bfe^{n+1} = \bfC \bfA \bfe^{n}$, where $\bfe^{n+1} = \bfb^{n+1} - \bfb$ is the error at the iteration $n+1$. The rate of convergence of the method depends on the spectral radius of the matrix $\bfC \bfA$, which in turn depends on the metric chosen. 
 
+\subsubsection*{With snapback}
+The case with snapback occurs when the mesh and thus, the size of the damage zone, is refined. In this case, an arc length solver is needed to track the full damage evolution in the element. So, this case will first be presented and the effect of metric on the rate of convergence will be studied.
 
+Using an arc length solver corresponds to when the displacement at the end of the bar, $u_D$, is treated as an unknown. This results in the number of unknowns increasing by $1$. The additional equation that is needed to fully resolve the system is the arc length constraint, stated in equation \ref{onedarclength}. This changes the equations to be resolved in the previous section to 
+
+
+\begin{multline}
+	\begin{bmatrix}
+		1 & 0& 0&  -C_2/(C_1+NC_2) \ell_e \\
+		0 & 1 & 0 & -C_1/(C_1+NC_2) \ell_e \\
+		0 & 0 & 1 & 0 \\
+		0 & 1 & 0 & 0
+	\end{bmatrix}
+	\begin{bmatrix}
+		\epsilon_1 \\
+		\epsilon_2 \\
+		\sigma \\
+		u_D
+	\end{bmatrix}
+	= \\
+	\begin{bmatrix}
+		C_1/(C_1+NC_2) & -C_2/(C_1+NC_2) & 0 & 0 \\
+		-NC_1/(C_1+NC_2) & NC_2/(C_1+NC_2) & 0 & 0 \\
+		0 & 0 & \frac{NC_2}{C_1+N C_2} & \frac{C_1}{C_1+N C_2} \\ 
+		0 & 0 & 0&0
+	\end{bmatrix}
+	\begin{bmatrix}
+		\epsilon_1^* \\
+		\epsilon_2^* \\
+		\sigma_1^* \\
+		\sigma_2^* 
+	\end{bmatrix}
+	+
+	\begin{bmatrix}
+		0 \\
+		0  \\
+		0	\\
+		\epsilon_0 + \Delta \epsilon
+	\end{bmatrix}
+	.
+\end{multline}
+The material states can be found by taking the variations with respect to $\epsilon_1^*, \epsilon_2^*$, while realizing that $\sigma_1^*=E\epsilon_1^*$, and $\sigma_2^*=m\epsilon_2^*+c$. Thus,
+\begin{equation}
+	\begin{bmatrix}
+		\epsilon_1^* \\
+		\epsilon_2^* \\
+		\sigma_1^* \\
+		\sigma_2^* 
+	\end{bmatrix} 
+	= 
+	\begin{bmatrix}
+		C_1^2/(E^2 + C_1^2) & 0 & E/(E^2 + C_1^2) & 0 \\
+		0 & C_2^2/(m^2 + C_2^2)  & m/(m^2 + C_2^2) &0 \\
+		E C_1^2/(E^2 + C_1^2) & 0 & E^2/(E^2 + C_1^2) &0\\
+		0 & mC_2^2/(m^2 + C_2^2)  & m^2/(m^2 + C_2^2) &0
+	\end{bmatrix} 
+	\begin{bmatrix}
+		\epsilon_1 \\
+		\epsilon_2 \\
+		\sigma \\
+		u_D
+	\end{bmatrix} + 
+	\begin{bmatrix}
+		0 \\
+		-mc/(m^2+C_2^2) \\
+		0 \\
+		cC_2^2/(m^2+C_2^2)
+	\end{bmatrix} .
+\end{equation}
+
+Thus, even in this case, the update can be cast into the form of equation \ref{combined_equn} and can be analyzed similarly.
 
 \section{Euler Lagrange equations}
 Finding the solution of the boundary value problems consists of minimizing the potential energy functional which is defined as
