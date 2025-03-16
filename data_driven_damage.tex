@@ -198,7 +198,7 @@ The corresponding Euler Lagrange equations during the mechanical update can be s
 \end{gather}
 
 \section{1D case check : Garbage in - Garbage out}
-To begin with, it is necessary to determine if the DD algorithm results in mesh dependence if there is no regularization introduced into the problem. The database in this scenario is a collection of stress-strain pairs that include the softening scenario. The problem examined is that of a 1D bar subjected to a body force with displacement imposed on its ends. It is expected that the body force results in strain localization in the (left end of the) bar, which depends on the mesh size when there is no regularization. See Figure \ref{1D_bar_bf}.
+To begin with, it is necessary to determine if the DD algorithm results in mesh dependence if there is no regularization introduced into the problem. The database in this scenario will be a collection of stress-strain pairs that include the softening scenario. The problem examined is that of a 1D bar subjected to a body force with displacement imposed on its ends. It is expected that the body force results in strain localization in the (left end of the) bar, which depends on the mesh size when there is no regularization. See Figure \ref{1D_bar_bf}.
 
 \begin{figure}
 	\centering
@@ -206,7 +206,7 @@ To begin with, it is necessary to determine if the DD algorithm results in mesh 
 	\caption{1D bar with a body force \label{1D_bar_bf}}
 \end{figure}
 
-The set of equations that govern the data driven solution can be found in the previous section. The database looks like in figure \ref{database_actual}. To prevent the possible effects of insufficient data, it will be assumed that the database can be approximated by a series of piecewise affine relations. For instance, $\sigma=E \epsilon$ describes the \textit{elastic part}, $\sigma = m\epsilon + c$, the \textit{softening part}, $\sigma = E_i \epsilon$, the $i$th softening branch. This corresponds to the case where the database size tends to infinity (in the sense of ). In such a case, the material update can be performed analytically, as demonstrated in \ref{appx_convergence}. 
+The set of equations that govern the data driven solution can be found in the previous section. To prevent the possible effects of insufficient data, it will be assumed that the database can be approximated by a series of piecewise affine relations. For instance, $\sigma=E \epsilon$ describes the \textit{elastic part}, $\sigma = m\epsilon + c$, the \textit{softening part}, $\sigma = E_i \epsilon$, the $i$th unloading branch. This corresponds to the case where the database size tends to infinity. In such a case, the material update can be performed analytically, as demonstrated in \ref{appx_convergence}. 
 
 \begin{figure}
 	\centering
@@ -218,86 +218,97 @@ The set of equations that govern the data driven solution can be found in the pr
 The rate of convergence of the method can be analyzed by looking at the spectral radius of the matrix $\bfC \bfA $, as stated in \ref{appx_convergence}. It has been assumed that there is no body force and that all but one elements are on the elastic (unloading) branch and only one element moves on the damage branch. This case corresponds to picking one of several possible bifurcation states from the homogeneous state. Two cases can thus be considered (depending on the mesh size): the case where there is no snapback and the other when a snap back is to be expected. 
 
 \subsubsection*{No snapback}
-In the case when a snapback isn't expected, direct displacement control can be used. In such a case, the assumptions made above (regarding the elements belonging to the loading and unloading branches) are valid and the analysis above can be used to judge the rate of convergence. 
+No snapback occurs when the mesh size and hence, the localization length, is big enough. In the case, direct displacement control can be used. In such a case, the assumptions made above (regarding the elements belonging to the loading and unloading branches) are valid and the analysis in the appendix can be used to judge the rate of convergence. 
 
-An analysis has been made by setting $N=10, E=100, m=-0.0667, c=100.0667$. When $C_1=C_2=E$, the spectral radius of the matrix $\bfC \bfA $ in equation \ref{combined_equn} has been found to be $0.993$. However, when $C_2$ is taken equal to $m$, $C_2=m$, the spectral radius became $0.5$. The value of $N$ was then changed to $100$, $N=100$. In this case, using $C_1=C_2=E$ resulted in a spectral radius of $0.9999$. When $C_2=m$, the spectral radius was still $0.5$. Thus, in some scenarios, using an \textit{incorrect} value for the metric can result in a need for a very large number of iterations for convergence.
+An analysis was conducted by setting $N=10, E=100, m=-0.0667, c=100.0667$. When $C_1=C_2=E$, the spectral radius of the matrix $\bfC \bfA $ in equation \ref{combined_equn} has been found to be $0.993$. However, when $C_2$ is taken equal to $m$, $C_2=m$, the spectral radius decreased to $0.5$. This indicates that the number of iterations needed for convergence, which is said to have occurred when the distance functional is sufficiently small, depends on the value of metric chosen. The successive mechanical and material states for the elements on the elastic and damage branch, stating from the \textit{yield point}, can be seen in figures \ref{bad_metric_no_snap} and \ref{good_metric_no_snap}. As described earlier, since the spectral radius of the case where $C_2=E$ is very close to $1$, successive iterates can be seen very close to each other. In the case where $C_2$ is taken to be $m$, it can be seen that the mechanical and material states approach each other much faster. The converged solution is reached in just $7$ iterations. In the case where $C_2=E$, since the successive material states are very close to each other convergence will be judged to have occurred if the criterion for convergence is based on how much the successive material states change. It shall also be noted that in the case where $C_2=E$, the (mechanical) strain changes for the elements on the elastic and the damage branch can be seen to point in the same direction (positive) as the external load (also positive). But, when $C_2=m$, the sign of the strain change for the element on the damage branch is same as the external load, while for the element on the elastic branch, it is negative. Thus, when $C_2=E$, the system favors the homogeneous branch of the solution.
+
+This case has also been tested when an arc length constraint has been used instead of driving the system with an applied displacement. The details of the arc length constraint can be seen in the appendix. The parameters used are same as earlier. The strain increment in the arc length is taken so that the resulting solution is same as the case of applied displacement. In this case, the successive mechanical and material states can be seen in figures \ref{bad_metric_no_snap_arc_length} and \ref{good_metric_no_snap_arc_length}. As earlier, the successive states are very close to each other when $C_2=E$. However, when $C_2=m$, the rate of convergence is optimal - the successive states can be seen exactly same as in the earlier case. Also, the same observation can be made regarding the signs of the initial strain changes.
 
 \subsubsection*{With snapback}
 
-An analysis has been made by setting $N=10, E=100, m=-0.0667, c=100.0667$. When $C_1=C_2=E$, the spectral radius of the matrix $\bfC \bfA $ in equation \ref{combined_equn} has been found to be $0.993$. However, when $C_2$ is taken equal to $m$, $C_2=m$, the spectral radius became $0.5$. The value of $N$ was then changed to $100$, $N=100$. In this case, using $C_1=C_2=E$ resulted in a spectral radius of $0.9999$. When $C_2=m$, the spectral radius was still $0.5$. Thus, in some scenarios, using an \textit{incorrect} value for the metric can result in a need for a very large number of iterations for convergence.
+When $N$ is changed to $100$, that is when the mesh is refined, a snap back is expected to occur. In this case, an arc length method is required to track the evolution of the solution. The case where an arc length solver is not used when a snap back occurs will be discussed later. 
 
+The progression of the mechanical and the material states in this case can be seen in figures \ref{bad_metric_snap_no_arclength} and \ref{good_metric_snap_no_arclength}. In this case, it is necessary to take $C_2=m$ to arrive at a converged solution. As can be seen in figure \ref{bad_metric_snap_no_arclength}, if $C_2=E$, the mechanical strain change for both the elements point in the same direction. In subsequent iterations, the same material state is selected for the element on the elastic branch. As a result, the distance value stagnates at a high value and does not change anymore regardless of the number of iterations. However, when $C_2=m$, the rate of convergence is not only optimal, but also the algorithm converges, and to the correct solution.
+
+To investigate whether an arc length solver is absolutely needed - that is, to study the capability of the data driven algorithm to \textit{jump through} snap backs - the case where a snapback is expected to occur has been studied without using an arc length solver. The system is thus displacement driven. The successive iterates in this case can be seen in figures \ref{bad_metric_snap_no_arclength} and \ref{good_metric_snap_no_arclength}. When $C_2=E$, the successive mechanical and material states can be seen to move further from each other. The distance functional in this case thus increases as the iterations progress. When $C_2=m$, the mechanical and the material states change during the first iteration but no more during the further iterations. It shall also be noted that the strain in the elements on the damage branch decreases while the strain in the elements on the elastic branch increase. This is consistent with the fact that the smallest eigen value of the system becomes negative when $C_2=m$ and thus, the sign of the strain change for the element on the damage branch is opposite to the sign of the external load change. Thus, when the applied displacement increases, the strain in the damage branch tends to decrease, while the strain in the elastic branch tends to increase. (Cite de Borst and Peerlings PhD thesis with the chapters here). 
+
+To ensure that the above observations hold regardless of the initial state of the mechanical and material states, the analysis above is repeated with a different initial point. The progression of the iterates through the iterations can be seen in figures \ref{bad_metric_snap_no_arclength_add} and \ref{good_metric_snap_no_arclength_add}. As earlier, when the applied displacement increases, the mechanical and material states move as the same direction as the applied displacement after the first iteration. The subsequent iterations take the mechanical state for the element on the damage branch further from its material state, and the solution stagnates at a point which is very far from the expected solution (a fully damaged state for the current element on the damage branch). The situation is similar when $C_2=m$, but with a fewer number of iterations.
 
 \begin{figure}[]
 	\begin{subfigure}{0.45\textwidth}
 		\centering
 		\includegraphics[scale=0.7]{./conv_figs/bad_metric_no_snap.pdf}
-		\caption{Bad metric, no snapback, and without the arc length constraint.}
-		%\label{force_disp_local}
+		\caption{$C_2=E$, no snapback, and without the arc length constraint.}
+		\label{bad_metric_no_snap}
 	\end{subfigure}
 	\hfill
 	\begin{subfigure}{0.45\textwidth}
 		\centering
 		\includegraphics[scale=0.7]{./conv_figs/good_metric_no_snap.pdf}
-		\caption{Good metric, no snapback, and without the arc length constraint.}
-		%\label{sn_dist_local}
+		\caption{$C_2=m$, no snapback, and without the arc length constraint.}
+		\label{good_metric_no_snap}
 	\end{subfigure}
 	\begin{subfigure}{0.45\textwidth}
 		\centering
 		\includegraphics[scale=0.7]{./conv_figs/bad_metric_no_snap_arc_length.pdf}
-		\caption{Bad metric, no snapback, and with the arc length constraint.}
-		%\label{force_disp_local}
+		\caption{$C_2=E$, no snapback, and with the arc length constraint.}
+		\label{bad_metric_no_snap_arc_length}
 	\end{subfigure}
 	\hfill
 	\begin{subfigure}{0.45\textwidth}
 		\centering
 		\includegraphics[scale=0.7]{./conv_figs/good_metric_no_snap_arc_length.pdf}
-		\caption{Good metric, no snapback, and with the arc length constraint.}
-		%\label{sn_dist_local}
+		\caption{$C_2=m$, no snapback, and with the arc length constraint.}
+		\label{good_metric_no_snap_arc_length}
 	\end{subfigure}
 \end{figure}
 \begin{figure}\ContinuedFloat
 	\begin{subfigure}{0.45\textwidth}
 		\centering
 		\includegraphics[scale=0.7]{./conv_figs/bad_metric_snap_arc_length.pdf}
-		\caption{Bad metric, snapback, and with the arc length constraint.}
-		%\label{force_disp_local}
+		\caption{$C_2=E$, snapback, and with the arc length constraint.}
+		\label{bad_metric_snap_arc_length}
 	\end{subfigure}
 	\hfill
 	\begin{subfigure}{0.45\textwidth}
 		\centering
 		\includegraphics[scale=0.7]{./conv_figs/good_metric_snap_arc_length.pdf}
-		\caption{Good metric, snapback, and with the arc length constraint.}
-		%\label{sn_dist_local}
+		\caption{$C_2=m$, snapback, and with the arc length constraint.}
+		\label{good_metric_snap_arc_length}
 	\end{subfigure}
 	\begin{subfigure}{0.45\textwidth}
 		\centering
 		\includegraphics[scale=0.7]{./conv_figs/bad_metric_snap_no_arclength.pdf}
-		\caption{Bad metric, snapback, and without the arc length constraint.}
-		%\label{force_disp_local}
+		\caption{$C_2=E$, snapback, and without the arc length constraint.}
+		\label{bad_metric_snap_no_arclength}
 	\end{subfigure}
 	\hfill
 	\begin{subfigure}{0.45\textwidth}
 		\centering
 		\includegraphics[scale=0.7]{./conv_figs/good_metric_snap_no_arclength.pdf}
-		\caption{Good metric, snapback, and without the arc length constraint.}
-		%\label{sn_dist_local}
+		\caption{$C_2=m$, snapback, and without the arc length constraint.}
+		\label{good_metric_snap_no_arclength}
 	\end{subfigure}
 	\begin{subfigure}{0.45\textwidth}
 		\centering
 		\includegraphics[scale=0.7]{./conv_figs/bad_metric_snap_no_arclength_add.pdf}
-		\caption{Bad metric, snapback, different initiation, and without the arc length constraint.}
-		%\label{force_disp_local}
+		\caption{$C_2=E$, snapback, different initiation, and without the arc length constraint.}
+		\label{bad_metric_snap_no_arclength_add}
 	\end{subfigure}
 	\hfill
 	\begin{subfigure}{0.45\textwidth}
 		\centering
 		\includegraphics[scale=0.7]{./conv_figs/good_metric_snap_no_arclength_add.pdf}
-		\caption{Good metric, snapback, different initiation, and without the arc length constraint.}
-		%\label{sn_dist_local}
+		\caption{$C_2=m$, snapback, different initiation, and without the arc length constraint.}
+		\label{good_metric_snap_no_arclength_add}
 	\end{subfigure}
-	\caption{Results from the analysis various cases in 1D}
+	\caption{Results from the analysis of various cases in 1D are presented. The successive iterates for the material states are denoted by circles, while the mechanical states are represented by crosses. The successive iterates are connected by arrows: dashed arrows for the elements on the elastic unloading branch and dash-dotted arrows for the elements on the damage branch.}
 	%\label{fig:ut_regularization}
 \end{figure}
+
+\begin{remark}
+Thus, it can be concluded that not only is using a \textit{good} metric, together with an arc length solver, sufficient to achieve an optimal rate of convergence, but it is also necessary to achieve convergence in some cases.
+\end{remark}
 
 \subsection{Method and Results}
 
