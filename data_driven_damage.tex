@@ -198,7 +198,7 @@ The corresponding Euler Lagrange equations during the mechanical update can be s
 \end{gather}
 
 \section{1D case check : Garbage in - Garbage out}
-To begin with, it is necessary to determine if the DD algorithm results in an expected mesh dependence, as in the case with a model, if there is no regularization introduced into the problem. The database in this scenario will be a collection of stress-strain pairs that include the softening scenario. The problem examined is that of a 1D bar subjected to a body force with displacement imposed on its ends. It is expected that the body force results in strain localization in the (left end of the) bar, which depends on the mesh size when there is no regularization. See Figure \ref{1D_bar_bf}. Also, it is usually known that the accuracy of the solution obtained with the DD method depends on the resolution of the phase space by the data. Since, in the present case, the strain increments in the body is expected to be non-homogeneous as a consequence of localization effects, the resolution of the phase space might be even more critical. Thus, to prevent the possible effects of insufficient data and phase space resolution, it will be assumed that the database can be approximated by a series of piecewise affine relations. For instance, $\sigma=E \epsilon$ describes the \textit{elastic part}, $\sigma = m\epsilon + c$, the \textit{softening part}, $\sigma = E_i \epsilon$, the $i$th unloading branch. This corresponds to the case where the database size tends to infinity. In such a case, the material update can be performed analytically, as demonstrated in \ref{appx_convergence}. 
+To begin with, it is necessary to determine whether the DD algorithm results in an expected mesh dependence, as is the case with a model when there is no regularization introduced into the problem. The database in this scenario consists of a collection of stress-strain pairs that includes softening. It is well known that the accuracy of the solution obtained with the DD method depends on the resolution of the phase space by the data. Since, in the present case, the strain increments in the body is expected to be non-homogeneous due to localization effects, the resolution of the phase space might be even more critical. Thus, to mitigate the issues arising from insufficient data and phase space resolution, it will be assumed that the database can be approximated by a series of piecewise affine relations. For instance, $\sigma=E \epsilon$ describes the \textit{elastic part}, $\sigma = m\epsilon + c$, the \textit{softening part}, $\sigma = E_i \epsilon$, the $i$th unloading branch. See figure \ref{database_actual}. This corresponds to the case where the database size tends to infinity. In such a case, the material update can be performed analytically, as demonstrated in \ref{appx_convergence}. It is also important to determine if applying the DD method to softening scenario will affect the (rate of) convergence of the method. Therefore, a simplified problem will be analyzed first.
 
 \begin{figure}
 	\centering
@@ -207,9 +207,10 @@ To begin with, it is necessary to determine if the DD algorithm results in an ex
 \end{figure}
 
 
+
 \subsection{Convergence of the method and its rate}
 
-Since the problem to be analyzed implicitly contains non-convexity (though the structure of the database), it is expedient to first examine the effect of various parameters (the metric in particular) on the convergence of the method. Thus, a simplified problem will first be studied. The problem setup together with the minimization procedure will be described in appendix \ref{appx_convergence}. 
+Since the problem to be analyzed implicitly contains non-convexity (though the structure of the database), it is expedient to first examine the effect of various parameters (the metric in particular) on the convergence of the method. Thus, a simplified problem will first be studied. The problem setup together with the minimization procedure can be found in \ref{appx_convergence}. 
 
 As shown in the appendix, the rate of convergence of the method (and whether it converges at all) can be determined by analyzing the matrix $\bfC \bfA $. It has been assumed that there is no body force and that all but one elements are on the elastic (unloading) branch and only one element moves on the damage branch. This setup corresponds to picking one of several possible bifurcation states from the homogeneous state. Two cases can thus be considered (depending on the mesh size): one with a snapback and one without. 
 
@@ -312,7 +313,7 @@ Thus, it can be concluded that not only is using an optimal value for $C_2$, tog
 \end{remark}
 
 \subsection{A 1D bar with a body force}
-The problem of 1D problem subjected to a body force as in figure \ref{1D_bar_bf} will now be analyzed. The same problem will then be used to demonstrate the effect of introducing a length scale into the problem. The set of equations that govern the data driven solution can be found in the previous section. An arc-length solver will be used to capture the (possible) snapback response of the bar. The bar is meshed with piecewise linear and continuous displacement elements. The mechanical stresses are taken to be piecewise constant. The mesh size is homogeneous. The problem is examined for two mesh sizes (say $\ell_e$, $0.5 \ell_e$) to determine the effect of the mesh size on the response of the bar.
+The problem of 1D bar subjected to a body force as in figure \ref{1D_bar_bf} will now be analyzed. The same problem will then be used to demonstrate the effect of introducing a length scale into the problem. The set of equations that govern the data driven solution can be found in the previous section. An arc-length solver will be used to capture the (possible) snapback response of the bar. The bar is meshed with piecewise linear and continuous displacement elements. The mechanical stresses are taken to be piecewise constant. The mesh size is homogeneous. The problem is examined for two mesh sizes (say $\ell_e$, $0.5 \ell_e$) to determine the effect of the mesh size on the response of the bar.
 
 \begin{figure}
 	\centering
@@ -322,7 +323,7 @@ The problem of 1D problem subjected to a body force as in figure \ref{1D_bar_bf}
 
 
 
-The force at the right end of the bar vs the displacement (at the right end as well) of the bar, until complete failure (where some element in the bar is fully damaged), for the two mesh sizes can be seen in Figure \ref{force_disp_local}. The mesh dependence of the response, together with the snapback response, can be clearly seen once the \textit{damage begins to increase}. At the first step, a compressive force is developed as a consequence of the body force, which gradually becomes positive as the displacement is increased. The initial negative displacement is a consequence of the arc-length constraint that the strain increment in the left most element is equal to a certain (user specified) value. As the load is increased further, the damage initiates at the left end of the bar (just at the left end because of the applied body force). The strain and the damage localize in the element at the left end in the subsequent steps until the element undergoes a complete failure ($d=1$). A small compressive load can again be seen at the end as a consequence of the applied body force. The corresponding strain distributions, at complete failure, for the two mesh sizes can be seen in figure \ref{strain_dist_local}. The mesh dependence of the solution is obvious.
+The force at the right end of the bar vs the applied displacement until complete failure (where some element in the bar is fully damaged) for the two mesh sizes can be seen in Figure \ref{force_disp_local}. The mesh dependence of the strain distribution, together with the snapback response, can be clearly seen once the \textit{damage begins to increase}. At the first step, a compressive force is developed as a consequence of the body force, which gradually becomes positive as the displacement is increased. The initial negative displacement is a consequence of the arc-length constraint that the strain increment in the left most element is equal to a certain (user specified) value. As the load is increased further, the damage initiates at the left end (just at the left end because of the applied body force). The strain and the damage localize in the element at the left end in the subsequent steps until the element undergoes a complete failure ($d=1$). A small compressive load can again be seen at the end as a consequence of the applied body force. The corresponding strain distributions, at complete failure, for the two mesh sizes can be seen in figure \ref{strain_dist_local}. The mesh dependence of the solution is obvious.
 
 \begin{figure}[ht]
 	\begin{subfigure}{0.45\textwidth}
@@ -351,19 +352,19 @@ Thus, with the ingredients presented (the arc length solver and the choice of me
 \end{remark}
 
 \begin{remark}
-	In non DD setting, the damage problem involves minimizing a functional that is non-convex. The energy density is a function of displacement and damage, and is separately convex with respect to the two variables. Thus, the minimization is performed alternatively between the two variables to find the solution. The problem is thus \textit{convexified} in non-DD setting. This allows the minimizers to \textit{jump through} instabilities such as snapbacks under displacement control (the number of iterations needed might be higher, though). It shall be noted that using a Newton solver for non-convex minimization may lead to unconvergence \cite{Farrell2017,Gerasimov2016}.
+	In non DD setting, the damage problem involves minimizing a functional that is non-convex. The energy density is a function of displacement and damage, and is separately convex with respect to the two variables. Thus, the minimization is performed alternatively between the two variables to find the solution. The problem is thus \textit{convexified} in non-DD setting. This allows the minimizers to \textit{jump through} instabilities such as snapbacks under displacement control (the number of iterations needed might be higher, though). It shall be noted that using a Newton solver (without additional refinements) for non-convex minimization may lead to unconvergence \cite{Farrell2017,Gerasimov2016}.
 	
 	In DD setting, however, the database looks like in figure \ref{1D_bar_dam_elem} and thus, the nonconvexity is inherently contained in the database. Thus, an arclength method has been used to track the entire bifurcation branch without having to jump through. Also, it is unclear is it is indeed possible to jump through snapbacks in this case as the convexity is not specifically handled. 
 \end{remark}
 
 \section{Introduction of a length scale}
 
-In the previous section, it was demonstrated that the Data Driven algorithm with no regularization (and a \textit{local} database) results in mesh dependence of the solution (as expected). Here, the strain based Lipschitz regularization, introduced in \cite{Kamasamudram2023}, will first be developed for the Data driven case (for 1D). It will then be applied for the problem introduced in the previous section. A relaxed version of the method will then be developed and presented for the 2D case.
+In the previous section, it was demonstrated that the Data Driven algorithm with no regularization (and a \textit{local} database) results in mesh dependence of the solution (as expected). Here, the strain based Lipschitz regularization, introduced in \cite{Kamasamudram2023}, will first be developed for the Data driven case (for 1D). It will then be applied for the problem introduced in the previous section. A relaxed version of the method will then be developed and presented for the 2D case later on.
 
 \subsection{The method}
 The regularization technique was introduced in \cite{Kamasamudram2023}, where it was tested with a constitutive model. Here, it will first be extended for use with the DDCM methodology.
 
-To begin with, a length scale is introduced into the problem by restricting the gradient of the strain variable to lie in a certain interval. More precisely, it is required that $\epsilon_{,x} \in [-1/{\ell_c}, 1/{\ell_c} ]$, where $\ell_c$ is a length parameter. It is expected that the introduction of this constraint prevents the spurious strain localization and dependence of the solution on the Finite Element mesh size. 
+To begin with, a length scale is introduced into the problem by restricting the gradient of the strain variable to lie in a certain interval. More precisely, it is required that $\epsilon_{,x} \in [-1/{\ell_c}, 1/{\ell_c} ]$, where $\ell_c$ is a length parameter. It is expected that the introduction of this constraint prevents the spurious strain localization, and the dependence of the solution on the Finite Element mesh size. 
 
 
 The introduction of the Lipschitz constraint on the strain variable modifies the equation of equilibrium (in 1D) to 
@@ -376,7 +377,7 @@ Beginning with the distance functional,
 \begin{equation}
 	d(\bfeps,\bfsig,\bfeps^*,\bfsig^*) = \frac{1}{2}(\bfB \bfu - \bfeps^*)^T\mathcal{C}\bfw(\bfB \bfu - \bfeps^*) + \frac{1}{2}(\bfsig - \bfsig^*)^T\mathcal{C}^{-1}\bfw(\bfsig - \bfsig^*),
 \end{equation}
-the objective now is to see the minimizers of the above functional so that the strain field satisfies the Lipschitz constraint. As already mentioned, the Lagrange multipliers that enforce the constraint on the strain field act as couple stresses.
+the objective now is to find the minimizers of the above functional so that the strain field satisfies the Lipschitz constraint, and the stress fields satisfy the equilibrium. As already mentioned, the Lagrange multipliers that enforce the constraint on the strain field act as couple stresses.
 \begin{equation}
 	\text{Sol } \in \arg \min_{(\bfeps,\bfsig) \in \mathcal{E}, (\bfeps^*,\bfsig^*) \in \mathcal{D}} d(\bfeps,\bfsig,\bfeps^*,\bfsig^*),
 \end{equation}
@@ -387,7 +388,7 @@ where, the equilibrium manifold is now defined as (in discrete form)
 	\mathcal{E} = \{(\bfeps,\bfsig) : \bfeps = \bfB \bfu, \bfeps \text{ is such that } |\bfB' \bfeps|  \leq 1/{\ell_c} ,\bfu = \bfu_D \text{ on } \partial \Omega_d,
 	\text{ and } \bfB ^T\bfw \bfsig + \bfP^T \bflam = 0     \},
 \end{equation}
-where $\bflam$ is the Lagrange multiplier. $\bfB'$ is the discrete gradient operator on the strain variable, and $\bfP = \bfB \bfB'$ is the discrete second gradient operator. To facilitate things, the Lagrangian will be redefined as follows:
+where $\bflam$ is the Lagrange multiplier. $\bfB'$ is the discrete gradient operator on the strain variable (see figure \ref{mesh_dual_1d}), and $\bfP = \bfB \bfB'$ is the discrete second gradient operator. To facilitate things, the Lagrangian will be redefined as follows:
 \begin{equation}
 	\Pi = d(\bfeps,\bfsig,\bfeps^*,\bfsig^*) - \bfeta^T \bfB ^T \bfw\bfsig + \sum_{i=1}^{N_c} \lambda^u_i \left( (\bfP \bfu)_i - \frac{1}{\ell_c}   \right) + \sum_{i=1}^{N_c} \lambda^{\eta u}_i \left( (\bfP (\bfu + \bfeta))_i - \frac{1}{\ell_c}   \right).
 \end{equation}
@@ -414,7 +415,7 @@ The Euler Lagrange equations can be seen to be
 At convergence, $\bfeps=\bfeps^*$ and $\bfeta=0$. Thus, from equation \ref{residual_u_1D_DD}, it can be seen that $\lambda^u_i = -\lambda^{\eta u}_i$, as mentioned earlier. The equations of equilibrium can be recovered as $\bfB^T \bfw \bfsig +\bfP^T \bflam^{u} =0$, since $\bfsig = \bfsig^*$ at convergence.
 
 \subsection{Application and results}
-The regularization technique is now applied to the DDCM case tested in the previous section with no regularization. The value of $\ell_c$ is taken to be $0.1\si{\meter}$. Arc length solver has been used like in the previous case with similar loading conditions. A piecewise linear and continuous interpolation has been used for displacement and a piecewise constant for the mechanical stress. A dual mesh had been used to impose the constraint on the strain gradient. The strain is taken to be piecewise linear and continuous on the dual mesh. See figure \ref{mesh_dual_1d}. In this case, the discrete gradient operator $\bfB'$ is calculated on the dual (red) mesh.
+The regularization technique is now applied to the DDCM case tested earlier with a body force. The value of $\ell_c$ is taken to be $0.1\si{\meter}$. Arc length solver has been used like in the previous case with similar loading conditions. A piecewise linear and continuous interpolation has been used for displacement and a piecewise constant for the mechanical stress. A dual mesh had been used to impose the constraint on the strain gradient. The strain is taken to be piecewise linear and continuous on the dual mesh. See figure \ref{mesh_dual_1d}. In this case, the discrete gradient operator $\bfB'$ is calculated on the dual (red) mesh.
 
 \begin{figure}[ht]
 	\centering
@@ -443,7 +444,7 @@ The regularization technique is now applied to the DDCM case tested in the previ
 	\label{fig:Results_with_regularization}
 \end{figure}
 
-The load displacement curves and the strain distribution at failure can be seen in figures \ref{force_disp_nonlocal} and \ref{strain_dist_nonlocal} for two different mesh sizes. A couple of observations warrant a closer look. First, as discussed in \cite{Kamasamudram2023s}, the constraint shall be removed from the elements that are fully damaged to allow for the strains to localize in the fully damaged element and prevent the expansion of damage further into the body. The black dot in figure \ref{force_disp_nonlocal} corresponds to the case when the constraint is deactivated - the force displacement curve suddenly jumps to zero force. This situation is trivial in 1D, but is susceptible to cause convergence issues in 2D case \cite{geersarticle}. Second, taking a closer look at the force-displacement curve as in figure \ref{force_disp_nonlocal_zoom}, a number of smaller snapbacks can be observed. It can be explained as follows: since the regularization is introduced through an inequality constraint, and this constraint is numerically resolved with a finite mesh size, the regularization is inactive until strain localizes in the some region of the body. The strains thus grow locally till the constraint becomes active. Once activated, the constraint expands the damage zone further into the neighboring elements, where the strains again begin to localize. This process carries on until some part of the body is fully damaged. Thus, the problem switches between a local (albeit with a varying length scale) and non-local problem as the constraint is activated and the damage spreads into other elements. The snapback occurs when the strains localize and the recovery corresponds to the activation of the constraint. It can also be seen that the amplitude of this sawtooth like pattern decreases as the mesh is refined, but the number of tooth increases.
+The load displacement curves and the strain distribution at failure can be seen in figures \ref{force_disp_nonlocal} and \ref{strain_dist_nonlocal} for two different mesh sizes. A couple of observations warrant a closer look. First, as discussed in \cite{Kamasamudram2023}, the constraint shall be removed from the elements that are fully damaged to allow for the strains to localize in the fully damaged element and prevent the expansion of damage further into the body. The black dot in figure \ref{force_disp_nonlocal} corresponds to the case when the constraint is deactivated - the force displacement curve suddenly jumps to zero force. This situation is trivial in 1D, but is susceptible to cause convergence issues in 2D case. See \cite{Geers1998,Cabot2014,Le2018} and the references therein for similar discussions where the damaged regions extend across the body. Second, taking a closer look at the force-displacement curve as in figure \ref{force_disp_nonlocal_zoom}, a number of smaller snapbacks can be observed. It can be explained as follows: since the regularization is introduced through an inequality constraint, and this constraint is numerically resolved with a finite mesh size, the regularization is inactive until strain localizes in the some region of the body. The strains then grow locally till the constraint becomes active. Once activated, the constraint expands the damage zone further into the neighboring elements, where the strains again grow locally. This process carries on until some part of the body is fully damaged. Thus, the problem switches between a local (albeit with a varying length scale) and non-local problem as the constraint is activated and the damage spreads into other elements. The snapback occurs when the strains localize and the recovery corresponds to the activation of the constraint. It can also be seen that the amplitude of this sawtooth like pattern decreases as the mesh is refined, but the number of tooth increases.
 
 
 \begin{remark}
@@ -458,14 +459,16 @@ The load displacement curves and the strain distribution at failure can be seen 
 	\label{force_disp_nonlocal_zoom}
 \end{figure}
 
-Thus, in the 1D case, the regularization technique renders the result independent of the mesh size, as expected.
+Thus, in the 1D case, the proposed regularization technique ensures that the result remains independent of the mesh size, as expected. To address the challenges associated with the abrupt deactivation of the constraint once an element is fully damaged, an alternative approach is presented below for the 2D case, in which the regularization is gradually weakened as the damage increases.
 
 \section{2D Case}
 
 % This, combined with the arc-length method, would render the method tedious and expensive?? 
-As mentioned in the previous section, the strain based Lipschitz constraint introduces a length scale into the problem and renders the solution mesh independent. However, as was seen, the inequality constraint introduces a saw-tooth like pattern in the force-displacement response, which can be tedious to track. Thus, two modifications will be introduced in this section in its extension to 2D. First, the constraint will be gradually weakened as the damage level increases. Second, the inequality constraint will be replaced by a log-barrier-like function. The EL equations corresponding to the regularization technique will be derived in the appendix.
+As mentioned in the previous section, the strain based Lipschitz constraint introduces a length scale into the problem and results in a mesh independent solution. However, as was seen, the inequality constraint introduces a saw-tooth like pattern in the force-displacement response, which can be tedious to track. Also, to ensure that the damage zone does not extend across the body, the constraint (ane thus, the length scale) will have to be removed from the fully damaged regions of the body. Thus, two modifications will be introduced in this section in its extension to 2D. First, the constraint will be gradually weakened as the damage level increases. Second, the inequality constraint will be replaced by a log-barrier-like function. The EL equations corresponding to the Lagrangian can be seen later on. 
 
-In DDCM, the distance functional remains as
+The body is assumed to be triangulated by constant strain triangles, referred to as the primary mesh. Consequently, the displacement is piecewise linear and continuous across the elements, while the stress field is taken to be piecewise constant in each element. Thus, each element is associated with a single mechanical and material state. To impose the constraints on the gradient of strain, a dual mesh is introduced. The dual mesh consists of another set of constant strain triangles defined using the centroids of the triangles of the primary mesh as vertices. The strain field is then interpolated over the dual mesh in a piecewise linear manner. The gradient of strain, is thus piecewise constant over the triangles of the dual mesh.
+
+The distance functional remains as
 \begin{equation}
 	d(\bfeps,\bfsig,\bfeps^*,\bfsig^*) = \frac{1}{2}(\bfB \bfu - \bfeps^*)^T\mathcal{C}\bfw(\bfB \bfu - \bfeps^*) + \frac{1}{2}(\bfsig - \bfsig^*)^T\mathcal{C}^{-1}\bfw(\bfsig - \bfsig^*).
 \end{equation}
@@ -512,13 +515,13 @@ As in the 1D case, at convergence, $\bfeps = \bfeps^*$, and $\bfsig = \bfsig^*$.
 \end{remark}
 
 \section{Applications}
-\subsection{A 2D - 1D bar}
+\subsection{A bar with a notch}
 The regularization technique described above will be applied to the case of a 2D-1D bar as shown in figure \ref{2d_1d_bar_dims}. The left side of the bar is fixed. A horizontal displacement is applied to the right end, which is controlled by an arc-length method to be described in appendix. The displacement fields are approximated by constant-strain triangles. The strain variable is then interpolated on the dual mesh which is then used to compute the strain gradient. The geometry of the bar can be seen in figure \ref{2d_1d_bar_dims}.
 
 \begin{figure}
 	\centering
 	\includegraphics[width=\linewidth]{./Images/2d_1d_bar/2d_1d_bar.pdf}
-	\caption{Geometry of the 2D-1D bar with a notch. All dimensions are in meters.}
+	\caption{Geometry of the bar with a notch. All dimensions are in meters.}
 	\label{2d_1d_bar_dims}
 \end{figure}
 
@@ -547,7 +550,7 @@ The regularization technique described above will be applied to the case of a 2D
 		\vfill
 		\includegraphics[width=0.4\linewidth]{./Images/2d_1d_bar/cb.pdf}
 	\end{subfigure}
-	\caption{Results with regularization - A 2D-1D bar}
+	\caption{Results with regularization - A notched bar}
 	\label{2d_1d_bar_damage}
 \end{figure}
 
@@ -628,7 +631,16 @@ The regularization technique has also been applied to the case of an L-beam subj
 
 \section{Discussion}
 
-1D no length - mesh dependence - 1D strict inequality - snap back, arc length - metric - instability - 2D - arc length - mesh independence - connection with homogenization for database
+The results presented in this study highlight the critical role of the chosen metric and solver strategy in determining the convergence behavior of the data-driven (DD) algorithm. The analysis performed on the rate of convergence of the method reveals the necessity of using the \textit{tangent} as the \textit{metric} for a better rate of convergence. In some cases where some instabilities such a snapback are expected, using a good (and in fact, correct) metric is necessary to even achieve convergence. Also, it was determined using an arc length (AL) solver is also necessary in some cases to achieve convergence. The AL solver is, however, not sufficient on its own. It should be coupled with a correct value of metric. The AL solver, together with a correct metric resulted in the solution exhibiting a behavior characteristic of softening problems even in DD simulations. It shall be noted that using a tangent for metric has been discussed earlier in some studies \cite{Pham2023,Nguyen2022,Kanno2019}. However, those studies were limited to improving the rate of convergence of the method and only examine the cases where there are no instabilities. The application of DD method to a case involving a snap through can be found in \cite{Kuang2023}. The authors of that study apply the DD method to a case where an instability develops as a consequence of geometric non-linearity. The initial guess for the alternate minimization in DD algorithm is perturbed to achieve convergence. To the best of the authors' knowledge, the current article is the first instance where the importance of metric, together with the need for an AL solver is first discussed when a material instability is encountered. 
+
+
+The case of a 1D bar subjected to a body force demonstrates that finite element (FE) results exhibit mesh dependence, but in a manner consistent with what is typically observed when a constitutive model is used, provided a good metric and the arc-length (AL) method are employed. The regularization introduced in \cite{Kamasamudram2023} can also be seen to remove the mesh dependence of the solution in the DD setting. The saw tooth like pattern observed in the load displacement curves in figures 7 and 9 of \cite{Kamasamudram2023} can also be seen in the DD framework, as seen in figures \ref{force_disp_nonlocal} and \ref{force_disp_nonlocal_zoom} for two different mesh sizes. Since it has earlier been demonstrated that the DD solver lacks the ability to jump through the snap backs, it is essential that the DD solver (with AL method) track all the observed snap backs to obtain a mesh independent solution. This can be observed in the current case in the strain distributions for two mesh sizes in figure \ref{strain_dist_nonlocal} for the current case. Furthermore, it remains unclear whether applying the method without the AL method and using an incorrect metric would still yield a mesh-independent solution, even with regularization. While not explicitly reported in this article, preliminary analyses indicate that achieving convergence proves to be particularly challenging when a poor metric is used and the AL solver is omitted, especially for finer meshes.
+
+The method has then been extended to the 2D case, but after relaxing the Lipschitz constraint aiming to smoothen out or even eliminate the saw tooth pattern observed in the load displacement curve in the 1D setting.  
+
+%The convergence issues associated with using a Newton solver for on-convex problems can be seen in various references. \cite{Farrell2017} monitor the residual during the Newton iterations and resort to alternate minimization if the residual is observed to increase. The Newton method is then resumed once the solution arrives into the \textit{basin of convergence}. \cite{Gerasimov2016} propose a modified line search method where the line search parameter is allowed to take on negative values owing to the non-convexity of the energy functional. 
+
+
 
 \section{Conclusion}
 
