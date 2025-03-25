@@ -636,6 +636,9 @@ The results presented in this study highlight the critical role of the chosen me
 
 The case of a 1D bar subjected to a body force demonstrates that finite element (FE) results exhibit mesh dependence, but in a manner consistent with what is typically observed when a constitutive model is used, provided a good metric and the arc-length (AL) method are employed. The regularization introduced in \cite{Kamasamudram2023} can also be seen to remove the mesh dependence of the solution in the DD setting. The saw tooth like pattern observed in the load displacement curves in figures 7 and 9 of \cite{Kamasamudram2023} can also be seen in the DD framework, as seen in figures \ref{force_disp_nonlocal} and \ref{force_disp_nonlocal_zoom} for two different mesh sizes. Since it has earlier been demonstrated that the DD solver lacks the ability to jump through the snap backs, it is essential that the DD solver (with AL method) track all the observed snap backs to obtain a mesh independent solution. This can be observed in the current case in the strain distributions for two mesh sizes in figure \ref{strain_dist_nonlocal} for the current case. Furthermore, it remains unclear whether applying the method without the AL method and using an incorrect metric would still yield a mesh-independent solution, even with regularization. While not explicitly reported in this article, preliminary analyses indicate that achieving convergence proves to be particularly challenging when a poor metric is used and the AL solver is omitted, especially for finer meshes.
 
+
+A point of interest is that the constraint has to be removed from the elements that have fully damaged to prevent the damage region from expanding through the body. Similar issues are usually encountered in the non-local regularization techniques and have been discussed thoroughly in \cite{Geers1998,Cabot2014,Le2018} and other references therein.The common solution pursued is to evolve the length scale through the coarse of the simulation so that a proper localization is obtained. In 1D setting, deactivating the constraint in the fully damaged element ...
+
 The method has then been extended to the 2D case, but after relaxing the Lipschitz constraint aiming to smoothen out or even eliminate the saw tooth pattern observed in the load displacement curve in the 1D setting.  
 
 %The convergence issues associated with using a Newton solver for on-convex problems can be seen in various references. \cite{Farrell2017} monitor the residual during the Newton iterations and resort to alternate minimization if the residual is observed to increase. The Newton method is then resumed once the solution arrives into the \textit{basin of convergence}. \cite{Gerasimov2016} propose a modified line search method where the line search parameter is allowed to take on negative values owing to the non-convexity of the energy functional. 
@@ -820,7 +823,7 @@ where $\cc^u$ and $\cc^d$ denote the space of admissible displacements and damag
 \end{gather}
 The definition of the space $\cc^d$ ensures the irreversibility of the damage. 
 
-It is well known that the formulation just presented is devoid of any length scale and as such, the solution in the FE simulations become mesh dependent. In \cite{Kamasam}, the length scale is introduced by constraining the gradient of the strain to lie in a certain interval in 1D case. Here, the regularization will be introduced by weakening the constraint by using a log-barrier-like function. Thus, the functional to be minimized becomes
+It is well known that the formulation just presented is devoid of any length scale and as such, the solution in the FE simulations become mesh dependent. In \cite{Kamasamudram2023}, the length scale is introduced by constraining the gradient of the strain to lie in a certain interval in 1D case. Here, the regularization will be introduced by weakening the constraint by using a log-barrier-like function. Thus, the functional to be minimized becomes
 \begin{equation}
 	\Pi(u,d;\ell_c) = \int_\Omega \psi(\bfeps,d) \diff v +  \int_\Omega \hat{\psi}(\nabla \bfeps,d;\ell_c) \diff v  - W_{\ext}(\bfu) + \int_{0}^{t} D \diff t,
 \end{equation}
@@ -881,6 +884,53 @@ where $\bfLam$ is a matrix composed of the coefficients $a_i$ from equation \ref
 	\caption{Log barrier function vs quadratic functional}
 	\label{comparison_log_quadratic}
 \end{figure}
+
+
+\section{Material update}
+When the mechanical state is given, the material state can be updated analytically in the present case. 
+\subsection*{In 1D}
+In 1D, assuming that the database is represented by a model of the form $\sigma^* = m \epsilon ^*+d$, the material state is the minimizer of the following functional:
+\begin{equation}
+	\frac{(\sigma - \sigma^*)^2}{2C} + \frac{C}{2}(\epsilon - \epsilon^*)^2.	 
+\end{equation}
+
+Taking its derivative with respect to $\epsilon^*$ and equating it to zero, the material state can be seen to be
+\begin{equation}
+	\epsilon^* = \frac{m \sigma + C^2 \epsilon -md}{m^2 + C^2}.
+\end{equation}
+
+\subsection*{In 2D}
+The generating model is $\sigst_i = g(D) E_{ij} \epsst_j$. $g$ is the degradation function of the damage variable, $D$. The damage evolution in the present case is taken to be a function of strain as 
+\begin{equation}
+D = \frac{\sqrt{k \psi_0(\bfeps^*)} - \sqrt{Y_c}}{(k-1)\sqrt{Y_c}}.
+\end{equation}
+$\psi_0$ is the strain energy density. $Y_c$ and $k$ are material parameters. $g$ is then defined as
+\begin{equation}
+	g(D) = \frac{1-D}{1+(k-1)D}.
+\end{equation}
+
+The distance functional, written in index form is
+\begin{equation}
+	d(\dots) = \frac{1}{2}(\sigma-\sigma^*)_i S_{ij} (\sigma-\sigma^*)_j + \frac{1}{2} (\epsilon-\epsilon^*)_i C_{ij} (\epsilon-\epsilon^*)_j.
+\end{equation}
+The material state can then be found by minimizing the above functional with respect to $\epsilon^*$. Thus, $\parder{d}{\epsilon ^*}=0$ . This can be further developed as follows:
+\begin{equation}
+	\parder{d}{\epsilon ^*_k} = -\parder{\sigst_i}{\epsst_k} S_{ij} (\sig - \sigst)_j - \parder{\epsst_i}{\epsst_k} C_{ij}(\eps-\epsst)_j.
+\end{equation}
+Realizing that $\sigst_i = g(d) E_{ij} \epsst_j$, the derivative can be written as 
+\begin{gather}
+	\parder{\sigst_i}{\epsst_k} = g'(D) \parder{D}{\epsst_k} E_{ij} \epsst_j + g(D) E_{ij} \delta_{jk}, \\
+	= -\frac{\sqrt{k Y_c}}{2(k-1)\psi_0 \sqrt{\psi_0}} \sigsthat_i \sigsthat_k + g(D) E_{ik}.
+\end{gather}
+Thus, the equation to be resolved can be seen to be
+\begin{equation}
+	r_k = \left(\frac{\sqrt{k Y_c}}{2(k-1)\psi_0 \sqrt{\psi_0}} \sigsthat_i \sigsthat_k + g(D) E_{ik} \right) S_{ij} (\sig - \sigst)_j - \parder{\epsst_i}{\epsst_k} C_{ij}(\eps-\epsst)_j = 0.
+\end{equation}
+The above equation is non-linear and requires newton's method to solve. This needs the derivative of residual, which can be seen to be
+\begin{multline}
+	\parder{r_k}{\epsst_p} = \left\{  \frac{\sqrt{k Y_c}}{2(k-1)} \left[ \frac{ E_{kp} \sigsthat_i + \sigsthat_k E_{ip} + \sigsthat_p E_{ik} }{\psi_0 \sqrt{\psi_0}}-\frac{3}{2} \psi_0^{-5/2} \sigsthat_i \sigsthat_k \sigsthat_p \right] S_{ij} (\sig - \sigst)_j  \right\} +  \\ 
+	\left(\frac{\sqrt{k Y_c}}{2(k-1)\psi_0 \sqrt{\psi_0}} \sigsthat_i \sigsthat_k + g(D) E_{ik} \right) S_{ij} \left(\frac{\sqrt{k Y_c}}{2(k-1)\psi_0 \sqrt{\psi_0}} \sigsthat_j \sigsthat_p + g(D) E_{jp} \right) + C_{kp}.
+\end{multline}
 
 \section{Arc length constraint}
 The arc length constraint is simpler in 1D case than in 2D case as it involves selecting degrees of freedom where a certain quantity is monotone increasing. For instance, in \cite{}, the damage variables are used to write the arc length constraint. In the current case, for the 1D bar, the mechanical strain variable at the left end of the bar is chosen to impose the arc length constraint. The constraint can be expressed as
