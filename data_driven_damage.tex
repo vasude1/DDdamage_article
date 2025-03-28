@@ -900,7 +900,7 @@ Taking its derivative with respect to $\epsilon^*$ and equating it to zero, the 
 \end{equation}
 
 \subsection*{In 2D}
-The generating model is $\sigst_i = g(D) E_{ij} \epsst_j$. $g$ is the degradation function of the damage variable, $D$. The damage evolution in the present case is taken to be a function of strain as 
+The generating model is $\sigma^*_i = g(D) E_{ij} \epsilon^*_j$. $g$ is the degradation function of the damage variable, $D$. The damage evolution in the present case is taken to be a function of strain as 
 \begin{equation}
 D = \frac{\sqrt{k \psi_0(\bfeps^*)} - \sqrt{Y_c}}{(k-1)\sqrt{Y_c}}.
 \end{equation}
@@ -915,21 +915,21 @@ The distance functional, written in index form is
 \end{equation}
 The material state can then be found by minimizing the above functional with respect to $\epsilon^*$. Thus, $\parder{d}{\epsilon ^*}=0$ . This can be further developed as follows:
 \begin{equation}
-	\parder{d}{\epsilon ^*_k} = -\parder{\sigst_i}{\epsst_k} S_{ij} (\sig - \sigst)_j - \parder{\epsst_i}{\epsst_k} C_{ij}(\eps-\epsst)_j.
+	\parder{d}{\epsilon^*_k} = -\parder{\sigma^*_i}{\epsilon^*_k} S_{ij} (\sig - \sigma^*)_j - \parder{\epsilon^*_i}{\epsilon^*_k} C_{ij}(\eps-\epsilon^*)_j.
 \end{equation}
-Realizing that $\sigst_i = g(d) E_{ij} \epsst_j$, the derivative can be written as 
+Realizing that $\sigma^*_i = g(d) E_{ij} \eps^*_j$, the derivative can be written as 
 \begin{gather}
-	\parder{\sigst_i}{\epsst_k} = g'(D) \parder{D}{\epsst_k} E_{ij} \epsst_j + g(D) E_{ij} \delta_{jk}, \\
-	= -\frac{\sqrt{k Y_c}}{2(k-1)\psi_0 \sqrt{\psi_0}} \sigsthat_i \sigsthat_k + g(D) E_{ik}.
+	\parder{\sigma^*_i}{\eps^*_k} = g'(D) \parder{D}{\eps^*_k} E_{ij} \eps^*_j + g(D) E_{ij} \delta_{jk}, \\
+	= -\frac{\sqrt{k Y_c}}{2(k-1)\psi_0 \sqrt{\psi_0}} \sigma^*hat_i \sigma^*hat_k + g(D) E_{ik}.
 \end{gather}
 Thus, the equation to be resolved can be seen to be
 \begin{equation}
-	r_k = \left(\frac{\sqrt{k Y_c}}{2(k-1)\psi_0 \sqrt{\psi_0}} \sigsthat_i \sigsthat_k + g(D) E_{ik} \right) S_{ij} (\sig - \sigst)_j - \parder{\epsst_i}{\epsst_k} C_{ij}(\eps-\epsst)_j = 0.
+	r_k = \left(\frac{\sqrt{k Y_c}}{2(k-1)\psi_0 \sqrt{\psi_0}} \hat{\sigma}^*_i \hat{\sigma}^*_k + g(D) E_{ik} \right) S_{ij} (\sig - \sigma^*)_j - \parder{\epsilon^*_i}{\epsilon^*_k} C_{ij}(\eps-\epsilon^*)_j = 0.
 \end{equation}
 The above equation is non-linear and requires newton's method to solve. This needs the derivative of residual, which can be seen to be
 \begin{multline}
-	\parder{r_k}{\epsst_p} = \left\{  \frac{\sqrt{k Y_c}}{2(k-1)} \left[ \frac{ E_{kp} \sigsthat_i + \sigsthat_k E_{ip} + \sigsthat_p E_{ik} }{\psi_0 \sqrt{\psi_0}}-\frac{3}{2} \psi_0^{-5/2} \sigsthat_i \sigsthat_k \sigsthat_p \right] S_{ij} (\sig - \sigst)_j  \right\} +  \\ 
-	\left(\frac{\sqrt{k Y_c}}{2(k-1)\psi_0 \sqrt{\psi_0}} \sigsthat_i \sigsthat_k + g(D) E_{ik} \right) S_{ij} \left(\frac{\sqrt{k Y_c}}{2(k-1)\psi_0 \sqrt{\psi_0}} \sigsthat_j \sigsthat_p + g(D) E_{jp} \right) + C_{kp}.
+	\parder{r_k}{\epsilon^*_p} = \left\{  \frac{\sqrt{k Y_c}}{2(k-1)} \left[ \frac{ E_{kp} \hat{\sigma}^*_i + \hat{\sigma}^*_k E_{ip} + \hat{\sigma}^*_p E_{ik} }{\psi_0 \sqrt{\psi_0}}-\frac{3}{2} \psi_0^{-5/2} \hat{\sigma}^*_i \hat{\sigma}^*_k \hat{\sigma}^*_p \right] S_{ij} (\sig - \sigma^*)_j  \right\} +  \\ 
+	\left(\frac{\sqrt{k Y_c}}{2(k-1)\psi_0 \sqrt{\psi_0}} \hat{\sigma}^*_i \hat{\sigma}^*_k + g(D) E_{ik} \right) S_{ij} \left(\frac{\sqrt{k Y_c}}{2(k-1)\psi_0 \sqrt{\psi_0}} \hat{\sigma}^*_j \hat{\sigma}^*_p + g(D) E_{jp} \right) + C_{kp}.
 \end{multline}
 
 \section{Arc length constraint}
