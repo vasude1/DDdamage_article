@@ -1,5 +1,5 @@
 %\documentclass[12pt,twoside,letterpaper]{article}
-\documentclass[11pt]{elsarticle}
+\documentclass[10pt]{elsarticle}
 \usepackage{geometry} % Load the geometry package
 
 % Set the margins
@@ -22,6 +22,8 @@
 \usepackage{xcolor}
 \usepackage{siunitx}
 \usepackage{caption}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
 \usepackage{subcaption} % For subfigures
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.17}
@@ -215,7 +217,7 @@ Since the problem to be analyzed implicitly contains non-convexity (though the s
 As shown in the appendix, the rate of convergence of the method (and whether it converges at all) can be determined by analyzing the matrix $\bfC \bfA $. It has been assumed that there is no body force and that all but one elements are on the elastic (unloading) branch and only one element moves on the damage branch. This setup corresponds to picking one of several possible bifurcation states from the homogeneous state. Two cases can thus be considered (depending on the mesh size): one with a snapback and one without. 
 
 \subsubsection*{No snapback}
-No snapback occurs when the mesh size and hence, the localization length, is big enough. Thus, a direct displacement control has been used. In such a case, the assumptions made above (regarding the elements belonging to the loading and unloading branches) are valid and the analysis in the appendix can be used to judge the rate of convergence. The analysis has been performed by setting $N=10, E=100, m=-0.0667, c=100.0667$. When $C_1=C_2=E$, the spectral radius of the matrix $\bfC \bfA $ in equation \ref{combined_equn} has been found to be $0.993$. However, when $C_2=m$, the spectral radius decreased to $0.5$. This indicates that the number of iterations needed for convergence, which is considered to have occurred when the distance functional is sufficiently small, depends on the value of the parameter $C_2$.
+No snapback occurs when the mesh size and hence, the localization length, is big enough. Thus, a direct displacement control has been used. In such a case, the assumptions made above (regarding the elements belonging to the loading and unloading branches) are valid and the analysis in the appendix can be used to judge the rate of convergence. The analysis has been performed by setting $N=10, E=100, m=-7.1428, c=107.142$. When $C_1=C_2=E$, the spectral radius of the matrix $\bfC \bfA $ in equation \ref{combined_equn} has been found to be $0.993$. However, when $C_2=m$, the spectral radius decreased to $0.5$. This indicates that the number of iterations needed for convergence, which is considered to have occurred when the distance functional is sufficiently small, depends on the value of the parameter $C_2$.
 
 The successive mechanical and material states for the elements on the elastic and damage branch, stating from the \textit{yield point}, can be seen in figures \ref{bad_metric_no_snap} and \ref{good_metric_no_snap} for the two cases $C_2=E$ and $C_2=m$, respectively. Since the spectral radius for the case $C_2=E$ is very close to $1$, the successive iterates can be seen very close to each other. Consequently, the mechanical and material states remain far apart. In contrast, when $C_2=m$, the mechanical and material states approach each other much faster, and the solution converges within just 7 iterations. For $C_2=E$, since the successive material states are very close to each other, convergence will be judged to have occurred if the criterion for convergence based on the change of successive material states is used (and this is the criterion used traditionally). It shall also be noted that in the case $C_2=E$, the (mechanical) strain changes for the elements on the elastic and the damage branch point in the same direction (positive) as the external load (also positive). But when $C_2=m$, the sign of the strain change for the element on the damage branch is same as the external load, while for the element on the elastic branch, it is the opposite. Thus, when $C_2=E$, the system favors the homogeneous branch of the solution.
 
@@ -313,7 +315,7 @@ Thus, it can be concluded that not only is using an optimal value for $C_2$, tog
 \end{remark}
 
 \subsection{A 1D bar with a body force}
-The problem of 1D bar subjected to a body force as in figure \ref{1D_bar_bf} will now be analyzed. The same problem will then be used to demonstrate the effect of introducing a length scale into the problem. The set of equations that govern the data driven solution can be found in the previous section. An arc-length solver will be used to capture the (possible) snapback response of the bar. The bar is meshed with piecewise linear and continuous displacement elements. The mechanical stresses are taken to be piecewise constant. The mesh size is homogeneous. The problem is examined for two mesh sizes (say $\ell_e$, $0.5 \ell_e$) to determine the effect of the mesh size on the response of the bar.
+The problem of 1D bar subjected to a body force as in figure \ref{1D_bar_bf} will now be analyzed. The same problem will then be used to demonstrate the effect of introducing a length scale into the problem. The set of equations that govern the data driven solution can be found in the previous section. An arc-length solver will be used to capture the (possible) snapback response of the bar. The bar is meshed with piecewise linear and continuous displacement elements. The mechanical stresses are taken to be piecewise constant. The mesh size is homogeneous. The problem is examined for two mesh sizes (say $\ell_e$, $0.5 \ell_e$) to determine the effect of the mesh size on the response of the bar. The database and the corresponding material parameters are same as the ones used to perform the convergence analysis earlier.
 
 \begin{figure}
 	\centering
@@ -413,6 +415,34 @@ The Euler Lagrange equations can be seen to be
 \end{gather}
 
 At convergence, $\bfeps=\bfeps^*$ and $\bfeta=0$. Thus, from equation \ref{residual_u_1D_DD}, it can be seen that $\lambda^u_i = -\lambda^{\eta u}_i$, as mentioned earlier. The equations of equilibrium can be recovered as $\bfB^T \bfw \bfsig +\bfP^T \bflam^{u} =0$, since $\bfsig = \bfsig^*$ at convergence.
+
+
+\begin{algorithm}
+	\begin{algorithmic}
+		\State Given $\sigma^n, \epsilon^n, \sigst^n, \epsst^n,\Delta \epsilon$ 
+		\State Determine $\sigma^{n+1}, \epsilon^{n+1}, \sigst^{n+1}, \epsst^{n+1}$ 
+		\State $i \gets 1$, $\sigst_{0} = \sigst^{n}, \epsst_{0}= \epsst^{n}$
+		\While{Not Converged} 
+			\Procedure{Mechanical update}{$\sigst_{i-1}, \epsst_{i-1},$Tangent}
+			\State Resolve the Euler Lagrange equations
+			\State \Return $\sigma_{i}, \epsilon_{i}$
+			\EndProcedure
+			\Procedure{Material update}{$\sigma_{i}, \epsilon_{i}$}
+				\State Find the closest point on the elastic branch, equation \ref{elastic_branch_material_state}: $\sigst_e,\epsst_e$
+				\State Find the closest point on the damage branch, equation \ref{damage_branch_material_state}: $\sigst_d,\epsst_d$
+				\If{d($\sigma_{i}, \epsilon_{i},\sigst_e,\epsst_e$) $<$ d($\sigma_{i}, \epsilon_{i},\sigst_d,\epsst_d$)}
+					\State \Return $\sigst_e,\epsst_e$, Elastic tangent
+				\Else
+					\State \Return $\sigst_e,\epsst_e$, Damage tangent
+				\EndIf
+			\EndProcedure
+			\State $i \gets i+1$
+		\EndWhile 
+		\State $n \gets n+1$
+	\end{algorithmic}
+	\caption{The DD algorithm}\label{alg:the_dd_algorithm}
+\end{algorithm}
+
 
 \subsection{Application and results}
 The regularization technique is now applied to the DDCM case tested earlier with a body force. The value of $\ell_c$ is taken to be $0.1\si{\meter}$. Arc length solver has been used like in the previous case with similar loading conditions. A piecewise linear and continuous interpolation has been used for displacement and a piecewise constant for the mechanical stress. A dual mesh had been used to impose the constraint on the strain gradient. The strain is taken to be piecewise linear and continuous on the dual mesh. See figure \ref{mesh_dual_1d}. In this case, the discrete gradient operator $\bfB'$ is calculated on the dual (red) mesh.
@@ -647,7 +677,7 @@ The method has then been extended to the 2D case, but after relaxing the Lipschi
 
 \section{Conclusion}
 
-\bibliography{library}
+
 
 \appendix
 
@@ -889,18 +919,22 @@ where $\bfLam$ is a matrix composed of the coefficients $a_i$ from equation \ref
 \section{Material update}
 When the mechanical state is given, the material state can be updated analytically in the present case. 
 \subsection*{In 1D}
-In 1D, assuming that the database is represented by a model of the form $\sigma^* = m \epsilon ^*+d$, the material state is the minimizer of the following functional:
+In 1D, assuming that the database is represented by a model of the form $\sigma^* = m \epsilon ^*+c$, the material state is the minimizer of the following functional:
 \begin{equation}
 	\frac{(\sigma - \sigma^*)^2}{2C} + \frac{C}{2}(\epsilon - \epsilon^*)^2.	 
 \end{equation}
 
 Taking its derivative with respect to $\epsilon^*$ and equating it to zero, the material state can be seen to be
 \begin{equation}
-	\epsilon^* = \frac{m \sigma + C^2 \epsilon -md}{m^2 + C^2}.
+	\epsilon^* = \frac{m \sigma + C^2 \epsilon -mc}{m^2 + C^2}, \quad \sigst = m \epsst+c. \label{damage_branch_material_state}
+\end{equation}
+The point on the elastic branch can be found by simply using $m=E, c=0$ in the above equation.
+\begin{equation}
+	\epsilon^* = \frac{E \sigma + C^2 \epsilon}{E^2 + C^2}, \quad \sigst = E \epsst. \label{elastic_branch_material_state}
 \end{equation}
 
 \subsection*{In 2D}
-The generating model is $\sigma^*_i = g(D) E_{ij} \epsilon^*_j$. $g$ is the degradation function of the damage variable, $D$. The damage evolution in the present case is taken to be a function of strain as 
+The generating model is $\sigst_i = g(D) E_{ij} \epsst_j$. $g$ is the degradation function of the damage variable, $D$. The damage evolution in the present case is taken to be a function of strain as 
 \begin{equation}
 D = \frac{\sqrt{k \psi_0(\bfeps^*)} - \sqrt{Y_c}}{(k-1)\sqrt{Y_c}}.
 \end{equation}
@@ -915,21 +949,21 @@ The distance functional, written in index form is
 \end{equation}
 The material state can then be found by minimizing the above functional with respect to $\epsilon^*$. Thus, $\parder{d}{\epsilon ^*}=0$ . This can be further developed as follows:
 \begin{equation}
-	\parder{d}{\epsilon^*_k} = -\parder{\sigma^*_i}{\epsilon^*_k} S_{ij} (\sig - \sigma^*)_j - \parder{\epsilon^*_i}{\epsilon^*_k} C_{ij}(\eps-\epsilon^*)_j.
+	\parder{d}{\epsilon ^*_k} = -\parder{\sigst_i}{\epsst_k} S_{ij} (\sig - \sigst)_j - \parder{\epsst_i}{\epsst_k} C_{ij}(\eps-\epsst)_j.
 \end{equation}
-Realizing that $\sigma^*_i = g(d) E_{ij} \eps^*_j$, the derivative can be written as 
+Realizing that $\sigst_i = g(d) E_{ij} \epsst_j$, the derivative can be written as 
 \begin{gather}
-	\parder{\sigma^*_i}{\eps^*_k} = g'(D) \parder{D}{\eps^*_k} E_{ij} \eps^*_j + g(D) E_{ij} \delta_{jk}, \\
-	= -\frac{\sqrt{k Y_c}}{2(k-1)\psi_0 \sqrt{\psi_0}} \sigma^*hat_i \sigma^*hat_k + g(D) E_{ik}.
+	\parder{\sigst_i}{\epsst_k} = g'(D) \parder{D}{\epsst_k} E_{ij} \epsst_j + g(D) E_{ij} \delta_{jk}, \\
+	= -\frac{\sqrt{k Y_c}}{2(k-1)\psi_0 \sqrt{\psi_0}} \sigsthat_i \sigsthat_k + g(D) E_{ik}.
 \end{gather}
 Thus, the equation to be resolved can be seen to be
 \begin{equation}
-	r_k = \left(\frac{\sqrt{k Y_c}}{2(k-1)\psi_0 \sqrt{\psi_0}} \hat{\sigma}^*_i \hat{\sigma}^*_k + g(D) E_{ik} \right) S_{ij} (\sig - \sigma^*)_j - \parder{\epsilon^*_i}{\epsilon^*_k} C_{ij}(\eps-\epsilon^*)_j = 0.
+	r_k = \left(\frac{\sqrt{k Y_c}}{2(k-1)\psi_0 \sqrt{\psi_0}} \sigsthat_i \sigsthat_k + g(D) E_{ik} \right) S_{ij} (\sig - \sigst)_j - \parder{\epsst_i}{\epsst_k} C_{ij}(\eps-\epsst)_j = 0.
 \end{equation}
 The above equation is non-linear and requires newton's method to solve. This needs the derivative of residual, which can be seen to be
 \begin{multline}
-	\parder{r_k}{\epsilon^*_p} = \left\{  \frac{\sqrt{k Y_c}}{2(k-1)} \left[ \frac{ E_{kp} \hat{\sigma}^*_i + \hat{\sigma}^*_k E_{ip} + \hat{\sigma}^*_p E_{ik} }{\psi_0 \sqrt{\psi_0}}-\frac{3}{2} \psi_0^{-5/2} \hat{\sigma}^*_i \hat{\sigma}^*_k \hat{\sigma}^*_p \right] S_{ij} (\sig - \sigma^*)_j  \right\} +  \\ 
-	\left(\frac{\sqrt{k Y_c}}{2(k-1)\psi_0 \sqrt{\psi_0}} \hat{\sigma}^*_i \hat{\sigma}^*_k + g(D) E_{ik} \right) S_{ij} \left(\frac{\sqrt{k Y_c}}{2(k-1)\psi_0 \sqrt{\psi_0}} \hat{\sigma}^*_j \hat{\sigma}^*_p + g(D) E_{jp} \right) + C_{kp}.
+	\parder{r_k}{\epsst_p} = \left\{  \frac{\sqrt{k Y_c}}{2(k-1)} \left[ \frac{ E_{kp} \sigsthat_i + \sigsthat_k E_{ip} + \sigsthat_p E_{ik} }{\psi_0 \sqrt{\psi_0}}-\frac{3}{2} \psi_0^{-5/2} \sigsthat_i \sigsthat_k \sigsthat_p \right] S_{ij} (\sig - \sigst)_j  \right\} +  \\ 
+	\left(\frac{\sqrt{k Y_c}}{2(k-1)\psi_0 \sqrt{\psi_0}} \sigsthat_i \sigsthat_k + g(D) E_{ik} \right) S_{ij} \left(\frac{\sqrt{k Y_c}}{2(k-1)\psi_0 \sqrt{\psi_0}} \sigsthat_j \sigsthat_p + g(D) E_{jp} \right) + C_{kp}.
 \end{multline}
 
 \section{Arc length constraint}
@@ -1001,8 +1035,8 @@ In 2D case, the method is slightly involved. The aim is to identify the degrees 
 %	r_{\lambda^{\eta u}_i} = \bfP (\bfu + \bfeta) )_i^T \bfLam (\bfP (\bfu + \bfeta))_i - \frac{1}{\ell_c^2}  =0. 
 %\end{gather}
 %
-
-\bibliography{data_driven_damage}
+\bibliography{library}
+%\bibliography{data_driven_damage}
 \end{document}
 %%% Local Variables: 
 %%% mode: latex
