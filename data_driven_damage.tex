@@ -515,7 +515,7 @@ The factors $ w_i'$ denotes the area of the dual elements and is thus similar to
 	\Pi  = d -\bfeta ^T \bfB^T \bfw \bfsig - \mu \sum_{i=1}^{N_c} \
 	w_i' \ln s_u{_i} + \mu \sum_{i=1}^{N_c} \
 	w_i' \ln s_\eta{_i} +\sum_{i=1}^{N_c} \lambda_u^ i \left\{ s_u{_i}  - \left[ \frac{1}{\ell_c}- g(d_i)\psi_i(\bfu) \right]  \right\} \\
-	+\sum_{i=1}^{N_c} \lambda_\eta^ i \left\{ s_\eta{_i}  - \left[ \frac{1}{\ell_c}-g(d_i) \psi_i(\bfu+\bfeta) \right]  \right\},
+	+\sum_{i=1}^{N_c} \lambda_\eta^ i \left\{ s_\eta{_i}  - \left[ \frac{1}{\ell_c}-g(d_i) \psi_i(\bfu+\bfeta) \right]  \right\}, \label{lagrangian_interior_point}
 \end{multline}
 where $g$ is a function such that $g(0)=1$ and $g(1)=0$. The function $\psi$ is defined, similar to in \cite{Mindlin1968}, as 
 \begin{equation}
@@ -584,6 +584,8 @@ The regularization technique described above will be applied to the case of a 2D
 	\label{2d_1d_bar_damage}
 \end{figure}
 
+The material parameters used to generate the database for this problem are $E = 210E9, \nu = 0.3, Y_c = 2E6, k=10, \ell_c = 0.5$, see \ref{app_mat_update}. The parameter $\mu = 2E6$ in equation \ref{lagrangian_interior_point}.
+
 Figure \ref{2d_1d_bar_damage} shows the damage distribution attached to the material states associated with each element. The results are for three mesh sizes, where the ratio of element sizes of the coarse mesh to the intermediate mesh, and of the intermediate mesh to the fine mesh is 2. The variation of damage value across the center of the bar, from $(0.08,0.01)$ to $(0.12,0.01)$, where the origin is at the bottom left corner of the bar, can be seen in figure \ref{1D_comparison_x}. Force-displacement curves for all the three mesh sizes can be seen in figure \ref{1D_force_displacement}. 
 
 \begin{figure}[h]
@@ -605,7 +607,7 @@ It can be seen that in all the cases, the results are independent of the mesh si
 
 \subsection{L Beam}
 
-The regularization technique has also been applied to the case of an L-beam subjected to a vertical displacement. It is fixed horizontally at its bottom end and the applied displacement is again determined through the arc length method.
+The regularization technique has also been applied to the case of an L-beam subjected to a vertical displacement. It is fixed horizontally at its bottom end and the applied displacement is again determined through the arc length method. The material parameters used to generate the database for this problem are $E = 210E9, \nu = 0, Y_c = 2E6, k=10, \ell_c = 1$, see \ref{app_mat_update}. The parameter $\mu = 2E6$ in equation \ref{lagrangian_interior_point}.
 
 
 
@@ -916,7 +918,7 @@ where $\bfLam$ is a matrix composed of the coefficients $a_i$ from equation \ref
 \end{figure}
 
 
-\section{Material update}
+\section{Material update\label{app_mat_update}}
 When the mechanical state is given, the material state can be updated analytically in the present case. 
 \subsection*{In 1D}
 In 1D, assuming that the database is represented by a model of the form $\sigma^* = m \epsilon ^*+c$, the material state is the minimizer of the following functional:
