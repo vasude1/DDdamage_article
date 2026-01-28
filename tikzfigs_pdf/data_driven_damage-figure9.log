@@ -1,4 +1,4 @@
-This is LuaHBTeX, Version 1.14.0 (TeX Live 2022/dev/Debian)  (format=lualatex 2024.11.15)  12 SEP 2025 15:17
+This is LuaHBTeX, Version 1.14.0 (TeX Live 2022/dev/Debian)  (format=lualatex 2024.11.15)  12 SEP 2025 15:03
  system commands enabled.
 **\def\tikzexternalrealjob{data_driven_damage}\input{data_driven_damage}
 Lua module: luaotfload 2021-05-21 3.18 Lua based OpenType font support
@@ -102,8 +102,7 @@ File: luatex.def 2021/06/01 v1.2c Graphics/color driver for luatex
 \@enLab=\toks18
 \@sep=\skip49
 \@@sep=\skip50
-(./tikzfigs_pdf/data_driven_damage-figure8.spl) (/usr/share/texlive/texmf-dist/
-tex/latex/natbib/natbib.sty
+(/usr/share/texlive/texmf-dist/tex/latex/natbib/natbib.sty
 Package: natbib 2010/09/13 8.31b (PWD, AO)
 \bibhang=\skip51
 \bibsep=\skip52
@@ -112,7 +111,7 @@ LaTeX Info: Redefining \cite on input line 694.
 )
 \splwrite=\write3
 
-\openout3 = tikzfigs_pdf/data_driven_damage-figure8.spl
+\openout3 = tikzfigs_pdf/data_driven_damage-figure9.spl
 \appnamewidth=\dimen144
 ) (/usr/share/texlive/texmf-dist/tex/latex/geometry/geometry.sty
 Package: geometry 2020/01/02 v5.9 Page Geometry
@@ -734,7 +733,7 @@ Package: nth 2002/02/27
 ) (./conco.tex)
 Package translations Info: No language package found. I am going to use `englis
 h' as default language. on input line 56.
-No file tikzfigs_pdf/data_driven_damage-figure8.aux.
+No file tikzfigs_pdf/data_driven_damage-figure9.aux.
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 56.
 LaTeX Font Info:    ... okay on input line 56.
 LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 56.
@@ -1294,7 +1293,10 @@ The command '\includegraphics [width=0.9\textwidth ]{./Images/L/damage_fine.pdf
 .
 The command '\includegraphics [width=0.4\linewidth ]{./Images/L/cb.pdf}' has be
 en optimized away. Use '/tikz/external/optimize=false' to disable this.
-(./tikz_figs/L_comparison_y.tex
+(./tikz_figs/L_comparison_y_0p08.tex
+A tikzpicture has been optimized away. Use '/tikz/external/optimize=false' to d
+isable this.
+) (./tikz_figs/L_comparison_y_0p12.tex
 A tikzpicture has been optimized away. Use '/tikz/external/optimize=false' to d
 isable this.
 )
@@ -1302,108 +1304,108 @@ The command '\includegraphics []{./Images/L/force_displacement.pdf}' has been o
 ptimized away. Use '/tikz/external/optimize=false' to disable this.
 
 Package natbib Warning: Citation `Pham2023' on page 9 undefined on input line 6
-66.
+75.
 
 
 Package natbib Warning: Citation `Nguyen2022' on page 9 undefined on input line
- 666.
+ 675.
 
 
 Package natbib Warning: Citation `Kanno2019' on page 9 undefined on input line 
-666.
+675.
 
 
 Package natbib Warning: Citation `Kuang2023' on page 9 undefined on input line 
-666.
+675.
 
 
 Package natbib Warning: Citation `Kamasamudram2023' on page 9 undefined on inpu
-t line 669.
+t line 678.
 
 
 Package natbib Warning: Citation `Kamasamudram2023' on page 9 undefined on inpu
-t line 669.
+t line 678.
 
 
 LaTeX Warning: Reference `force_disp_nonlocal' on page 9 undefined on input lin
-e 669.
+e 678.
 
 
 LaTeX Warning: Reference `force_disp_nonlocal_zoom' on page 9 undefined on inpu
-t line 669.
+t line 678.
 
 
 LaTeX Warning: Reference `strain_dist_nonlocal' on page 9 undefined on input li
-ne 669.
+ne 678.
 
 
 Package natbib Warning: Citation `Geers1998' on page 9 undefined on input line 
-672.
+681.
 
 
 Package natbib Warning: Citation `Cabot2014' on page 9 undefined on input line 
-672.
+681.
 
 
-Package natbib Warning: Citation `Le2018' on page 9 undefined on input line 672
+Package natbib Warning: Citation `Le2018' on page 9 undefined on input line 681
 .
 
 
-LaTeX Warning: Reference `1D_bar_dam_elem' on page 9 undefined on input line 68
-7.
+LaTeX Warning: Reference `1D_bar_dam_elem' on page 9 undefined on input line 69
+6.
 
 The command '\includegraphics [scale=1.2]{1D_bar_dam_elem.pdf}' has been optimi
 zed away. Use '/tikz/external/optimize=false' to disable this.
 
-LaTeX Warning: Reference `onedarclength' on page 10 undefined on input line 769
+LaTeX Warning: Reference `onedarclength' on page 10 undefined on input line 778
 .
 
 
-LaTeX Warning: Reference `combined_equn' on page 11 undefined on input line 836
+LaTeX Warning: Reference `combined_equn' on page 11 undefined on input line 845
 .
 
 
 Package natbib Warning: Citation `Mielke2005' on page 11 undefined on input lin
-e 847.
+e 856.
 
 
 Package natbib Warning: Citation `Nguyen1975' on page 11 undefined on input lin
-e 847.
+e 856.
 
 
 Package natbib Warning: Citation `Kamasamudram2023' on page 11 undefined on inp
-ut line 858.
+ut line 867.
 
 
 LaTeX Warning: Reference `Total_potential_energy_model' on page 12 undefined on
- input line 875.
+ input line 884.
 
 
 LaTeX Warning: Reference `equilibruim_in_index' on page 12 undefined on input l
-ine 884.
+ine 893.
 
 
 Package natbib Warning: Citation `Mindlin and Toupin' on page 12 undefined on i
-nput line 896.
+nput line 905.
 
 
 Package natbib Warning: Citation `Moes and Chevaugeon' on page 12 undefined on 
-input line 899.
+input line 908.
 
 
-LaTeX Warning: Reference `energy_constraint_gradient' on page 12 undefined on i
-nput line 911.
+LaTeX Warning: Reference `energy_constraint_gradient' on page 13 undefined on i
+nput line 920.
 
 (./tikz_figs/comparison_log_quadratic.tex
-\openout5 = tikzfigs_pdf/data_driven_damage-figure8.dpth
+\openout5 = tikzfigs_pdf/data_driven_damage-figure9.dpth
  [13
 
 {/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}])
 
 LaTeX Warning: Reference `app_damage_tangent' on page 14 undefined on input lin
-e 971.
+e 980.
 
-No file tikzfigs_pdf/data_driven_damage-figure8.bbl.
+No file tikzfigs_pdf/data_driven_damage-figure9.bbl.
 
 Package natbib Warning: There were undefined citations.
 
@@ -1413,13 +1415,13 @@ LaTeX Warning: There were undefined references.
 )
 
 Here is how much of LuaTeX's memory you used:
- 33534 strings out of 477805
+ 33540 strings out of 477805
  100000,2373549 words of node,token memory allocated
  849 words of node memory still in use:
    6 hlist, 2 vlist, 2 rule, 2 glue, 4 kern, 1 glyph, 89 attribute, 58 glue_spec
 , 89 attribute_list, 2 write nodes
-   avail lists: 2:2428,3:1591,4:88,5:454,6:55,7:8432,8:93,9:880,10:19,11:616
- 53057 multiletter control sequences out of 65536+600000
+   avail lists: 2:2508,3:1601,4:88,5:454,6:59,7:8620,8:93,9:900,10:19,11:616
+ 53060 multiletter control sequences out of 65536+600000
  65 fonts using 4451751 bytes
  103i,21n,93p,2081b,2417s stack positions out of 5000i,500n,10000p,200000b,80000s
 </usr/share/texmf/fonts/opentype/public/lm/lmroman10-regular.otf></usr/share/tex
@@ -1427,7 +1429,7 @@ live/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/texlive/te
 xmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/share/texlive/texmf-dist
 /fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/share/texlive/texmf-dist/fonts/ty
 pe1/public/amsfonts/cm/cmsy10.pfb>
-Output written on tikzfigs_pdf/data_driven_damage-figure8.pdf (1 page, 41834 byt
+Output written on tikzfigs_pdf/data_driven_damage-figure9.pdf (1 page, 41834 byt
 es).
 
 PDF statistics: 34 PDF objects out of 1000 (max. 8388607)
