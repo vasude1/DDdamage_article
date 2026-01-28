@@ -1,0 +1,27 @@
+plt.clf()
+plt.close()
+f,a = plt.subplots(1,1)
+c,f,a = ddprob.mech.mesh.plotScalarField(ddprob.mat.d[:], fig =f, ax = a, showmesh =0)
+a.set_xlim(-0.006, 0.006)
+# a.set_ylim(ymin, ymax)
+f.colorbar(c)
+plt.gca().set_aspect('equal', adjustable='box')
+f.savefig(respath+'/dam.pdf',dpi=300, bbox_inches='tight', pad_inches=0)
+Traceback (most recent call last):
+
+  Cell In[1], line 1
+    plt.clf()
+
+NameError: name 'plt' is not defined
+
+
+Fx.insert(0,0)
+
+uimp.insert(0,0)
+
+data = list(zip(uimp, Fx))
+
+with open(respath+"/data.dat", "w") as f:
+    for xi, yi in data:
+        f.write(f"{xi} {yi}\n")
+        
