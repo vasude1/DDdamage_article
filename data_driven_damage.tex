@@ -263,7 +263,7 @@ The matrix $\bfA  \bfC $ remains unsymmetric with $C_2=m$, but still possesses r
 	When $C_2 = E$, the initial mechanical strain increment for the elements on the elastic and softening branch are in the same direction. If the elements are not restricted to lie on their corresponding branches during the course of iterations, the system will thus favor the homogeneous branch of the solution, since starting from iteration $2$, the nearest points for the material state of the elements in red lie on the damage branch. See Figure \ref{bad_metric_no_snap}. Choosing $C_2=m$ will let the system continue on the existing bifurcation branch as presented in Figure \ref{good_metric_no_snap}. Taking $C_2 = E$ is thus likely to cause the solution to revert from the bifurcated path to the homogeneous one, an outcome that is undesirable when the objective is to capture localized damage evolution. This will be of considerable importance in 2D, as shown later.
 \end{remark}
 
-\begin{figure}[htb]
+\begin{figure}
 	\begin{subfigure}{0.45\textwidth}
 		\centering
 		\includegraphics[scale=0.6]{./conv_figs/bad_metric_no_snap.pdf}
@@ -281,7 +281,7 @@ The matrix $\bfA  \bfC $ remains unsymmetric with $C_2=m$, but still possesses r
 \end{figure}
 
 
-\begin{figure}[ht!]
+\begin{figure}
 		\centering
 		\includegraphics[scale=0.8]{./conv_figs/bad_metric_no_snap_zoom.pdf}
 	\caption{Zoom in of the first few iterations from Figure \ref{bad_metric_no_snap}.\label{bad_metric_no_snap_zoom}}
@@ -318,7 +318,7 @@ When $C_2=m$, the path taken by the successive iterates are presented in Figure 
 
 As presented in Figure \ref{bad_metric_snap_arc_length}, if $C_2=E$, the mechanical strain change for both the elements point in the same direction. In subsequent iterations, the same material state is selected for the element on the elastic branch (as it has restricted to remain on the elastic branch in the current case to study the bifurcated solution). As a result, the distance functional stagnates at a high value and does not change anymore regardless of the number of iterations. However, when $C_2=m$, not only is the rate of convergence optimal, but also the algorithm converges, and to the correct solution. This stresses the importance of using an arc-length solver when expecting snapback instabilities in the DDCM paradigm. Not using the proper hyper-parameter - arc-length combination may result in an artificial widening of the damage zone even without any regularization, as a consequence of the trajectories followed by the mechanical and material states during the mechanical and the material updates. Similar conclusions about the rate of convergence (and whether it converges) can be drawn even if the starting point is further down the damage branch. This case has been presented in Appendix \ref{different_starting_point}.
 
-\begin{figure}[t!]
+\begin{figure}
 	\begin{subfigure}{0.45\textwidth}
 		\centering
 		\includegraphics[scale=0.6]{./conv_figs/bad_metric_snap_arc_length.pdf}
@@ -533,7 +533,7 @@ The problem of 1D bar subjected to a body force as in Figure \ref{1D_bar_bf} wil
 
 The force at the right end of the bar vs the applied displacement until complete failure (where some element in the bar is fully damaged) for the two mesh sizes is presented in Figure \ref{force_disp_local}. The mesh dependence of the strain distribution, together with the snapback response, can be clearly seen once the \textit{damage begins to increase}. At the first step, a compressive force is developed as a consequence of the body force, which gradually becomes positive as the displacement is increased. The initial negative displacement is a consequence of the arc-length constraint that the strain increment in the left most element is equal to a certain (user specified) value. As the load is increased further, the damage initiates at the left end (just at the left end because of the applied body force). The strain and the damage localize in the element at the left end in the subsequent steps until the element undergoes a complete failure ($d=1$). A small compressive load can again be seen at the end as a consequence of the applied body force. The corresponding strain distributions, at complete failure, for the two mesh sizes can be seen in figure \ref{strain_dist_local}. The mesh dependence of the solution is obvious. Using appropriate values for the hyper-parameters, together with the arc-length solver accurately captures the snapback response of the bar, mesh dependence of the solution, and follows the expected bifurcation branch.
 
-\begin{figure}[ht]
+\begin{figure}
 	\begin{subfigure}{0.49\textwidth}
 		\centering
 		\input{./tikz_figs/force_disp_local.tex}
@@ -564,7 +564,7 @@ The results obtained for the damage profile at the center section of the bar in 
 
 
 
-\begin{figure}[h]
+\begin{figure}
 	\centering
 	\begin{subfigure}{0.19\textwidth}
 		\centering
@@ -600,7 +600,7 @@ The results obtained for the damage profile at the center section of the bar in 
 	\caption{Damage distribution without regularization. (a) Damaged elastic modulus used for hyper-parameter and no arc-length (AL), (b) Tangent modulus used for hyper-parameter and no AL, (c) Tangent modulus used for hyper-parameter with AL solver, (d) Fine mesh - Tangent modulus used for hyper-parameter and no AL, (e) Fine mesh - Tangent modulus used for hyper-parameter with AL solver  \textcolor{red}{which load level?}\label{conv_check_2D}}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}
 	\centering
 	\includegraphics[scale=0.8]{Images/conv_check/comparison_conv_check.pdf}
 	\caption{Load - displacement response for the bar with a notch. AL stands for Arc Length. Elastic - no AL corresponds to case (a), Tangent - no AL corresponds to case (b), AL corresponds to case (c), AL - fine corresponds to case (e) of Figure \ref{conv_check_2D}. \label{comparison_conv_check}}
