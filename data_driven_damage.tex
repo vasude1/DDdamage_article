@@ -1,5 +1,5 @@
 %\documentclass[12pt,twoside,letterpaper]{article}
-\documentclass[10pt]{cas-sc}
+\documentclass[8pt]{cas-sc}
 % \usepackage[authoryear,longnamesfirst]{natbib}
 %\documentclass{a4paper,article}
 \def\tsc#1{\csdef{#1}{\textsc{\lowercase{#1}}\xspace}}
@@ -19,6 +19,8 @@
 \usepackage{graphics}
 \usepackage{graphicx}
 \usepackage{xcolor}
+\usepackage{geometry}
+\geometry{legalpaper, margin=0.6in}
 \usepackage{siunitx}
 \usepackage{caption}
 \usepackage{algorithm}
@@ -92,11 +94,11 @@
 \cortext[cor1]{Corresponding author}
 
 \begin{abstract}
-Data-driven computational mechanics enables the direct use of material databases within finite element analysis through an alternate minimization of a constitutive distance between mechanical and material states. This work investigates the behavior of this algorithm in the presence of damage-induced softening and resulting snapback instabilities. By analytically prescribing the material response, database discretization effects are eliminated and the algorithmic behavior is isolated. The results show that tangent-consistent hyper-parameters and arc-length continuation are essential to achieve convergence and to follow post-peak response. A regularization strategy introducing an intrinsic length scale is then proposed and its effectiveness and implications are demonstrated through one- and two-dimensional numerical examples.
+Data-driven computational mechanics enables the direct use of material databases within finite element analysis through an alternate minimization between mechanical and material states. This work investigates the behavior of this algorithm in the presence of damage-induced softening and snapback instabilities. By analytically prescribing the material response, database discretization effects are eliminated and the algorithmic behavior is isolated. The results show that tangent-consistent hyper-parameters and arc-length continuation are essential to achieve convergence and to follow post-peak response. A regularization strategy introducing an intrinsic length scale is then proposed and its effectiveness and implications are demonstrated through one- and two-dimensional numerical examples.
 \end{abstract}
 
 \begin{keywords}
-	P
+	Data-Driven \sep Damage Mechanics \sep Instabilities \sep Regularization \sep Softening
 \end{keywords}
 
 
@@ -120,7 +122,7 @@ Data-driven computational mechanics enables the direct use of material databases
 
 The paradigm of Data-Driven Computational Mechanics (DDCM) was introduced in \cite{Kirchdoerfer2016} as an alternative to classical constitutive modeling, replacing explicit material laws with a database of stress-strain pairs obtained, for instance, from experiments or multiscale simulations. In this framework, the solution of the boundary value problem is obtained by minimizing a distance functional defined between admissible mechanical states and material data. While the original work focused on linear elasticity, the approach has since been extended to inelastic problems, including plasticity and viscoelasticity \cite{Eggersmann2019}, as well as to non-standard continua \cite{Karapiperis2021a}. For higher-dimensional problems and for history-dependent materials, the application of DDCM requires specialized data structures and sampling strategies, which have been investigated in \cite{Dandin2024,Rocha2025}.
 
-Regularization plays a crucial role in DDCM, particularly when localization phenomena occur. In \cite{Karapiperis2021a}, DDCM was employed to predict the onset of shear bands in granular materials, and mesh-size dependence was mitigated by modeling the material as a Cosserat medium. This approach introduces additional kinematic variables, together with a corresponding database for higher-order stresses and strains. While effective for shear-dominated problems, such regularization strategies are known to be inadequate for situations where shear is not the dominant deformation mode, such as mode-I crack propagation \textcolor{red}{[ref?]}. This limitation motivates the exploration of alternative regularization strategies within the DDCM framework, especially for fracture and damage problems.
+Regularization plays a crucial role in DDCM, particularly when localization phenomena occur. In \cite{Karapiperis2021a}, DDCM was employed to predict the onset of shear bands in granular materials, and mesh-size dependence was mitigated by modeling the material as a Cosserat medium. This approach introduces additional kinematic and kinetic variables, together with a corresponding database for higher-order stresses and strains. While effective for shear-dominated problems, such regularization strategies are known to be inadequate for situations where shear is not the dominant deformation mode, such as mode-I crack propagation \textcolor{red}{(see Section 7.3 of \cite{sluys1994wave})}. This limitation motivates the exploration of alternative regularization strategies within the DDCM framework, especially for fracture and damage problems.
 
 The application of DDCM to fracture has been explored in several studies. In \cite{Carrara2020}, fracture was modeled using a database relating energy release rate to crack length, with the crack evolution predicted through a data-driven minimization procedure; this approach was later extended to rate-dependent fracture in \cite{Carrara2021}. More recently, \cite{Ulloa2024} combined DDCM with damage mechanics, introducing a micromorphic regularization to achieve mesh-independent predictions. In this setting, a length scale is incorporated through strain gradients, leading to the appearance of couple stresses, as commonly encountered in higher-order continuum theories \cite{Mindlin1968,Xia1996}. Consequently, the material database and the distance functional must be extended to include Cauchy stress-couple stress and strain-strain gradient pairs. This increases the dimensionality of the material phase space, which may lead to increased difficulties in sampling the database. The algorithmic behavior of such formulations in the presence of damage-induced instabilities remains largely unexplored.
 
@@ -128,7 +130,7 @@ Damage and fracture problems are often characterized by strong non-convexities a
 
 Another important aspect influencing the performance of DDCM algorithms is the choice of hyper-parameters, particularly the metric used in the distance functional. Previous works have shown that an appropriate choice of metric can significantly accelerate convergence. In \cite{Pham2023}, a locally linear reconstruction of the material database was used to define an effective local material response, while \cite{Nguyen2022} demonstrated, using a truss example, that optimal convergence rates are obtained when the metric is chosen consistently with the tangent stiffness inferred from the database. These studies, however, focus on elastic-plastic or nonlinear elastic problems, for which the DDCM formulation remains well behaved. In such cases, the choice of metric primarily affects the rate of convergence. As will be shown in this work, the situation is fundamentally different in the presence of damage-induced non-convexity: here, the choice of hyper-parameters can critically influence not only the convergence rate but also whether the DDCM algorithm converges at all, and whether the obtained solution is physically meaningful.
 
-Combining these considerations and building directly on \cite{Kamasamudram2023}, the objective of the present article can be established as follows. First, it is essential to analyze the alternate minimization procedure employed in the DDCM setting when softening effects are present. This, in turn, requires a suitable description of the material database incorporating softening behavior. Unlike \cite{Ulloa2024}, the present study assumes the availability of a database containing only classical stress-strain pairs, for instance obtained from experiments or lower-scale simulations that capture softening phenomena \cite{nguyen2010existence,nguyen2012enhanced,Nguyen2019}. Regularization will be introduced separately from the material database. The database is assumed to be stored in a form that appropriately accounts for irreversibility effects; the specific data structures required for this purpose are not addressed here and can be found in \cite{Eggersmann2021a,Dandin2024}. At the same time, it is well recognized that the performance of DDCM algorithms depends on the resolution of the material phase space, and that their sensitivity to database size remains largely unexplored in the presence of softening and instability phenomena. To isolate algorithmic effects from database discretization issues, throughout this article, the material response is therefore described implicitly through an underlying constitutive model, corresponding to an infinitely dense database without noise, while the solution is still obtained by minimizing the data-driven distance functional with respect to the mechanical and the material states.
+Combining these considerations and building directly on \cite{Kamasamudram2023}, the objective of the present article can be established as follows. First, it is essential to analyze the alternate minimization procedure employed in the DDCM setting when softening effects are present. This, in turn, requires a suitable description of the material database incorporating softening behavior. Unlike \cite{Ulloa2024}, the present study assumes the availability of a database containing only classical stress-strain pairs, for instance obtained from experiments or lower-scale simulations that capture softening phenomena \cite{nguyen2010existence,nguyen2012enhanced,Nguyen2019}. Regularization will be introduced separately from the material database. The database is assumed to be stored in a form that appropriately accounts for irreversibility effects; the specific data structures required for this purpose are not addressed here and can be found in \cite{Eggersmann2021a,Dandin2024}. At the same time, it is well recognized that the performance of DDCM algorithms depends on the resolution of the material phase space, and that their sensitivity to database size remains largely unexplored in the presence of softening and instability phenomena. To isolate algorithmic effects from database discretization issues, throughout this article, the material response is therefore described implicitly through an underlying constitutive model, while the solution is still obtained by minimizing the data-driven distance functional with respect to the mechanical and the material states.
 
 The article proceeds incrementally and the objectives of this work are:
 \begin{itemize}
@@ -141,54 +143,53 @@ The article proceeds incrementally and the objectives of this work are:
 The remainder of this article is organized as follows. First, the DDCM algorithm is briefly reviewed. A one-dimensional example is then introduced to analyze convergence properties in the presence of damage-induced non-convexity. Subsequently, the proposed regularization strategy is presented and extended to two-dimensional problems, followed by numerical examples illustrating the performance of the method.
 
 \section{Data driven solver}
-In this section, the data driven solver \cite{Kirchdoerfer2016} will be introduced briefly. For this purpose, the notions of mechanical and material states are first introduced. A stress-strain state, $(\sigma,\epsilon)$, is called a mechanical state if the stress state, $\sigma$, satisfies the conditions of equilibrium and the strain state, $\epsilon$, satisfies the compatibility conditions with a displacement field satisfying the Dirichlet boundary conditions. At each point in the body, the material state, $(\sigma^*,\epsilon^*)$, belongs to the material manifold, $\mathcal{D}$, typically obtained from experiments or from simulations performed at lower scales. The equilibrium and compatibility manifold is defined as 
+In this section, the data driven solver \cite{Kirchdoerfer2016} will be introduced briefly. For this purpose, the notions of mechanical and material states are first introduced. A stress-strain pair, $(\sigma,\epsilon)$, constitutes a mechanical state if the stress state, $\sigma$, satisfies equilibrium and the strain state, $\epsilon$, satisfies the compatibility, and the displacement fields satisfy the Dirichlet boundary conditions. At each point in the body, the material state, $(\sigma^*,\epsilon^*)$, belongs to the material manifold, $\mathcal{D}$, typically obtained from experiments or from simulations performed at lower scales. The equilibrium and compatibility manifold is defined as 
 \begin{equation}
 	\mathcal{E} = \{ (\sigma,\epsilon) \text{ }|\text{ } \sigma,\epsilon \text{ are sufficiently smooth, } \divop \sigma = 0 \text{ and } \epsilon=\sym\nabla u, u=u_D \text{ on } \partial \Omega_d  \}.
 \end{equation}
 The solution is sought as the intersection of the two manifolds.
 \begin{equation}
-	\text{Sol} \in \mathcal{D} \cap \mathcal{E}.
+	{\rm Sol} \in \mathcal{D} \cap \mathcal{E}.
 \end{equation}
-In case where the material behavior is defined by a discrete collection of stress-strain pairs, a strict intersection may not exist between the two manifolds. In such a case, the solution is sought as the pair of mechanical-material states that are closest to each other with respect to a certain distance. In discrete case (such as in Finite Element Method, where each element or integration point in the mesh is associated with a pair of mechanical and material states), the distance is defined as  
+In cases where the material behavior is defined by a discrete collection of stress-strain pairs, a strict intersection may not exist between the two manifolds. In such a case, the solution is sought as the mechanical-material states that are closest to each other with respect to a certain distance. In discrete case (such as in Finite Element Method, where each element in the mesh is associated with a pair of mechanical and material states), the distance is defined as  
 \begin{equation}
 	d(\bfeps,\bfsig,\bfeps^*,\bfsig^*) = \frac{1}{2}(\bfeps - \bfeps^*)^T\mathcal{C} \bfw(\bfeps - \bfeps^*) + \frac{1}{2}(\bfsig - \bfsig^*)^T\mathcal{C}^{-1}\bfw(\bfsig - \bfsig^*), \label{distance_func_orig}
 \end{equation}
-where $\bfw$ is vector containing the areas of elements or integration weights, and $\mathcal{C}$ is a hyper-parameter, typically positive definite. Arrays $\bfeps,\bfsig,\bfeps^*, \bfsig^* \in \mathbb{R}^{3M}$ in 2D, $M$ denotes the number of elements or of integration points, and $\bfw \in \mathbb{R}^{3M}$. Product $\bfw \bfsig$ thus indicates an element-wise operation. The discrete equilibrium manifold is defined as  
+where $\bfw$ is vector containing the areas of elements, and $\mathcal{C}$ is a hyper-parameter. $\bfeps,\bfsig,\bfeps^*, \bfsig^* \in \mathbb{R}^{3N}$ in 2D, $N$ denotes the number of elements, and $\bfw \in \mathbb{R}^{3N}$. $\bfw \bfsig$ thus indicates an element-wise operation. The discrete equilibrium manifold is defined as  
 \begin{equation}
 	\mathcal{E} = \{ (\bfsig,\bfeps) \quad | \bfB^T \bfw\bfsig = \boldsymbol{0} \text{ and } \bfeps=\bfB \bfu, \bfu=\bfu_D \text{ on } \partial \Omega_d  \}.
 \end{equation}
-In the above, $\bfB \in \mathbb{R}^{3M\times 2N}$ denotes the discrete strain-displacement operator, $\bfu \in \mathbb{R}^{2N}$ is the displacement vector, with $N$ the number of nodes. Thus, the solution is the minimizer of the distance functional:
+In the above, $\bfB \in \mathbb{R}^{3N\times 2N}$ denotes the discrete strain-displacement operator, $\bfu \in \mathbb{R}^{2N}$ is the displacement vector. Thus, the solution is the minimizer of the distance functional.
 \begin{equation}
-	\text{Sol} \in \arg \min d(\bfeps,\bfsig,\bfeps^*,\bfsig^*) \text{ } \stoper \text{ } (\bfsig , \bfeps) \in  \mathcal{E} \text{ and } (\bfsig^* , \bfeps^*) \in  \mathcal{D}.
+	{\rm Sol} \in \arg \min d(\bfeps,\bfsig,\bfeps^*,\bfsig^*) \text{ } \stoper \text{ } (\bfsig , \bfeps) \in  \mathcal{E} \text{ and } (\bfsig^* , \bfeps^*) \in  \mathcal{D}.
 \end{equation}
 The minimization can be carried out by imposing the constraints using Lagrange multipliers. The minimization process is divided into mechanical and material updates \cite{Kirchdoerfer2016}. During the mechanical update, the material states, denoted by the asterisked quantities are held fixed. The minimization is carried out wrt the mechanical states. During the material update, the mechanical states are held fixed and the minimization is carried out wrt material states, typically element wise.
 The corresponding Euler Lagrange equations during the mechanical update can be seen to be:
-%
+
 \begin{gather}
 	\bfB^T \mathcal{C}\bfw \bfB \bfu = \bfB^T \mathcal{C}\bfw \bfeps^*, \label{disp_equation_normaldd}\\
 	\bfsig - \bfsig^* =  \mathcal{C} \bfB \bfeta, \\
 	\bfB^T \bfw\bfsig = \mathbf{0}.
 \end{gather}
-%
+
 The last two of the above equations are combined and written as 
 \begin{equation}
  \bfB^T \bfw\mathcal{C} \bfB \bfeta = \bfB^T \bfw\bfsig^*. \label{eta_equation_normaldd}
 \end{equation}
-Lagrange multipliers $\bfeta$ are treated as the perturbation on the displacement field and so are taken as $\bf0$ on the Dirichlet boundary (where balance equations are enforced through reactions). Equation \eqref{eta_equation_normaldd} is used to obtain the remaining degrees of freedom.
+$\bfeta$ is treated as the perturbation on the displacement field and so is taken as $\bf0$ on the Dirichlet boundary. Equation \ref{eta_equation_normaldd} is used to obtain the remaining degrees of freedom.
 
-The material update in the DD framework is performed at each element or inegration point by searching for the state in the material database that is nearest to the current mechanical state. This step can be significantly optimized by employing specialized data structures for database storage and search, as discussed in \cite{Eggersmann2021}. The mechanical and the material updates are performed repeatedly until convergence. Refinement of the database ultimately leads to the convergence of the DD solution to the corresponding model-based solution \cite{Conti2018}.
+The material update in the DD framework is performed at each Gauss point by searching for the point in the material database that is nearest to the current mechanical state. This step can be significantly optimized by employing specialized data structures for database storage and search, as discussed in \cite{Eggersmann2021}. The mechanical and the material updates are performed repeatedly until convergence. Refinement of the database ultimately leads to the convergence of the DD solution to the corresponding model-based solution \cite{Conti2018}.
 
+Applications of DDCM to problems involving progressive damage and fracture are characterized by strong non-convexities arising from material softening. In conventional, model-based formulations, these non-convexities are typically handled through alternating minimization schemes that exploit the separate convexity of the energy functional with respect to displacement and damage fields, even in the presence of snapback. In contrast, the DD approach bypasses explicit constitutive modeling and embeds material nonlinearity implicitly through the material database. While it is known that DD solutions converge to their model-based counterparts in the limit of an infinitely rich database, the behavior of DD algorithms in the presence of damage-induced non-convexity and softening remains largely unexplored.
 
-The present study focuses on extending the DDCM paradigm to problems involving progressive damage and fracture. Such problems are characterized by strong non-convexities arising from material softening. In conventional, model-based formulations, these non-convexities are typically handled through alternating minimization schemes that exploit the separate convexity of the energy functional with respect to displacement and damage fields, even in the presence of snapback. In contrast, the DD approach bypasses explicit constitutive modeling and embeds material nonlinearity implicitly through the material database. While it is known that DD solutions converge to their model-based counterparts in the limit of an infinitely rich database, the behavior of DD algorithms in the presence of damage-induced non-convexity and softening remains largely unexplored.
-
-To investigate these effects in a controlled setting where the material phase space discretization effects are removed, the present work adopts a constitutive model-informed data-driven framework. \textbf{Instead of relying on a finite and potentially poorly sampled database, the material update is performed using a known constitutive relation, which acts as an implicit, infinitely rich database}. At each material point, the stress-strain pair is obtained through an analytical or numerical minimization of the data-driven distance functional subject to the constitutive relation. This approach is equivalent to a DD computation with an infinite dataset and eliminates errors associated with insufficient sampling of the material phase space. As a result, it allows the fundamental algorithmic challenges of applying DD mechanics based alternate minimization strategy to damage and fracture, particularly those related to non-convexity, softening, and convergence, to be isolated and examined.
+To investigate these effects in a controlled setting where the material phase space discretization effects are removed, the present work adopts a constitutive model-informed data-driven framework. Instead of relying on a finite and potentially poorly sampled database, the material update is performed using a known constitutive relation, which acts as an implicit, infinitely rich database. At each material point, the stress-strain pair is obtained through an analytical or numerical minimization of the data-driven distance functional subject to the constitutive relation. This approach is equivalent to a DD computation with an infinite dataset and eliminates errors associated with insufficient sampling of the material phase space. As a result, it allows the fundamental algorithmic challenges of applying DD mechanics based alternate minimization strategy to damage and fracture, particularly those related to non-convexity, softening, and convergence, to be isolated and examined.
 
 Subsequently, a 1D problem without any regularization is considered first. The underlying constitutive model for the material database will allow a simple analysis of the 1D problem in various cases. Following this, the demonstration will be extended to the 2D case, with a regularization technique introduced later on. 
 
 \section{Algorithmic robustness and convergence analysis}
 In this section, the DD algorithm described above is first applied to a one-dimensional problem to investigate the behavior of a material undergoing damage. In conventional simulations based on constitutive models without an intrinsic length scale, damage is known to localize within a single element, leading to pronounced mesh dependence as the localization width decreases with mesh refinement. To obtain mesh-objective results, such models typically introduce a length scale, for instance through gradients of strain or damage. For consistency, the DD algorithm should exhibit similar qualitative behavior: in the absence of an intrinsic length scale, its predictions should likewise depend on the mesh size, localizing in a single element, under appropriate loading and initial conditions.
 
-However, since the DD solution is obtained through the minimization of a distance functional, with non-convexity embedded directly in the material database, it is not a priori clear whether damage will localize within a single element. This possibility is examined in the following discussion using a data-driven formulation in which the material behavior is provided implicitly by a local damage model. As noted at the end of the previous section, the material update is performed directly using the analytical expression of the constitutive model, as detailed in Appendix \ref{app_mat_update}. Briefly, at each integration point, the material update is performed as
+However, since the DD solution is obtained through the minimization of a distance functional, with non-convexity embedded directly in the material database, it is not a priori clear whether damage will localize within a single element. This possibility is examined in the following discussion using a data-driven formulation in which the material behavior is provided implicitly by a local damage model. As noted at the end of the previous section, the material update is performed directly using the analytical expression of the constitutive model, as detailed in Appendix \ref{app_mat_update}. Briefly, at each Gauss point, the material update is performed as
 \begin{equation}
 	(\epsst,\sigst) = \arg \min_{(\tilde{\epsst},\tilde{\sigst})} d(\bfeps,\bfsig,\tilde{\epsst},\tilde{\sigst}) \quad \text{   s.t.   }\quad \tilde{\sigst}=f(\tilde{\epsst}),
 \end{equation}
@@ -196,28 +197,28 @@ where $f$ is the constitutive model that relates the material stresses and strai
 \begin{equation}
 	\parder{}{\tilde{\epsst}} \tilde{d}(\tilde{\epsst},f(\tilde{\epsst});\bfeps,\bfsig  )    =0,
 \end{equation}
-where $ \tilde{d}(\tilde{\epsst},f(\tilde{\epsst});\bfeps,\bfsig )  = d(\bfeps,\bfsig,\tilde{\epsst},\tilde{\sigst})$.
-The mechanical update is left as is. The overall algorithm is presented in Algorithm \ref{alg:the_dd_algorithm}, see below.
+where $ \tilde{d}(\tilde{\epsst},f(\tilde{\epsst});\bfeps,\bfsig )  = d(\bfeps,\bfsig,\tilde{\epsst},\tilde{\sigst})$
+The mechanical update is left as is. The overall algorithm has been presented in Algorithm \ref{alg:the_dd_algorithm}, explained later.
 
-The constitutive model, serving here as an implicit database, is represented by a set of piecewise affine relations: $\sigma = E\epsilon$ for the elastic regime, $\sigma = m\epsilon + c$ ($m<0$) for the softening regime, and $\sigma = E_i \epsilon$ for the $i$th unloading branch (see Figure \ref{database_actual}). The mechanical and material updates are presented in \ref{appx_convergence}.
+The constitutive model, serving here as an implicit database, is represented by a set of piecewise affine relations: $\sigma = E\epsilon$ for the elastic regime, $\sigma = m\epsilon + c$ ($m<0$) for the softening regime, and $\sigma = E_i \epsilon$ for the $i$th unloading branch (see Figure \ref{database_actual}). The mechanical and material updates are presented in Appendix \ref{appx_convergence}.
 
-With this setting, the following analysis demonstrates that the convergence and correctness of the DD alternate minimization algorithm in the presence of damage-induced non-convexity hinge on two essential ingredients: the choice of hyper-parameters employed during the updates, and the use of a continuation strategy capable of traversing snapbacks. These conclusions are established using a one-dimensional bar problem, which permits a complete analytical characterization of the associated fixed-point operator and isolates algorithmic effects from geometric or sampling artifacts.
+With this setting, the following analysis demonstrates that the convergence and correctness of the DD alternate minimization algorithm in the presence of damage-induced non-convexity hinge on two essential ingredients: the choice of hyper-parameters employed during the updates, and the use of a continuation strategy capable of traversing snapback. These conclusions are established using a one-dimensional bar problem, which permits a complete analytical characterization of the associated fixed-point operator and isolates algorithmic effects from geometric or sampling artifacts.
 
 \subsection{Convergence of the method and its rate\label{conv_method_rate}}
 
 Since a rigorous convergence proof of the DD algorithm in the presence of damage-induced non-convexity is currently unavailable, an algorithmic analysis will be performed based on representative one-dimensional configurations. The study focuses on identifying the mechanisms governing convergence, loss of convergence, and branch selection under softening. 
 %While different loading controls and initial conditions are considered, the results consistently reveal the same underlying behavior, allowing general conclusions to be drawn without reliance on case-specific features.
 
-Consider the case where the element in the middle is on the damage branch and the rest of the elements unload on the elastic branch. See Figure \ref{1D_bar_dam_elem}. It is the intent to check the effect of the hyper-parameters in the data driven case on the (rate of) convergence of the solution in this case. If the material behavior is described by a local damage model (or sometimes even with a non-local model), a snapback is expected in the load displacement response of the body in some scenarios, depending on the mesh size, and the regularization length, when present. Two cases can thus be considered : one with a snapback and one without. In either case, the stress state is homogeneous in the entire bar as a consequence of equilibrium. The strain is localized in the element undergoing damage (in blue in Figure \ref{1D_bar_dam_elem}), while the other elements (in red) are unloading. Thus, the mechanical state of the bar is described by a scalar stress $\sigma \in \mathbb{R}$ and strains $\epsilon_1, \epsilon_2 \in \mathbb{R}$ ($\epsilon_1$ for the undamaged elements and $\epsilon_2$ for the damaged element). The corresponding material states are defined as $(\epsilon_1^*, \sigma_1^*) \in \mathbb{R}^{1\times 1}$ for the elements in red and $(\epsilon_2^*, \sigma_2^*) \in \mathbb{R}^{1\times 1}$ for the element in blue. The displacement at the right end of the bar is given as $u_D$ and the left end is fixed. The distance function in this is given by 
+Consider the case where the element in the middle stays on the damage branch and the rest of the elements unload on the elastic branch. See Figure \ref{1D_bar_dam_elem}. The objective is to evaluate the effect of hyper-parameters on the convergence rate of the data-driven solution. If the material behavior is described by a local damage model (or sometimes even with a non-local model), a snapback is expected in the load displacement response of the body in some scenarios, depending on the mesh size, and the regularization length, when present. Two cases can thus be considered : one with a snapback and one without. In either case, the stress state is homogeneous in the entire bar as a consequence of equilibrium. The strain is localized in the element undergoing damage (in purple in Figure \ref{1D_bar_dam_elem}), while the other elements (in teal) are unloading. Thus, the mechanical state of the bar is described by a scalar stress $\sigma \in \mathbb{R}$ and strains $\epsilon_1, \epsilon_2 \in \mathbb{R}$ ($\epsilon_1$ for the undamaged elements and $\epsilon_2$ for the damaged element). The corresponding material states are defined as $(\epsilon_1^*, \sigma_1^*) \in \mathbb{R}^{1\times 1}$ for the elements in teal and $(\epsilon_2^*, \sigma_2^*) \in \mathbb{R}^{1\times 1}$ for the element in purple. The displacement at the right end of the bar is given as $u_D$ and the left end is fixed. The distance function in this is given by 
 \begin{equation}
-	d(\sigma,\sigma_1^*,\sigma_2^*,\epsilon_1,\epsilon_2,\epsilon_1^*,\epsilon_2^*;u_D) = \frac{N_1 \ell_e}{2} \left[ \frac{(\sigma - \sigma_1^*)^2}{C_1} +  C_1(\epsilon_1 - \epsilon_1^*)^2 \right] + \frac{\ell_e}{2}  \left[ \frac{(\sigma - \sigma_2^*)^2}{C_2} +  C_2(\epsilon_2 - \epsilon_2^*)^2 \right]. \label{1D_short_dist_func}
+	d(\sigma,\sigma_1^*,\sigma_2^*,\epsilon_1,\epsilon_2;u_D) = \frac{N \ell_e}{2} \left[ \frac{(\sigma - \sigma_1^*)^2}{C_1} +  C_1(\epsilon_1 - \epsilon_1^*)^2 \right] + \frac{\ell_e}{2}  \left[ \frac{(\sigma - \sigma_2^*)^2}{C_2} +  C_2(\epsilon_2 - \epsilon_2^*)^2 \right]. \label{1D_short_dist_func}
 \end{equation}
-The compatibility condition is $N_1 \epsilon_1 + \epsilon_2 = u_D/\ell_e$, $\ell_e$ is the element length, $C_1,C_2$ are the hyper-parameters for the undamaged and damaged elements, respectively, and the number of elements is $N_1+1$. Introducing the compatibility condition into equation \eqref{1D_short_dist_func}, Euler-Lagrange equations corresponding to the mechanical update can be obtained by setting the appropriate variations to $0$. In the current case, Euler-Lagrange equations can be obtained for material updates as well by setting $d_{, \epsilon_1^*}=0$ and $d_{, \epsilon_2^*}=0$.
+The compatibility condition is $N \epsilon_1 + \epsilon_2 = u_D/\ell_e$, $\ell_e$ is the element length, $C_1,C_2$ are the hyper-parameters for the undamaged and damaged elements, respectively, and the number of elements is $N+1$. Introducing the compatibility condition into equation \ref{1D_short_dist_func}, Euler-Lagrange equations corresponding to the mechanical update can be obtained by setting the appropriate variations to $0$. In the current case, Euler-Lagrange equations can be obtained for material updates as well by setting $d_{, \epsilon_1^*}=0$ and $d_{, \epsilon_2^*}=0$.
 
 \begin{figure}
 	\centering
-	\includegraphics[width=\linewidth]{1D_bar_dam_elem.pdf}
-	\caption{1D bar with damaged element\label{1D_bar_dam_elem}}
+	\includegraphics[width=0.8\linewidth]{1D_bar_dam_elem.pdf}
+	\caption{1D bar with damaged element \textcolor{red}{and the associated elastic and damage branches.} \label{1D_bar_dam_elem}}
 \end{figure}
 
 Defining $\bfa = [\epsilon_1,\epsilon_2,\sigma]^T$, $\bfb = [\epsilon^*_1,\epsilon^*_2,\sigma^*_1,\sigma^*_2]^T$, as shown in Appendix \ref{appx_convergence}, the mechanical and the material updates with in a load increment can be written concisely as 
@@ -229,7 +230,7 @@ where $\bfA,\bfC,\bfc,\bfd$ are parameters defined in Appendix \ref{appx_converg
 \begin{equation}
 	\bfa^{i+1} =  \bfA  \bfC	\bfa^{i} + \bff.\label{comb_update_short}
 \end{equation}
-At convergence, $\bfa^{i+1} \approx \bfa^{i} \approx \bfa$, where $\bfa$ is the exact solution. Defining the error at step $i$ as $\bfe^i = \bfa^{i} - \bfa$, the errors at successive iterations can be related, using equation \eqref{comb_update_short}, as
+At convergence, $\bfa^{i+1} \approx \bfa^{i} \approx \bfa$, where $\bfa$ is the exact solution. Defining the error at step $i$ as $\bfe^i = \bfa^{i} - \bfa$, the errors at successive iterations can be related, using equation \ref{comb_update_short}, as
 \begin{equation}
 	\bfe^{i+1} =  \bfA  \bfC	\bfe^{i}.
 \end{equation}
@@ -238,53 +239,51 @@ Thus the rate of convergence of the method (and whether it converges at all) can
 \begin{figure}
 	\centering
 	\includegraphics[scale=0.9]{./conv_figs/legend.pdf}
-	\caption{Mechanical and material states, with transitions \textcolor{red}{something missing???}}\label{conv_figs_legend}
+	\caption{\textcolor{red}{Legend for the mechanical and the material states and the transition between them for the 1D problem. On the $\sigma - \epsilon$ plane, the mechanical states $(\epsilon,\sigma)$ are indicated by red crosses and the transition between them by dashed lines. The material states $(\epsilon^*,\sigma^*)$ are indicated by blue circles and the transition between them by dash-dotted lines. This legend is used throughout the section \ref{conv_method_rate}.}  \label{conv_figs_legend}}
 \end{figure}
 
-With this framework, the 1D bar in Figure \ref{1D_bar_dam_elem} will now be analyzed for various cases . It will be assumed that the solution at some load step $n$ is known. The external load $u_D$ is then varied. The intent is to find the solution to the 1D problem, given the state at step $n$, under the new loading condition. For this purpose, the trajectory of the mechanical and the material states followed by the elements on corresponding branches within the mechanical-material minimization process of the DD algorithm will be presented on a $\sigma-\epsilon$ space. As represented in Figure \ref{conv_figs_legend}, the mechanical states are represented by an asterisk ($\ast$) and the material states by a circle ($\circ$). Within a DD iteration, the transition between the elements on the elastic branch are indicated by a dashed arrow and that on the softening branch by a dash-dotted arrow.
+With this framework, the 1D bar in Figure \ref{1D_bar_dam_elem} will now be analyzed for various cases . It will be assumed that the solution at some load step $n$ is known. The external load $u_D$ is then varied. The intent is to find the solution to the 1D problem, given the state at step $n$, under the new loading condition. For this purpose, the trajectory of the mechanical and the material states followed by the elements on corresponding branches within the mechanical-material minimization process of the DD algorithm will be presented on a $\sigma-\epsilon$ space. As represented in Figure \ref{conv_figs_legend}, the mechanical states are represented by a cross (x) and the material states by a circle ($\circ$). Within a DD iteration, the transition between the elements on the elastic branch are indicated by a dashed arrow and that on the softening branch by a dash-dotted arrow.
 
 For all the cases considered below, the material parameters are taken as $ E=100, m=-7.1428, c=107.142$. The initial mechanical and material states are taken as $\sig=\sig_1^*=\sig_2^*=99.95,\eps_1=\eps_1^* =0.9995,\eps_2=\eps_2^* =1.007$. This state corresponds to points that are just below the cusp of the damage initiation point. For the purpose of the analytical convergence study presented in this subsection, elements are temporarily restricted to remain on their respective solution branches (elastic unloading or softening). It is thus expected that the damage level in the blue elements continues to increase while the rest of the elements undergo unloading along the elastic branch. This restriction is introduced solely to isolate the fixed-point properties of the DD alternating minimization near a given bifurcated solution and does not reflect an assumption of the general DD algorithm. In particular, branch restriction is removed in subsequent examples, where the method is allowed to select material states freely.
 
 \subsubsection*{Behavior without snapback under displacement control}
-A snapback is not expected to occur when the mesh size, and hence the localization length, is \textit{big enough}. This is the case when $N_1=10$. Direct displacement control can be used in this case. Thus, the new applied displacement is taken as $u_D=1.0104$. The solution evolution is continuous. 
+A snapback is not expected to occur when the mesh size, and hence the localization length, is \textit{large enough}. This is the case when $N=10$. Direct displacement control can be used in this case. The new applied displacement is taken as $u_D=1.0104$. The solution evolution is continuous. 
 
-For the first case, $C_1,C_2$ are taken equal to $E$. The successive iterates for this case, computed from equations \eqref{mat_update_short} and \eqref{mech_update_short}, are presented in Figure \ref{bad_metric_no_snap}. The zoom-in of the first few iterations is presented in Figure \ref{bad_metric_no_snap_zoom}. At the first iteration, the mechanical states for all the elements move towards the damage branch. During the subsequent iterations, the mechanical states corresponding to the elements on the elastic branch return back, while the state of the element on the softening branch continues to go further along the branch. With increasing iteration count, the iterates on the elastic branch become progressively closer to one another, and the same behavior is observed for the damage branch. At some point, successive iterates can no longer be distinguished in Figure \ref{bad_metric_no_snap}, even though the mechanical and the material states are still further apart and the distance functional still assumes higher values. The reason behind this observation can be obtained by analyzing the matrix $\bfA \bfC$ in equation \eqref{comb_update_short}.
+For the first case, $C_1,C_2$ are taken equal to $E$. The intermediate iterates \textcolor{red}{of the mechanical and the material states, $(\eps_1,\sig),(\eps_2,\sig)$ and $(\eps^*_1,\sig_1^*),(\eps^*_2,\sig^*_2)$,} respectively, for this case, computed from equations \ref{mat_update_short} and \ref{mech_update_short}, are presented in Figure \ref{bad_metric_no_snap} on a $\epsilon-\sig$ plot. The zoom-in of the first few iterations is presented in Figure \ref{bad_metric_no_snap_zoom}. At the first iteration, the mechanical states for all the elements move towards the damage branch. During the subsequent iterations, the mechanical states corresponding to the elements on the elastic branch return back, while the state of the element on the softening branch continues to go further along the branch. With increasing iteration count, the iterates on the elastic branch become progressively closer to one another, and the same behavior is observed for the damage branch. At some point, successive iterates can no longer be distinguished in Figure \ref{bad_metric_no_snap}, even though the mechanical and the material states are still further apart and the distance functional still assumes higher values. The reason behind this observation can be obtained by analyzing the matrix $\bfA \bfC$ in equation \ref{comb_update_short}.
 
-\textcolor{red}{why is the figure so far away?}
-
-The matrix $\bfA \bfC$ is not symmetric. But for the parameters listed above, its eigen values are real and the eigen vectors are linearly independent. Thus, the rate of convergence of the iterations in equation \eqref{comb_update_short} can be obtained from the spectral radius of the matrix $\bfA  \bfC$. When $C_1,C_2$ are taken equal to $E$ in equations \eqref{big_update_mech} and \eqref{big_update_mat}, the spectral radius of $\bfA \bfC$ is $0.9994$. This implies that the fixed point iterations in equation \eqref{comb_update_short} are contractive and hence converge, albeit at a very slow rate. This explains the closeness of the successive iterates in Figure \eqref{bad_metric_no_snap}. If a discrete database were used instead of the analytical expressions, an extremely fine database would be required to ensure that the distance functional reduces sufficiently at convergence. 
+The matrix $\bfA \bfC$ is not symmetric. But for the parameters listed above, its eigen values are real. Thus, the rate of convergence of the iterations in equation \ref{comb_update_short} can be obtained from the spectral radius of the matrix $\bfA  \bfC$. When $C_1,C_2$ are taken equal to $E$ in equations \ref{big_update_mech} and \ref{big_update_mat}, the spectral radius of $\bfA \bfC$ is $0.9994$. This implies that the fixed point iterations in equation \ref{comb_update_short} are contractive and hence converge, albeit at a very slow rate. This explains the closeness of the successive iterates in Figure \ref{bad_metric_no_snap}. If a discrete database were used instead of the analytical expressions, an extremely fine database would be required to ensure that the distance functional reduces sufficiently at convergence. 
 
 
-Following this, the case $C_2 = m$ is examined to assess how this choice affects the rate of convergence. Since $m < 0$, this formally corresponds to assigning a negative weight to the strain term in the distance functional, which would be inadmissible if used to define the metric itself. For this reason, $C_2 = m$ is employed only in the Euler-Lagrange equations \eqref{big_update_mech} and \eqref{big_update_mat}. Convergence can still be evaluated exclusively using the distance functional \eqref{1D_short_dist_func} with $C_2 = E$. The choice $C_2 = m$ therefore does not alter the underlying metric and should be interpreted solely as an algorithmic modification used to probe its effect on convergence behavior. \textcolor{red}{but we then loose the variational structure}
+Following this, the case $C_2 = m$ is examined to assess how this choice affects the rate of convergence. Since $m < 0$, this formally corresponds to assigning a negative weight to the strain term in the distance functional, which would be inadmissible if used to define the metric itself. For this reason, $C_2 = m$ is employed only in the Euler-Lagrange equations \ref{big_update_mech} and \ref{big_update_mat}. Convergence can still be evaluated exclusively using the distance functional \ref{1D_short_dist_func} with $C_2 = E$. The choice $C_2 = m$ therefore does not alter the underlying metric and should be interpreted solely as an algorithmic modification used to probe its effect on convergence behavior. \textcolor{red}{In the Euler-Lagrange equations, the choice $C_2=m$ results in a left-hand side that corresponds to a consistent linearization of the condensed energy density, since $m=\partial \sig^*/ \partial \eps ^*$. The positive-definite distance interpretation and the associated variational structure are lost, but the operator now reflects the indefiniteness intrinsic to softening.} 
 
-The matrix $\bfA  \bfC $ remains unsymmetric with $C_2=m$, but still possesses real eigen values and linearly independent eigen vectors. Its spectral radius in this case is $0.5$. The successive iterates of mechanical and material states using equations \eqref{mech_update_short} and \eqref{mat_update_short} are presented in Figure \ref{good_metric_no_snap}. Unlike the behavior observed in Figure \ref{bad_metric_no_snap}, the iterates are more widely spread. The mechanical and material states approach each other over successive iterations and tend to intersect at a rate much faster than when $C_2=E$. The solution converges within just 7 iterations. Also, when $C_2=E$, during the first iteration, the (mechanical) strain changes for the elements on the elastic and the damage branch point in the same direction (positive) as the external load (also positive). In contrast, when $C_2=m$, the sign of the strain change for the element on the damage branch remains the same as the external load, while for the element on the elastic branch, it is opposite. Similar conclusions about the rate of convergence can be drawn even if the starting point is further down the damage branch. This case has been presented in Appendix \ref{different_starting_point}.
+The matrix $\bfA  \bfC $ remains unsymmetric with $C_2=m$, but still possesses real eigen values. Its spectral radius in this case is $0.5$. The successive iterates of mechanical and material states using equations \ref{mech_update_short} and \ref{mat_update_short} are presented in Figure \ref{good_metric_no_snap}. Unlike the behavior observed in Figure \ref{bad_metric_no_snap}, the iterates are more widely spread. The mechanical and material states approach each other over successive iterations and tend to intersect at a rate much faster than when $C_2=E$. The solution converges within just 7 iterations. Also, when $C_2=E$, during the first iteration, the (mechanical) strain changes for the elements on the elastic and the damage branch point in the same direction (positive) as the external load (also positive). In contrast, when $C_2=m$, the sign of the strain change for the element on the damage branch remains the same as the external load, while for the element on the elastic branch, it is opposite. Similar conclusions about the rate of convergence can be drawn even if the starting point is further down the damage branch. This case has been presented in appendix \ref{different_starting_point}.
 
 \begin{remark}
-	When $C_2 = E$, the initial mechanical strain increment for the elements on the elastic and softening branch are in the same direction. If the elements are not restricted to lie on their corresponding branches during the course of iterations, the system will thus favor the homogeneous branch of the solution, since starting from iteration $2$, the nearest points for the material state of the elements in red lie on the damage branch. See Figure \ref{bad_metric_no_snap}. Choosing $C_2=m$ will let the system continue on the existing bifurcation branch as presented in Figure \ref{good_metric_no_snap}. Taking $C_2 = E$ is thus likely to cause the solution to revert from the bifurcated path to the homogeneous one, an outcome that is undesirable when the objective is to capture localized damage evolution. This will be of considerable importance in 2D, as shown later.
+	When $C_2 = E$, the initial mechanical strain increment for the elements on the elastic and softening branch are in the same direction. If the elements are not restricted to lie on their corresponding branches during the course of iterations, the system will thus favor the homogeneous branch of the solution, since starting from iteration $2$, the nearest points for the material state of the elements in teal lie on the damage branch. See Figure \ref{bad_metric_no_snap}. Choosing $C_2=m$ will let the system continue on the existing bifurcation branch as presented in Figure \ref{good_metric_no_snap}. Taking $C_2 = E$ is thus likely to cause the solution to revert from the bifurcated path to the homogeneous one, an outcome that is undesirable when the objective is to capture localized damage evolution. This will be of considerable importance in 2D, as shown later.
 \end{remark}
 
-\begin{figure}
+\begin{figure}[t!]
 	\begin{subfigure}{0.45\textwidth}
 		\centering
 		\includegraphics[scale=0.6]{./conv_figs/bad_metric_no_snap.pdf}
-		\caption{\textcolor{red}{add legend for blue and red + show underlying elastic and damage branches}}
+		\caption{The paths taken by the mechanical and the material states for $C_2=E$. }
 		\label{bad_metric_no_snap}
 	\end{subfigure}
 	\hfill
 	\begin{subfigure}{0.45\textwidth}
 		\centering
 		\includegraphics[scale=0.6]{./conv_figs/good_metric_no_snap.pdf}
-		\caption{\textcolor{red}{idem, showing underlying branches compensates for the very different ranges of x and y axes between (a) and (b)}}
+		\caption{The paths taken by the mechanical and the material states for $C_2=m$.}
 		\label{good_metric_no_snap}
 	\end{subfigure}
-	\caption{Results from the 1D analysis. Successive mechanical and material states, connected by arrows as indicated in Figure \ref{conv_figs_legend}. Snapback not expected, and displacement control. (a) $C_2=E$. (b) $C_2=m$. }
+	\caption{\textcolor{red}{Transition of the mechanical and the material states. Case without snap back, using displacement control. The underlying elastic and damage branches are indicated using the same color scheme as in Figure \ref{1D_bar_dam_elem}}.}
 \end{figure}
 
 
-\begin{figure}
+\begin{figure}[t!]
 		\centering
 		\includegraphics[scale=0.8]{./conv_figs/bad_metric_no_snap_zoom.pdf}
-	\caption{Zoom in of the first few iterations from Figure \ref{bad_metric_no_snap}.\label{bad_metric_no_snap_zoom}}
+	\caption{Zoom in of the first few iterations from Figure \ref{bad_metric_no_snap}.  The underlying elastic and damage branches are indicated using the same color scheme as in Figure \ref{1D_bar_dam_elem}.\label{bad_metric_no_snap_zoom}}
 \end{figure}
 
 
@@ -309,215 +308,122 @@ The matrix $\bfA  \bfC $ remains unsymmetric with $C_2=m$, but still possesses r
 %	\caption{Results from the 1D analysis. Successive mechanical and material states, connected by arrows as indicated in Figure \ref{conv_figs_legend}. (a) $C_2=E$, no snapback, and with the arc length constraint. (b) $C_2=m$, no snapback, and with the arc length constraint. }
 %\end{figure}
 \subsubsection*{Behavior with snapback and arc-length solver}
-When the element size is decreased, a snapback response is expected to occur. In conventional simulations performed using constitutive models, the alternated minimization performed with respect to the displacement and the damage variables is capable of capturing the snapback, albeit taking a large number of iterations to converge. The solution typically 'jumps through' the snapback under displacement control. This scenario will be examined when using DD algorithm for the example described above, using an arc length solver. The material parameters and the initial conditions are kept the same as in the previous case, but with $N_1=100$. The solution update using an arc length solver is presented in equations \eqref{big_update_mat_al} and \eqref{big_update_mech_al} in Appendix \ref{appx_convergence}. The arc length constraint corresponds to prescribing the strain value for the element on the damage branch, in the current case as $\Delta=1.4$ \textcolor{red}{are you sure? that's huge and doesn't seem to correspond to strains in the graphs}. Thus, the prescribed displacement $u_D$ is obtained as a part of the solution. 
+When the element size is decreased, a snapback response is expected to occur. In conventional simulations performed using constitutive models, the alternative minimization performed with respect to the displacement and the damage variables is capable of capturing the snapback, albeit with taking a large number of iterations to converge. The solution typically 'jumps through' the snapback under displacement control. This scenario will be examined when using DD algorithm using the example described above, using an arc length solver. The material parameters and the initial conditions are kept the same as in the previous case, but with $N=100$. The solution update using an arc length solver is presented in equations \ref{big_update_mat_al} and \ref{big_update_mech_al}. The arc length constraint corresponds to prescribing the strain value for the element on the damage branch, in the current case as $1.4$. Thus, $\epsilon_2=\epsilon_0+\Delta \epsilon =1.4$ in equation \ref{big_update_mech_al}. The prescribed displacement $u_D$ is obtained as a part of the solution. 
 
 
-When $C_2=E$, the path taken by the successive iterates are presented in Figure \ref{bad_metric_snap_arc_length}. The arc length constraint carries all the mechanical strains near the prescribed arc-length value of $\Delta=1.4$ in the first iteration. Since the elements on the elastic and the damage branches are forced to remain on their corresponding branches, during the subsequent iterations, the element on the damage branch remains where it was after the first iteration, while the states of the elements restricted to the elastic branch return back. If the branch restriction is removed, the solution migrates to a homogeneous branch, even when the initial iterate (and thus the converged solution from the previous load step) lies slightly away from the elastic-damage cusp. This occurs because, from the second iteration onward, the nearest admissible material state for the elements initially marked in red is located on the damage branch. See Figure \ref{bad_metric_snap_arc_length_zoom}, that shows the position of the mechanical states after the first mechanical update. This causes all elements to collapse onto the same branch like in the previous case in Figure \ref{bad_metric_no_snap}. The spectral radius of the matrix $\bfA \bfC $ is $1.029$, which indicates the unconvergent nature of the iterations with branch restrictions. 
+When $C_2=E$, the path taken by the successive iterates are presented in Figure \ref{bad_metric_snap_arc_length}. The arc length constraint carries all the mechanical strains near the prescribed arc-length value of $1.4$ in the first iteration. Since the elements on the elastic and the damage branches are forced to remain on their corresponding branches, during the subsequent iterations, the element on the damage branch remains where it was after the first iteration, while the states of the elements restricted to the elastic branch return back. If the branch restriction is removed, the solution migrates to a homogeneous branch, even when the initial iterate (and thus the converged solution from the previous load step) lies slightly away from the elastic-damage cusp. This occurs because, from the second iteration onward, the nearest admissible material state for the elements initially marked in teal is located on the damage branch. See Figure \ref{bad_metric_snap_arc_length_zoom}, that shows the position of the mechanical states after the first mechanical update. This causes all elements to collapse onto the same branch like in the previous case in Figure \ref{bad_metric_no_snap}. The spectral radius of the matrix $\bfA \bfC $ is $1.029$, which indicates the unconvergent nature of the iterations with branch restrictions. \textcolor{red}{Despite $\rho(\bfA\bfC) > 1$, the $C_2 = E$ iterates do not diverge but freeze at a finite distance, since the material projection saturates at the peak (or irreversibility) bound and the iteration leaves the regime governed by $\bfA\bfC$; this constraint-saturation mechanism is detailed in the following subsection.}
+
+
 
 When $C_2=m$, the path taken by the successive iterates are presented in Figure \ref{good_metric_snap_arc_length}. The strain increments for the elements on the elastic and the softening branches point in the opposite directions, differently from when $C_2=E$. The mechanical and the material states quickly reach the intersection point. In this case, the spectral radius of $\bfA \bfC $ is $0.5$. This stresses the importance of the hyper-parameters, specifically in case where a snapback is expected to occur. In this case, it is necessary to take $C_2=m$ to arrive at a converged solution. 
 
-As presented in Figure \ref{bad_metric_snap_arc_length}, if $C_2=E$, the mechanical strain change for both the elements point in the same direction. In subsequent iterations, the same material state is selected for the element on the elastic branch (as it has restricted to remain on the elastic branch in the current case to study the bifurcated solution). As a result, the distance functional stagnates at a high value and does not change anymore regardless of the number of iterations. However, when $C_2=m$, not only is the rate of convergence optimal, but also the algorithm converges, and to the correct solution. This stresses the importance of using an arc-length solver when expecting snapback instabilities in the DDCM paradigm. Not using the proper hyper-parameter - arc-length combination may result in an artificial widening of the damage zone even without any regularization, as a consequence of the trajectories followed by the mechanical and material states during the mechanical and the material updates. Similar conclusions about the rate of convergence (and whether it converges) can be drawn even if the starting point is further down the damage branch. This case has been presented in Appendix \ref{different_starting_point}.
+As presented in Figure \ref{bad_metric_snap_arc_length_zoom}, if $C_2=E$, the mechanical strain change for both the elements point in the same direction. In subsequent iterations, the same material state is selected for the element on the elastic branch (as it has restricted to remain on the elastic branch in the current case to study the bifurcated solution). As a result, the distance functional stagnates at a high value and does not change anymore regardless of the number of iterations. However, when $C_2=m$, not only is the rate of convergence optimal, but also the algorithm converges, and to the correct solution. This stresses the importance of using an arc-length solver when expecting snapback instabilities in the DDCM paradigm. Failing to use the proper hyper-parameter - arc-length combination may result in an artificial widening of the damage zone even without any regularization, as a consequence of the trajectories followed by the mechanical and material states during the mechanical and the material updates. Similar conclusions about the rate of convergence (and whether it converges) can be drawn even if the starting point is further down the damage branch. This case has been presented in appendix \ref{different_starting_point}.
 
-\begin{figure}
+\begin{figure}[t!]
 	\begin{subfigure}{0.45\textwidth}
 		\centering
 		\includegraphics[scale=0.6]{./conv_figs/bad_metric_snap_arc_length.pdf}
-		\caption{}
+		\caption{The paths taken by the mechanical and the material states for $C_2=E$.}
 		\label{bad_metric_snap_arc_length}
 	\end{subfigure}
 	\hfill
 	\begin{subfigure}{0.45\textwidth}
 		\centering
 		\includegraphics[scale=0.6]{./conv_figs/good_metric_snap_arc_length.pdf}
-		\caption{}
+		\caption{The paths taken by the mechanical and the material states for $C_2=m$.}
 		\label{good_metric_snap_arc_length}
 	\end{subfigure}
-	\caption{Results from the 1D analysis. Successive mechanical and material states, connected by arrows as indicated in Figure \ref{conv_figs_legend}. Snapback expected and arc-length constraint included. (a) $C_2=E$. (b) $C_2=m$. }
+	\caption{Transition of the mechanical and the material states. Case with snap back, using arc-length.}
 \end{figure} 
 
 \begin{figure}
 	\begin{subfigure}{0.45\textwidth}
 		\centering
 		\includegraphics[scale=0.7]{./conv_figs/bad_metric_snap_arc_length_zoom.pdf}
-		\caption{}
+		\caption{Zoom-in of the first iteration in Figure \ref{bad_metric_snap_arc_length}. Arc-length control with $C_2=E$.}
 		\label{bad_metric_snap_arc_length_zoom}
 	\end{subfigure}
 	\hfill
 	\begin{subfigure}{0.45\textwidth}
 		\centering
 		\includegraphics[scale=0.7]{./conv_figs/bad_metric_snap_no_al_zoom.pdf}
-		\caption{}
+		\caption{Zoom-in of the first iteration in Figure \ref{bad_metric_snap_no_al}. Displacement control with $C_2=E$.}
 		\label{bad_metric_snap_no_al_zoom}
 	\end{subfigure}
-	\caption{Results from the 1D analysis. Successive mechanical and material states, connected by arrows as indicated in Figure \ref{conv_figs_legend}. (a) Zoom-in of the first iteration in Figure \ref{bad_metric_snap_arc_length}. (b) Zoom-in of the first iteration in Figure \ref{bad_metric_snap_no_al}. }
+	\caption{Zoom-in of the first iteration. Both show that the initial mechanical strain increments for the elastic and the damage branches point in the same direction, driving the system towards the homogeneous branch.}
 \end{figure}
+\color{red}
+Using the expressions presented in appendix \ref{appx_convergence} for the case with arc-length solver, the characteristic polynomial of the matrix $\bfA \bfC$, after eliminating the double root of $0$, can be derived as
+\begin{equation}
+	\lambda^2 -T \lambda +\Delta =0,
+\end{equation}
+where, if $C_1=E$,
+\begin{align}
+	T(C_2,N) &\;=\; 1 + \dfrac{E\,(m^2 - C_2^2)}{2\,D\,(m^2+C_2^2)},
+	\label{eq:T}\\[4pt]
+	\Delta(C_2,N) &\;=\; \dfrac{m\,(N C_2^2 + E m)}{2\,D\,(m^2+C_2^2)}.
+	\label{eq:Delta}
+\end{align}
+$D=C_1+NC_2$. Thus, the spectral radius is $\rho(C_2,N) = \max(|\lambda_+|,|\lambda_-|)$ with $\lambda_\pm = T/2 \pm \sqrt{T^2/4 - \Delta}$. When $C_2=m$, $T=1, \Delta=1/4$. $\lambda=0.5$, as stated earlier.
+
+
+In a general case, it can be verified that $T^2 \geq 4\Delta$. Thus, $\lambda_+$ is smaller than $1$ if $\Delta > T-1$. This translates to
+\begin{equation}
+	\frac{E+Nm}{E+NC_2} >0.
+\end{equation}
+When $N>-E/m$, a snapback takes place. Then, for convergence, the above relation requires $C_2<-E/N$. Since $E >0,N>0$, any positive $C_2$ will result in a spectral radius larger than $1$.
+\color{black}
 
 \subsubsection*{Failure with snapback and displacement control}
 
-To assess whether an arc-length solver is strictly necessary i.e., whether the data-driven algorithm can intrinsically jump through snapback instabilities, the snapback case is next examined under pure displacement control, without arc-length continuation. The corresponding DD iterations are shown in Figures \ref{bad_metric_snap_no_al} and \ref{good_metric_snap_no_al}.
+To assess whether the arc-length solver is strictly necessary, i.e., whether the data-driven algorithm can intrinsically traverse snapback instabilities under pure displacement control, the snapback case is examined with the end displacement $u_D$ prescribed directly, without arc-length continuation. $N=100$. The corresponding DD iterations are shown in Figures \ref{bad_metric_snap_no_al} and \ref{good_metric_snap_no_al}.
 
-When $C_2=E$, the mechanical and material states initially progressively drift apart and then stagnate. Thus, the distance functional increases initially and does not change any further later on. For this case, the spectral radius of $\bfA \bfC$ is $1$. Thus, the component of the error that corresponds to the eigen vector associated with this eigen value does not reduce anymore even after the other components are annihilated. If the branch restriction is relaxed, the algorithm instead collapses rapidly to the homogeneous damage solution: already from the second iteration onward, the closest admissible material state for both elastic and softening elements lies on the damage branch, as illustrated in Figure \ref{bad_metric_snap_no_al_zoom}.
+\color{red}
+Before discussing the results, it is important to delimit the range of validity of the spectral analysis of Section \ref{conv_method_rate}. The contraction estimate based on the spectral radius of $\bfA\bfC$ presumes that the iteration coincides with the affine map $\bfa^{i+1} = \bfA\bfC\,\bfa^{i} + \bff$. This holds only while every material projection returns a state lying on the corresponding branch and is admissible, so that the closed-form updates of Appendix \ref{appx_convergence} apply unmodified. It is possible that the intermediate material states obtained from equation \ref{mat_update_short} are inadmissible - that is, they may either be such that the resulting stress state $\sigst$ is larger than the peak stress or that the strain state $\epsst$ for the damage branch is smaller than the strain from the previous time step. The physical database, however, carries no stress above the peak $\sigma_{\mathrm{peak}}$, and, by irreversibility, the material state of a damaged element cannot retreat to a damage level below that already attained. When either bound becomes active, the material update is no longer the linear operator $\bfA$ but $\bfA$ composed with a projection onto the admissible segment. In that regime the iterated map is no longer $\bfA\bfC$, and its spectral radius, however computed for the interior map, no longer governs the behavior of the iteration. This is precisely what occurs under displacement control beyond the snapback threshold. Two distinct constraint-saturation mechanisms arise, depending on the state from which the load step is initiated.
 
-When $C_2=m$, the mechanical and material states change during the first iteration but subsequently stagnate. In this case, the strain in the softening element decreases while that in the elastic elements increases, despite an increasing applied displacement. This behavior is consistent with the loss of positive definiteness of the tangent operator at snapback, reflected by the emergence of a negative eigenvalue. Consequently, the strain increment in the softening element necessarily opposes the imposed displacement increment, as discussed in classical continuation analyses \cite{deBorst1986,deBorst1987b,Baldelli2021}. With branch restriction enforced, this sign inconsistency leads to stagnation of the DD iterations (Figure \ref{good_metric_snap_no_al}). If the restriction is removed, the algorithm again transitions to the homogeneous damage solution. In any case, displacement control proves insufficient to traverse snapback within the DD framework, irrespective of the chosen metric, thereby demonstrating the necessity of arc-length continuation for robust tracking of damage-induced instabilities.
+When the initial state lies near the elastic-damage cusp, the prescribed $u_D$ drives the mechanical update toward stresses exceeding $\sigma_{\mathrm{peak}}$. The database contains no such states, so the material projection saturates at the peak. The mechanical and material states then cannot coincide: the equilibrium-compatibility manifold and the material manifold do not intersect in the reachable region for the prescribed $u_D$. The distance functional consequently plateaus at, or grows to, a finite value and never closes, irrespective of the spectral radius of the interior map. This behavior is shown for $C_2 = E$ in Figure \ref{bad_metric_snap_no_al}. If the branch restriction was removed, the solution again moves to the homogeneous branch.
 
+
+When the initial state lies further down the softening branch, the binding constraint is instead irreversibility. As $u_D$ increases, equilibrium and compatibility require the damaged element to \emph{unload}, that is, its material strain would have to retreat toward lower damage. Irreversibility forbids this, fixing the damage-element material state at the maximum damage strain already reached. The projection again saturates. This behavior is shown in Figure \ref{bad_metric_snap_no_al_diffpt}.
+
+
+
+The choice of hyper-parameter does not alter this conclusion. With $C_2 = m$, the interior map is contractive with spectral radius $1/2$, yet under displacement control the same saturation occurs: the prescribed $u_D$ demands a stress the bounded database cannot supply, the active constraint binds, and the distance functional plateaus at a finite value. Under branch restriction the iteration freezes; if the restriction is relaxed, the nearest-point search instead drives both elements onto the homogeneous damage branch, abandoning the localized solution. The strain increment in the softening element is found to oppose the imposed displacement increment, consistent with the loss of positive definiteness of the tangent operator at snapback and with classical continuation analyses \cite{deBorst1986,deBorst1987b,Baldelli2021}. In neither case is a converged, physically meaningful solution obtained.
+\color{black}
 \begin{figure}
 	\begin{subfigure}{0.45\textwidth}
 			\centering
 			\includegraphics[scale=0.6]{./conv_figs/bad_metric_snap_no_al.pdf}
-			\caption{}
+			\caption{The paths taken by the mechanical and the material states for $C_2=E$.}
 			\label{bad_metric_snap_no_al}
 		\end{subfigure}
 	\hfill
 	\begin{subfigure}{0.45\textwidth}
 			\centering
 			\includegraphics[scale=0.6]{./conv_figs/good_metric_snap_no_al.pdf}
-			\caption{}
+			\caption{The paths taken by the mechanical and the material states for $C_2=m$.}
 			\label{good_metric_snap_no_al}
 		\end{subfigure}
-	\caption{Results from the 1D analysis. Successive mechanical and material states, connected by arrows as indicated in Figure \ref{conv_figs_legend}. Snapback expected and displacement control. (a) $C_2=E$. (b) $C_2=m$.}
+	\caption{Transition of the mechanical and the material states. Case with snap back, using displacement control. }
 \end{figure}
 
-%\subsubsection*{With snapback, without arc length solver, different previous state}
-%
-%To ensure that the above observations hold regardless of the initial state of the mechanical and material states, the analysis above is repeated with a different initial point, where the elements on the elastic and the damage branch are further away from the \textit{yield point}. The progression of the iterates through the iterations can be seen in figures \ref{bad_metric_snap_no_arclength_add} and \ref{good_metric_snap_no_arclength_add}. As earlier, when the applied displacement increases, the mechanical and material states move as the same direction as the applied displacement after the first iteration. The subsequent iterations take the mechanical state for the element on the damage branch further from its material state, and the solution stagnates at a point which is very far from the expected solution (a fully damaged state for the current element on the damage branch). The situation is similar when $C_2=m$, but with a fewer number of iterations.
-%
-%The paths taken by the iterates in Figures \ref{good_metric_snap_no_arclength}, \ref{bad_metric_snap_no_arclength}, \ref{bad_metric_snap_arc_length_diif_start} also resemble the ones presented in Figures 6,7, and 16 of \cite{Kuang2023}. In that reference, the performance of DD solver has been analyzed for cases involving instabilities. A truss system was considered, with a linearly elastic material behavior. The instabilities are geometric in nature. The authors of \cite{Kuang2023} extract the eigenvector corresponding to the zero eigenvalue of the hessian matrix to perturb the initial condition in DD solution. They also reverse their loading when the hessian matrix develops a zero eigenvalue. This is thus similar to implicitly using an arc-length solver. In the current case, the origins of the instability are both material (softening) and geometric (mesh size/ characteristic length). Thus, an arc-length solver will be used to trace any and all the  snapback instabilities.
-%
-%\begin{figure}[t!]
-%	\begin{subfigure}{0.45\textwidth}
-%		\centering
-%		\includegraphics[scale=0.6]{./conv_figs/bad_metric_snap_no_al.pdf}
-%		\caption{}
-%		\label{bad_metric_snap_no_arclength}
-%	\end{subfigure}
-%	\hfill
-%	\begin{subfigure}{0.45\textwidth}
-%		\centering
-%		\includegraphics[scale=0.6]{./conv_figs/good_metric_snap_no_al.pdf}
-%		\caption{}
-%		\label{good_metric_snap_no_arclength}
-%	\end{subfigure}
-%%	\begin{subfigure}{0.45\textwidth}
-%%		\centering
-%%		\includegraphics[scale=0.6]{./conv_figs/bad_metric_snap_no_arclength_add.pdf}
-%%		\caption{}
-%%		\label{bad_metric_snap_no_arclength_add}
-%%	\end{subfigure}
-%%	\hfill
-%%	\begin{subfigure}{0.45\textwidth}
-%%		\centering
-%%		\includegraphics[scale=0.6]{./conv_figs/good_metric_snap_no_arclength_add.pdf}
-%%		\caption{}
-%%		\label{good_metric_snap_no_arclength_add}
-%%	\end{subfigure}
-%	\caption{Results from the 1D analysis. Successive mechanical and material states, connected by arrows as indicated in Figure \ref{conv_figs_legend}. (a) $C_2=E$, snapback, and without the arc length constraint. (b) $C_2=m$, snapback, and without the arc length constraint. }
-%\end{figure}
-%%(c) $C_2=E$, snapback, different initiation, and without the arc length constraint. (d) $C_2=m$, snapback, different initiation, and without the arc length constraint.
-%%
-%%\begin{figure}[t!]
-%%	\begin{subfigure}{0.45\textwidth}
-%%		\centering
-%%		\includegraphics[scale=0.6]{./conv_figs/bad_metric_no_snap.pdf}
-%%		\caption{}
-%%		\label{bad_metric_no_snap}
-%%	\end{subfigure}
-%%	\hfill
-%%	\begin{subfigure}{0.45\textwidth}
-%%		\centering
-%%		\includegraphics[scale=0.6]{./conv_figs/good_metric_no_snap.pdf}
-%%		\caption{}
-%%		\label{good_metric_no_snap}
-%%	\end{subfigure}
-%%	\begin{subfigure}{0.45\textwidth}
-%%		\centering
-%%		\includegraphics[scale=0.6]{./conv_figs/bad_metric_no_snap_arc_length.pdf}
-%%		\caption{}
-%%		\label{bad_metric_no_snap_arc_length}
-%%	\end{subfigure}
-%%	\hfill
-%%	\begin{subfigure}{0.45\textwidth}
-%%		\centering
-%%		\includegraphics[scale=0.6]{./conv_figs/good_metric_no_snap_arc_length.pdf}
-%%		\caption{}
-%%		\label{good_metric_no_snap_arc_length}
-%%	\end{subfigure}
-%%\end{figure}
-%%\begin{figure}[t!]\ContinuedFloat
-%%	\begin{subfigure}{0.45\textwidth}
-%%		\centering
-%%		\includegraphics[scale=0.6]{./conv_figs/bad_metric_snap_arc_length.pdf}
-%%		\caption{}
-%%		\label{bad_metric_snap_arc_length}
-%%	\end{subfigure}
-%%	\hfill
-%%	\begin{subfigure}{0.45\textwidth}
-%%		\centering
-%%		\includegraphics[scale=0.6]{./conv_figs/good_metric_snap_arc_length.pdf}
-%%		\caption{}
-%%		\label{good_metric_snap_arc_length}
-%%	\end{subfigure}
-%%	\begin{subfigure}{0.45\textwidth}
-%%		\centering
-%%		\includegraphics[scale=0.6]{./conv_figs/bad_metric_snap_arc_length_diif_start.pdf}
-%%		\caption{}
-%%		\label{bad_metric_snap_arc_length_diif_start}
-%%	\end{subfigure}
-%%	\hfill
-%%	\begin{subfigure}{0.45\textwidth}
-%%		\centering
-%%		\includegraphics[scale=0.6]{./conv_figs/good_metric_snap_arc_length_diif_start.pdf}
-%%		\caption{}
-%%		\label{good_metric_snap_arc_length_diif_start}
-%%	\end{subfigure}
-%%\end{figure}
-%%\begin{figure}[t!]\ContinuedFloat
-%%	\begin{subfigure}{0.45\textwidth}
-%%		\centering
-%%		\includegraphics[scale=0.6]{./conv_figs/bad_metric_snap_no_arclength.pdf}
-%%		\caption{}
-%%		\label{bad_metric_snap_no_arclength}
-%%	\end{subfigure}
-%%	\hfill
-%%	\begin{subfigure}{0.45\textwidth}
-%%		\centering
-%%		\includegraphics[scale=0.6]{./conv_figs/good_metric_snap_no_arclength.pdf}
-%%		\caption{}
-%%		\label{good_metric_snap_no_arclength}
-%%	\end{subfigure}
-%%	\begin{subfigure}{0.45\textwidth}
-%%		\centering
-%%		\includegraphics[scale=0.6]{./conv_figs/bad_metric_snap_no_arclength_add.pdf}
-%%		\caption{}
-%%		\label{bad_metric_snap_no_arclength_add}
-%%	\end{subfigure}
-%%	\hfill
-%%	\begin{subfigure}{0.45\textwidth}
-%%		\centering
-%%		\includegraphics[scale=0.6]{./conv_figs/good_metric_snap_no_arclength_add.pdf}
-%%		\caption{}
-%%		\label{good_metric_snap_no_arclength_add}
-%%	\end{subfigure}
-%%	\centering
-%%	\begin{subfigure}{0.45\textwidth}
-%%		\centering
-%%		\includegraphics[scale=0.9]{./conv_figs/legend.pdf}
-%%	\end{subfigure}
-%%	\caption{Results from the analysis of various cases in 1D are presented. The successive iterates for the material states are denoted by circles, while the mechanical states are represented by asterisks. The successive iterates are connected by arrows: dashed arrows for the elements on the elastic unloading branch and dash-dotted arrows for the elements on the damage branch. (a) $C_2=E$, no snapback, and without the arc length constraint. (b) $C_2=m$, no snapback, and without the arc length constraint. (c) $C_2=E$, no snapback, and with the arc length constraint. (d) $C_2=m$, no snapback, and with the arc length constraint. (e) $C_2=E$, snapback, and with the arc length constraint. (f) $C_2=m$, snapback, and with the arc length constraint. (g) $C_2=E$, snapback, and with the arc length constraint, different starting point. (h) $C_2=m$, snapback, and with the arc length constraint, different starting point. (i) $C_2=E$, snapback, and without the arc length constraint. (j) $C_2=m$, snapback, and without the arc length constraint. (k) $C_2=E$, snapback, different initiation, and without the arc length constraint. (l) $C_2=m$, snapback, different initiation, and without the arc length constraint.}
-%%	%\label{fig:ut_regularization}
-%%\end{figure}
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.6]{./conv_figs/bad_metric_snap_no_al_diffpt.pdf}
+	\caption{Transition of the mechanical and the material states. Case with snap back, using displacement control, initiated further down the damage branch.\label{bad_metric_snap_no_al_diffpt}}
+\end{figure}
 
-
-Thus, it can be briefly concluded that not only is using an optimal value for $C_2$, together with an arc length solver, sufficient to achieve an optimal rate of convergence, but it is also necessary to achieve the expected localization in some cases with instabilites. This is in contrast to the study in \cite{Nguyen2022}, where the behavior of DD solver is studied for the case of a non-linearly elastic material, an optimal value for $C_2$ is only used to accelerate the convergence. Also, the paths taken by the iterates in Figures \ref{bad_metric_snap_no_al} and \ref{good_metric_snap_no_al} resemble the successive mechanical iterates taken by a truss system, presented in Figures 6, 7, and 16 of \cite{Kuang2023}. In that reference, the performance of DD solver has been analyzed for cases involving instabilities. A truss system was considered, with a linearly elastic material behavior. The authors of \cite{Kuang2023} extract the eigenvector corresponding to the zero eigenvalue of the hessian matrix to perturb the initial condition in DD solution. They also reverse their loading when the hessian matrix develops a zero eigenvalue. This is thus similar to implicitly using an arc-length solver. In the current case, the origins of the instability are both material (softening) and geometric (mesh size/ characteristic length). Thus, an arc-length solver will be used to trace any and all the  snapback instabilities.
+Thus, it can be briefly concluded that not only is using an optimal value for $C_2$, together with an arc length solver, sufficient to achieve an optimal rate of convergence, but it is also necessary to achieve the expected localization in some cases with instabilites. This is in contrast to the study in \cite{Nguyen2022}, where the behavior of DD solver is studied for the case of a non-linearly elastic material, an optimal value for $C_2$ is only used to accelerate the convergence. Also, the paths taken by the iterates in Figures \ref{bad_metric_snap_no_al} and \ref{good_metric_snap_no_al} resemble the successive mechanical iterates taken by a truss system, presented in Figures 6,7, and 16 of \cite{Kuang2023}. In that reference, the performance of DD solver has been analyzed for cases involving instabilities. A truss system was considered, with a linearly elastic material behavior. The authors of \cite{Kuang2023} extract the eigenvector corresponding to the zero eigenvalue of the hessian matrix to perturb the initial condition in DD solution. They also reverse their loading when the hessian matrix develops a zero eigenvalue. This is thus similar to implicitly using an arc-length solver. In the current case, the origins of the instability are both material (softening) and geometric (mesh size/ characteristic length). Thus, an arc-length solver will be used to trace any and all the  snapback instabilities.
 
 In the present work, the underlying material model is characterized by linear softening, which allows the convergence behavior to be analyzed through the spectral radius of the matrix 
-$ \bfA \bfC$. If this condition is not satisfied, for example, if the softening response is nonlinear or the problem is formulated in two dimensions, such an analysis is no longer feasible, since $ \bfA \bfC$ then depends on the evolving strain state. Nevertheless, the two-dimensional analyses presented later demonstrate that, for the cases considered, the convergence rate is quadratic i.e., the distance between successive iterates is halved at each iteration when the material tangent is used as the hyper-parameter similar to all the convergent 1D cases presented earlier.
+$ \bfA \bfC$. If this condition is not satisfied, for example, if the softening response is nonlinear or the problem is formulated in two dimensions, such an analysis is no longer feasible, since $ \bfA \bfC$ then depends on the evolving strain state. Nevertheless, the two-dimensional analyses presented later demonstrate that, for the cases considered, the distance between successive iterates is halved at each iteration when the material tangent is used as the hyper-parameter similar to all the convergent 1D cases presented earlier.
 
 
 
 \subsection{A 1D bar with a body force}
 In contrast to the analytical study of Section \ref{conv_method_rate}, no branch restriction is imposed in the following example. The material update is allowed to select the material state at each iteration as described below, and the observed behavior therefore reflects the intrinsic branch-selection properties of the DD algorithm.
 
-The problem of 1D bar subjected to a body force as in Figure \ref{1D_bar_bf} will now be analyzed. The same problem will then be used to demonstrate the effect of introducing a length scale into the problem. The bar is meshed with piecewise affine and continuous displacement elements. The set of equations that govern the data driven solution can be found in the previous section, in equations \eqref{disp_equation_normaldd} and \eqref{eta_equation_normaldd}. The arc-length solver - hyper-parameter combination that was presented earlier will be used to capture the (possible) snapback response of the bar. The hyper-parameter in this case will be the value of the tangent associated to the corresponding material state of an element. Expressing the displacement vector as $\bfu = \bfC_f \bfu_f + \lambda_g \bfu_g$, where $\bfu_f$ are the unkonwn degrees of freedom, $\lambda_g$ is the strength of the applied boundary condition, $\bfu_g$ is a vector that corresponds to the Dirichlet boundary conditions, and $\bfC_f$ is a matrix of zeros and ones that relates $\bfu_f$ to $\bfu$. Similarly, $\bfeta = \bfC_f \bfeta_f$. If the body is loaded through an applied displacement, $\lambda_g$ is a known and the equations \ref{disp_equation_normaldd} and \ref{eta_equation_normaldd} are solved for $\bfu_f$ and $\bfeta_f$. When an arc length solver is used, $\lambda_g$ is treated as an unknown. The system of equations is supplemented with an additional arc length constraint equation. More details on this can be found in \ref{appen_arc_length}. The mechanical stresses are taken to be piecewise constant. The mesh size is homogeneous. The problem is examined for two mesh sizes (say $\ell_e$, $0.5 \ell_e$) to determine the effect of the mesh size on the response of the bar. The database is taken as in Figure \ref{database_actual} and the corresponding material parameters are same as the ones used to perform the convergence analysis earlier. Material state updates are performed using equations \eqref{damage_branch_material_state} and \eqref{elastic_branch_material_state}. The update algorithm has been presented in Algorithm \ref{alg:the_dd_algorithm}. The entries of the matrix $\mathcal{C}$ in equations \eqref{disp_equation_normaldd} and \eqref{eta_equation_normaldd} are updated depending on the solution branch on which the material state of the element corresponds to, as stated in Algorithm \ref{alg:the_dd_algorithm}.
+The problem of 1D bar subjected to a body force as in Figure \ref{1D_bar_bf} will now be analyzed. The same problem will then be used to demonstrate the effect of introducing a length scale into the problem. The bar is meshed with piecewise affine and continuous displacement elements. The set of equations that govern the data driven solution can be found in the previous section, in equations \ref{disp_equation_normaldd} and \ref{eta_equation_normaldd}. The arc-length solver - hyper-parameter combination that was presented earlier will be used to capture the (possible) snapback response of the bar. The hyper-parameter in this case will be the value of the tangent associated to the corresponding material state of an element. Expressing the displacement vector as $\bfu = \bfC_f \bfu_f + \lambda_g \bfu_g$, where $\bfu_f$ are the unknown degrees of freedom, $\lambda_g$ is the strength of the applied boundary condition, $\bfu_g$ is a vector that corresponds to the Dirichlet boundary conditions, and $\bfC_f$ is a matrix of zeros and ones that relates $\bfu_f$ to $\bfu$. Similarly, $\bfeta = \bfC_f \bfeta_f$. If the body is loaded through an applied displacement, $\lambda_g$ is a known and the equations \ref{disp_equation_normaldd} and \ref{eta_equation_normaldd} are solved for $\bfu_f$ and $\bfeta_f$. When an arc length solver is used, $\lambda_g$ is treated as an unknown. The system of equations is supplemented with an additional arc length constraint equation. More details on this can be found in appendix \ref{appen_arc_length}. The mechanical stresses are taken to be piecewise constant. The mesh size is homogeneous. The problem is examined for two mesh sizes (say $\ell_e$, $0.5 \ell_e$) to determine the effect of the mesh size on the response of the bar. The database is taken as in Figure \ref{database_actual} and the corresponding material parameters are same as the ones used to perform the convergence analysis earlier. Material state updates are performed using equations \ref{damage_branch_material_state} and \ref{elastic_branch_material_state}. The update algorithm has been presented in alg \ref{alg:the_dd_algorithm}. The entries of the matrix $\mathcal{C}$ in equations \ref{disp_equation_normaldd} and \ref{eta_equation_normaldd} are updated depending on the solution branch on which the material state of the element corresponds to, as stated in alg \ref{alg:the_dd_algorithm}.
 \begin{figure}
 	\centering
 	\includegraphics[width=0.5\linewidth]{Images/1D_bar_bf.pdf}
@@ -531,40 +437,36 @@ The problem of 1D bar subjected to a body force as in Figure \ref{1D_bar_bf} wil
 \end{figure}
 
 
-The force at the right end of the bar vs the applied displacement until complete failure (where some element in the bar is fully damaged) for the two mesh sizes is presented in Figure \ref{force_disp_local}. The mesh dependence of the strain distribution, together with the snapback response, can be clearly seen once the \textit{damage begins to increase}. At the first step, a compressive force is developed as a consequence of the body force, which gradually becomes positive as the displacement is increased. The initial negative displacement is a consequence of the arc-length constraint that the strain increment in the left most element is equal to a certain (user specified) value. As the load is increased further, the damage initiates at the left end (just at the left end because of the applied body force). The strain and the damage localize in the element at the left end in the subsequent steps until the element undergoes a complete failure ($d=1$). A small compressive load can again be seen at the end as a consequence of the applied body force. The corresponding strain distributions, at complete failure, for the two mesh sizes can be seen in figure \ref{strain_dist_local}. The mesh dependence of the solution is obvious. Using appropriate values for the hyper-parameters, together with the arc-length solver accurately captures the snapback response of the bar, mesh dependence of the solution, and follows the expected bifurcation branch.
+The force at the right end of the bar vs the applied displacement until complete failure (where some element in the bar is fully damaged) for the two mesh sizes has been presented in Figure \ref{force_disp_local}. The mesh dependence of the strain distribution, together with the snapback response, can be clearly seen once the \textit{damage begins to increase}. At the first step, a compressive force is developed as a consequence of the body force, which gradually becomes positive as the displacement is increased. The initial negative displacement is a consequence of the arc-length constraint that the strain increment in the left most element is equal to a certain (user specified) value. As the load is increased further, the damage initiates at the left end (just at the left end because of the applied body force). The strain and the damage localize in the element at the left end in the subsequent steps until the element undergoes a complete failure ($d=1$). A small compressive load can again be seen at the end as a consequence of the applied body force. The corresponding strain distributions, at complete failure, for the two mesh sizes can be seen in figure \ref{strain_dist_local}. The mesh dependence of the solution is obvious. Using appropriate values for the hyper-parameters, together with the arc-length solver accurately captures the snapback response of the bar, mesh dependence of the solution, and follows the expected bifurcation branch.
 
-\begin{figure}
+\begin{figure}[ht]
 	\begin{subfigure}{0.49\textwidth}
 		\centering
 		\input{./tikz_figs/force_disp_local.tex}
-		\caption{}
+		\caption{Force vs Displacement curves for two mesh sizes.}
 		\label{force_disp_local}
 	\end{subfigure}
 	\hfill
 	\begin{subfigure}{0.49\textwidth}
 		\centering
 		\input{./tikz_figs/strain_dist_local.tex}
-		\caption{}
+		\caption{Strain distribution along the bar corresponding to the final load step in the force-displacement response in Figure \ref{force_disp_local}.}
 		\label{strain_dist_local}
 	\end{subfigure}
-	\caption{Results without regularization. (a) Force vs Displacement curves for two mesh sizes. (b) Strain distribution along the bar. \textcolor{red}{at which loading state?}}
+	\caption{Results for the 1D bar with a body force without regularization.}
 	\label{fig:Results_without_regularization}
 \end{figure}
 
 \subsection{2D case - Bar with a notch}
 The tests performed above in 1D case have been repeated in 2D. The example used is same as the one used later on to demonstrate the effect of introducing a length into the problem. The details about the geometry, loading, and the material properties have been presented in section \ref{a_bar_with_a_notch}. The simulations have been performed without introducing any length scale. Thus, the damage is expected to localize over a one element wide region. As earlier, three cases have been analyzed
 \begin{itemize}
-	\item Degraded elastic moduli of the corresponding material states are taken as the hyper-parameters. The system is displacement driven and an arc-length (AL) solver has not been used.
+	\item Degraded elastic moduli of the corresponding material states are taken as the hyper-parameters. The system is displacement driven and an arc-length solver has not been used.
 	\item Tangent moduli of the corresponding material states are taken as the hyper-parameters. The system is displacement driven and an arc-length solver has not been used.
 	\item Tangent moduli of the corresponding material states are taken as the hyper-parameters. Arc-length solver has been used.
 \end{itemize}
 The results obtained for the damage profile at the center section of the bar in Figure \ref{2d_1d_bar_dims} have been presented in Figure \ref{conv_check_2D} and the load-displacement response in Figure \ref{comparison_conv_check}.
 
-	
-
-
-
-\begin{figure}
+\begin{figure}[h]
 	\centering
 	\begin{subfigure}{0.19\textwidth}
 		\centering
@@ -597,33 +499,33 @@ The results obtained for the damage profile at the center section of the bar in 
 		\label{conv_checkdamage_fine}
 	\end{subfigure}
 	%\includegraphics[width=\linewidth]{Images/conv_check/conv_check_2D.pdf}
-	\caption{Damage distribution without regularization. (a) Damaged elastic modulus used for hyper-parameter and no arc-length (AL), (b) Tangent modulus used for hyper-parameter and no AL, (c) Tangent modulus used for hyper-parameter with AL solver, (d) Fine mesh - Tangent modulus used for hyper-parameter and no AL, (e) Fine mesh - Tangent modulus used for hyper-parameter with AL solver  \textcolor{red}{which load level?}\label{conv_check_2D}}
+	\caption{Damage distribution without regularization corresponding to the final load step in the force-displacement response in Figure \ref{comparison_conv_check}. (a) Damaged elastic modulus used for hyper-parameter and no AL, (b) Tangent modulus used for hyper-parameter and no AL, (c) Tangent modulus used for hyper-parameter with AL solver, (d) Fine mesh - Tangent modulus used for hyper-parameter and no AL, (e) Fine mesh - Tangent modulus used for hyper-parameter with AL solver  \label{conv_check_2D}}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[h]
 	\centering
 	\includegraphics[scale=0.8]{Images/conv_check/comparison_conv_check.pdf}
 	\caption{Load - displacement response for the bar with a notch. AL stands for Arc Length. Elastic - no AL corresponds to case (a), Tangent - no AL corresponds to case (b), AL corresponds to case (c), AL - fine corresponds to case (e) of Figure \ref{conv_check_2D}. \label{comparison_conv_check}}
 \end{figure}
 
-When the damaged elastic moduli are taken as the hyper-parameter, the damage profile is diffuse as presented in Figure \ref{conv_checkdam_el_met_noal}, even if there is no regularization in the problem. This is inline with the earlier discussion regarding the path taken by the mechanical and the material states in 1D, presented in Figures \ref{bad_metric_no_snap} and \ref{bad_metric_snap_no_al}, where the direction of strain increment in an element may result in a transition towards a homogeneous solution branch. The corresponding load-displacement curve in Figure \ref{comparison_conv_check} is still almost straight when the simulation is terminated. The simulation has been terminated early since the number of iterations till convergence (till successive material points are close) are very high. The distance functional remains large even though the successive material iterates are closer.
+When the damaged elastic moduli are taken as the hyper-parameter, the damage profile is diffuse as presented in Figure \ref{conv_checkdam_el_met_noal}, even if there is no regularization in the problem. This is in line with the earlier discussion regarding the path taken by the mechanical and the material states in 1D, presented in Figures \ref{bad_metric_no_snap} and \ref{bad_metric_snap_no_al}, where the direction of strain increment in an element may result in a transition towards a homogeneous solution branch. The corresponding load-displacement curve in Figure \ref{comparison_conv_check} is still almost straight when the simulation is terminated. The simulation has been terminated early since the number of iterations till convergence (till successive material points are close) are very high. The distance functional remains large even though the successive material iterates are closer.
 
 When the tangent moduli are taken as the hyper-parameter, the damage profile initially localizes until a certain load step, as presented in Figure \ref{conv_checkdam_neg_met_noal}. After this, a snapback response is expected. Since the system is displacement driven, it is expected that the system jumps through and the fully damaged band develops over the entire section instantaneously in a single load step. However, as presented in Figure \ref{conv_checkdam_neg_met_noal}, after the initial localized profile, the damage becomes diffuse as in the earlier case, and also as presented in Figure \ref{good_metric_snap_no_al}. The corresponding load-displacement curve in Figure \ref{comparison_conv_check} reveals a similar behavior. At the point where a snapback is expected, there is a small drop in the load, which later on recovers and starts to increase again. 
  
-The next combination is the arc-length solver with the tangent moduli as the hyper-parameter. Like in the 1D case, the damage localizes to a one element wide region as shown in Figure \ref{conv_checkdam_al}. The arc length solver is able to track the severe snapback response of the bar as presented in Figure \ref{comparison_conv_check}. This also demonstrates the robustness of the arc-length constraint, which will be described in detail later.
+The next combination is the arc-length solver with the tangent moduli as the hyper-parameter. As in the 1D case, the damage localizes to a one-element-wide region as shown in Figure \ref{conv_checkdam_al}. The arc length solver is able to track the severe snapback response of the bar as presented in Figure \ref{comparison_conv_check}. This also demonstrates the robustness of the arc-length constraint, which will be described in detail later.
 
 
-When similar combinations are tested for a fine mesh, the elastic-no arc length combination needed an extremely large number of iterations to converge, at least once the damage begins to increase. This is clear from the analysis in the previous section, where the spectral radius of the matrix $\bfA \bfC $ gets much closer to $1$ as the mesh is refined. The tangent-no arc length combination converges at an optimal rate until the snapback instability occurs. At that point, it fails to converge at all. The resulting damage profile from Figure \ref{conv_checkdam_fine_tan_noal}, however, resembles the one obtained by using an arc-length solver in Figure \ref{conv_checkdamage_fine}. The load-displacement curve for this case has not been presented, since the curve is almost linear and shows no special features till the point of unconvergence. The tangent-arc length combination presented in Figure \ref{conv_checkdamage_fine} presents a damage band that is one-element wide, exhibiting the expected mesh sensitivity. The load-displacement curve, presented in Figure \ref{comparison_conv_check}, shows a snapback response that is different from the coarse mesh case.
+When similar combinations are tested for a fine mesh, the elastic-no arc length combination needed an extremely large number of iterations to converge, once the damage begins to increase. This is clear from the analysis in the previous section, where the spectral radius of the matrix $\bfA \bfC $ gets much closer to $1$ as the mesh is refined. The tangent-no arc length combination converges at an optimal rate until the snapback instability occurs. At that point, it fails to converge at all. The resulting damage profile from Figure \ref{conv_checkdam_fine_tan_noal}, however, resembles the one obtained by using an arc-length solver in Figure \ref{conv_checkdamage_fine}. The load-displacement curve for this case has not been presented, since the curve is almost linear and shows no special features till the point of unconvergence. The tangent-arc length combination presented in Figure \ref{conv_checkdamage_fine} presents a damage band that is one-element wide, exhibiting the expected mesh sensitivity. The load-displacement curve, presented in Figure \ref{comparison_conv_check}, shows a snapback response that is different from the coarse mesh case.
 
 
 
 
 \begin{remark}
-	Results from the analysis performed in Appendix \ref{appx_convergence} reveals that an optimal rate of convergence is obtained when the metric in the distance functional is taken equal to the tangent, $\parder{\sigma^*}{\epsilon^*}$, obtained from the corresponding material state. For materials that undergo damage, this derivative is negative. Thus, during the alternate minimization process, for the elements that undergo damage, $C$ is smaller than zero. It shall be noted that the convergence of the solver is still judged on the basis of the metric that is equal to the elastic modulus and the tangent is used only during the alternate minimization and the corresponding Newton iterations, equations \eqref{disp_equation_normaldd} and \eqref{eta_equation_normaldd}.
+	Results from the analysis performed in appendix \ref{appx_convergence} reveals that an optimal rate of convergence is obtained when the metric in the distance functional is taken equal to the tangent, $\parder{\sigma^*}{\epsilon^*}$, obtained from the corresponding material state. For materials that undergo damage, this derivative is negative. Thus, during the alternate minimization process, for the elements that undergo damage, $C$ is smaller than zero. The convergence of the solver is still judged based on the metric that equals the elastic modulus, while the tangent is used only during the alternate minimization and the corresponding Newton iterations (equations \ref{disp_equation_normaldd} and \ref{eta_equation_normaldd}).
 \end{remark}
 
 
-In a non-DD setting, the problem involves minimizing a functional that is non-convex. The energy density depends on displacement and damage, and is separately convex with respect to each variable. Consequently, the minimization is carried out by alternating between the two variables, which effectively convexifies the problem. This procedure allows the minimizers to jump through instabilities such as snapbacks under displacement control (although this may require a larger number of iterations). It should be noted that using a monolithic (Newton) solver for such a non-convex problem, without additional refinements or an arc-length constraint, may lead to non-convergence \cite{Farrell2017, Gerasimov2016, Singh2016, bharali2022robust}. In the DD setting, however, the database resembles that in Figure \ref{1D_bar_dam_elem}, and thus the non-convexity is inherently embedded in the stored data. For this reason, an arc-length method has been employed to trace the entire bifurcation branch without requiring any jumps. As presented, not using an arc-length solver may result in a widened damage profile even in the absence of regularization. This may result in a mesh-dependent behavior even after the introduction of a length scale.
+In a non-DD setting, the problem involves minimizing a functional that is non-convex. The energy density depends on displacement and damage, and is separately convex with respect to each variable. Consequently, the minimization is carried out by alternating between the two variables. This procedure allows the minimizers to jump through instabilities such as snapbacks under displacement control (although this may require a larger number of iterations). It should be noted that using a monolithic (Newton) solver for such a non-convex problem, without additional refinements or an arc-length constraint, may lead to non-convergence \cite{Farrell2017, Gerasimov2016, Singh2016, bharali2022robust}. In the DD setting, however, the database resembles that in figure \ref{1D_bar_dam_elem}, and thus the non-convexity is inherently embedded in the stored data. For this reason, an arc-length method has been employed to trace the entire bifurcation branch without requiring any jumps. As presented, not using an arc-length solver may result in a widened damage profile even in the absence of regularization. This may result in a mesh-dependent behavior even after the introduction of a length scale.
 
 To conclude, with the ingredients presented (the arc length solver and the choice of hyper-parameters), the data driven solver is able to exhibit the expected mesh dependence of the solution as expected when there is no regularization. To emphasize, the emergence of localized or diffuse damage in this setting is not enforced but results entirely from the interaction between the DD hyper-parameters, continuation strategy, and material non-convexity. 
 
@@ -632,9 +534,7 @@ To conclude, with the ingredients presented (the arc length solver and the choic
 
 In the previous section, it was shown that, in the absence of regularization, the DD algorithm exhibits mesh dependence of the solution, as expected, provided that the appropriate algorithmic ingredients are employed. The natural next step is therefore to introduce a regularization mechanism such that the results, most notably the width of the localization band, become independent of the mesh size.
 
-In non-DD settings, this objective is commonly achieved through a variety of approaches, including gradient-enhanced damage models, nonlocal damage evolution laws, and nonlocal or gradient-based strain formulations. In the DD setting considered here, however, the direct use of damage gradients is non-trivial or even infeasible, since the damage variable, when present, is attached to the material state rather than defined as an independent field. For this reason, regularization is instead introduced through the gradient of the mechanical strain.
-
-Furthermore, the regularization is modeled independently of the material database - here represented by the local constitutive model - in contrast to the approach adopted in \cite{Ulloa2024}.
+In non-DD settings, this objective is commonly achieved through a variety of approaches, including gradient-enhanced damage models, nonlocal damage evolution laws, and nonlocal or gradient-based strain formulations. In the DD setting considered here, however, the direct use of damage gradients is non-trivial or even infeasible, since the damage variable, when present, is attached to the material state rather than defined as an independent field. For this reason, regularization is instead introduced through the gradient of the mechanical strain. Furthermore, the regularization is modeled independently of the material database - here represented by the local constitutive model - in contrast to the approach adopted in \cite{Ulloa2024}.
 
 To this end, the strain-based Lipschitz regularization introduced in \cite{Kamasamudram2023} is first adapted to the data-driven framework in a one-dimensional setting. The method is then applied to the localization problem introduced in the previous section. Finally, a relaxed version of the regularization strategy is developed and presented for the two-dimensional case.
 
@@ -647,13 +547,13 @@ The introduction of the Lipschitz constraint on the strain variable modifies the
 \begin{equation}
 	\sigma_{,x}- \lambda_{,xx}=0,\label{equil_couple_1D}
 \end{equation}
-see equation 37 of \cite{Kamasamudram2023}, where $\lambda$ is the Lagrange multiplier that is dual to the Lipschitz constraint. $\lambda \neq 0$ only in the regions of the body where the constraint is active. The equations of equilibrium used in DDCM should thus take this into account. 
+see equation 37 of \cite{Kamasamudram2023}, where $\lambda$ is the Lagrange multiplier that is dual to the Lipschitz constraint. $\lambda \neq 0$ only in the regions of the body where the constraint is active. The equilibrium equations used in DDCM should thus take this into account. 
 
 Assuming piecewise affine interpolation for the displacement variable and thus, a piecewise constant variation of the stresses and the strains, the distance functional becomes
 \begin{equation}
 	d(\bfeps,\bfsig,\bfeps^*,\bfsig^*) = \frac{1}{2}(\bfB \bfu - \bfeps^*)^T\mathcal{C}\bfw(\bfB \bfu - \bfeps^*) + \frac{1}{2}(\bfsig - \bfsig^*)^T\mathcal{C}^{-1}\bfw(\bfsig - \bfsig^*).
 \end{equation}
-The objective now is to find the minimizers of the above functional so that the strain field satisfies the Lipschitz constraint, and the stress fields satisfy the equilibrium. The Lagrange multipliers that enforce the constraint on the strain field act as couple stresses. The strains are interpolated on a different mesh from the one used to interpolate the displacement field, see Figure \ref{mesh_dual_1d}. The strain field is taken to vary linearly over the red mesh. The solution is now
+The objective now is to find the minimizers of the above functional so that the strain field satisfies the Lipschitz constraint, and the stress fields satisfy the equilibrium. The Lagrange multipliers that enforce the constraint on the strain field act as couple stresses. The strains are interpolated on a different mesh from the one used to interpolate the displacement field. See Figure \ref{mesh_dual_1d}. The strain field is taken to vary linearly over the red mesh. The solution is now
 \begin{equation}
 	\text{Sol } \in \arg \min_{(\bfeps,\bfsig) \in \mathcal{E}, (\bfeps^*,\bfsig^*) \in \mathcal{D}} d(\bfeps,\bfsig,\bfeps^*,\bfsig^*),
 \end{equation}
@@ -662,21 +562,28 @@ where, the equilibrium manifold is now defined as (in discrete form)
 	\mathcal{E} = \{(\bfeps,\bfsig) : \bfeps = \bfB \bfu, \bfeps \text{ is such that } |\bfB' \bfeps|  \leq 1/{\ell_c} ,\bfu = \bfu_D \text{ on } \partial \Omega_d,
 	\text{ and } \bfB ^T\bfw \bfsig + \bfP^T \bflam = 0     \},
 \end{equation}
-\textcolor{red}{[Note: it may be necessary to explain that $|\bfB' \bfeps|$ denotes the array of norms, and not the norm of the array]}\\
-where $\bflam$ is the Lagrange multiplier. $\bfB'$ is the discrete gradient operator on the strain variable (see Figure \ref{mesh_dual_1d}), and $\bfP = \bfB \bfB'$ is the discrete second gradient operator. By splitting the constraints $|\bfB' \bfeps|  \leq 1/{\ell_c}$ as $\bfB' \bfeps  \leq 1/{\ell_c}$ (plus side) and $-\bfB' \bfeps  \leq 1/{\ell_c}$ (minus side), the Lagrangian can now be defined as:
+where $\bflam$ is the vector of Lagrange multipliers. $\bfB'$ is the discrete gradient operator on the strain variable (see Figure \ref{mesh_dual_1d}), and $\bfP = \bfB' \bfB$ is the discrete second gradient operator. The term $\bfP^T \bflam$ carries an implicit element-length weighting analogous to $\bfw$ on the first term; this weighting is absorbed into $\bflam$ in the 1D setting and written explicitly in the 2D formulation
+\color{red}
+
+The constraints $|\bfP \bfu|  \leq 1/{\ell_c}$ are interpreted element wise. That is
+\begin{equation}
+	|\bfP \bfu|  \leq 1/{\ell_c} \implies |P_{ij}u_j|  \leq 1/{\ell_c} \quad \forall \quad i={1,2,3,\dots N},
+\end{equation}
+where  $N$ denotes the number of dual elements (see Figure \ref{mesh_dual_1d}). \color{black} By splitting the constraints $|\bfP \bfu|  \leq 1/{\ell_c}$ as $\bfP \bfu  \leq 1/{\ell_c}$ (plus side) and $-\bfP \bfu  \leq 1/{\ell_c}$ (minus side), the Lagrangian can now be defined as:
 \begin{multline}
-	\Pi = d(\bfeps,\bfsig,\bfeps^*,\bfsig^*) - \bfeta^T \bfB ^T \bfw\bfsig + \sum_{i=1}^{N_c^+} \lambda^u_i \left( (\bfP \bfu)_i - \frac{1}{\ell_c}   \right) + \sum_{i=1}^{N_c^+} \lambda^{\eta u}_i \left( (\bfP (\bfu + \bfeta))_i - \frac{1}{\ell_c}   \right) + \\
-	\sum_{i=1}^{N_c^-} \lambda^u_i \left( -(\bfP \bfu)_i - \frac{1}{\ell_c}   \right) + \sum_{i=1}^{N_c^-} \lambda^{\eta u}_i \left( -(\bfP (\bfu + \bfeta))_i - \frac{1}{\ell_c}   \right) \label{big_1D_lagrangian}.
+	\Pi = d(\bfeps,\bfsig,\bfeps^*,\bfsig^*) - \bfeta^T \bfB ^T \bfw\bfsig + \sum_{i=1}^{N_c^+} \lambda^{u+}_i \left( (\bfP \bfu)_i - \frac{1}{\ell_c}   \right) + \sum_{i=1}^{N_c^+} \lambda^{\eta u +}_i \left( (\bfP (\bfu + \bfeta))_i - \frac{1}{\ell_c}   \right) + \\
+	\sum_{i=1}^{N_c^-} \lambda^{u-}_i \left( -(\bfP \bfu)_i - \frac{1}{\ell_c}   \right) + \sum_{i=1}^{N_c^-} \lambda^{\eta u-}_i \left( -(\bfP (\bfu + \bfeta))_i - \frac{1}{\ell_c}   \right) \label{big_1D_lagrangian}.
 \end{multline}
-Here, $N_c^+$ and $N_c^-$ denote the number of active plus and minus constraints, respectively, and $\lambda^u_i$ are the Lagrange multipliers dual to the constraint on the gradient of strain, and $(\bullet)_i$ denotes the $i$th component of the vector $\bullet$. \\
-\textcolor{red}{[A word on $\lambda^{\eta u}_i$? Note also that $\lambda^{u}_i$ and $\lambda^{\eta u}_i$ are defined on two sets of dual nodes... Maybe use $\lambda^{\eta u+}_i$ and $\lambda^{\eta u-}_i$ \ldots?]}\\
+\color{red}
+Here, $N_c^+$ and $N_c^-$ denote the number of active plus and minus constraints, respectively, and $\lambda^u_i, \lambda^{\eta u}_i$ are the Lagrange multipliers dual to the constraint on the displacements $\bfu$ and the perturbed displacements $\bfu + \bfeta$, respectively. $(\bullet)_i$ denotes the $i$th component of the vector $\bullet$. $\bflam^u, \bflam^{\eta u}$ are thus defined as piecewise constant on the dual elements.
+\color{black}
 The solution is defined as the collection that renders the Lagrangian stationary.
 \begin{equation}
 	\Pi  \leftarrow \statop!
 \end{equation}
 % $\lambda^u_i >0$ if $(\bfP \bfu)_i = \frac{1}{\ell_c}$ and $\lambda^u_i <0$ if $(\bfP \bfu)_i = -\frac{1}{\ell_c}$.
 
-The third and the fourth terms in the Lagrangian warrant some discussion. It is clear that the third term, together with the condition that $\lambda^u \geq 0$, enforces the inequality constraint $|\epsilon_{,x}| \leq 1/\ell_c$. Treating $\bfeta$ as the virtual displacement, the fourth term enforces the constraint that in the regions where the inequality constraint is satisfied as an equality, the perturbed field, $\bfu+\bfeta$, must also satisfy the constraint as an equality. It shall be noted that there is a priori no restriction on the sign of $\lambda^{\eta u}$. However, as will be demonstrated below, at convergence, $\lambda^{\eta u}_i = -\lambda^{ u}_i$. This, owing to the restriction on $\lambda^u$, determines the sign of $\lambda^{\eta u}$.
+The third and the fourth terms in the Lagrangian warrant some discussion. It is clear that the third term, together with the condition that $\lambda^u \geq 0$, enforces the inequality constraint $|\epsilon_{,x}| \leq 1/\ell_c$. Treating $\bfeta$ as the virtual displacement, the fourth term enforces the constraint that in the regions where the inequality constraint is satisfied as an equality, the perturbed field, $\bfu+\bfeta$, must also satisfy the constraint as an equality. A priori, there is no restriction on the sign of $\lambda^{\eta u}$. However, as demonstrated below, $\lambda^{\eta u}_i = -\lambda^{ u}_i$ at convergence. Since $\lambda^u$ is already restricted, this relationship inherently determines the sign of $\lambda^{\eta u}$. 
 
 For notational convenience, the minus constraints will be dropped, since the only difference they make is in the sign of the couple stress. The Euler Lagrange equations can be seen to be
 \begin{gather}
@@ -685,41 +592,63 @@ For notational convenience, the minus constraints will be dropped, since the onl
 	r_{\lambda^u_i} =  (\bfP \bfu)_i - \frac{1}{\ell_c}  =0, \\
 	r_{\lambda^{\eta u}_i} =  (\bfP (\bfu + \bfeta))_i - \frac{1}{\ell_c}  =0. 
 \end{gather}
-%
-At convergence, $\bfeps=\bfeps^*$ and $\bfeta=0$. Thus, from equation \eqref{residual_u_1D_DD}, it can be seen that $\lambda^u_i = -\lambda^{\eta u}_i$, as mentioned earlier. The equations of equilibrium can be recovered as $\bfB^T \bfw \bfsig +\bfP^T \bflam^{u} =0$, since $\bfsig = \bfsig^*$ at convergence.\\
-\textcolor{red}{[This result is specific to a perfect database, no?]}
+
+At convergence, $\bfeps=\bfeps^*$ and $\bfeta=0$. Thus, from equation \ref{residual_u_1D_DD}, it can be seen that $\lambda^u_i = -\lambda^{\eta u}_i$, as mentioned earlier. The equations of equilibrium can be recovered as $\bfB^T \bfw \bfsig +\bfP^T \bflam^{u} =0$, since $\bfsig = \bfsig^*$ at convergence.
+
+
+%\begin{algorithm}
+%	\begin{algorithmic}
+%		\State Given $\sigma^n, \epsilon^n, \sigst^n, \epsst^n,\Delta \epsilon$ 
+%		\State Determine $\sigma^{n+1}, \epsilon^{n+1}, \sigst^{n+1}, \epsst^{n+1}$ 
+%		\State $i \gets 1$, $\sigst_{0} = \sigst^{n}, \epsst_{0}= \epsst^{n}$
+%		\While{Not Converged} 
+%			\Procedure{Mechanical update}{$\sigst_{i-1}, \epsst_{i-1},$Tangent}
+%			\State Resolve the Euler Lagrange equations
+%			\State \Return $\sigma_{i}, \epsilon_{i}$
+%			\EndProcedure
+%			\Procedure{Material update}{$\sigma_{i}, \epsilon_{i}$}
+%				\State Find the closest point on the elastic branch, equation \ref{elastic_branch_material_state}: $\sigst_e,\epsst_e$
+%				\State Find the closest point on the damage branch, equation \ref{damage_branch_material_state}: $\sigst_d,\epsst_d$
+%				\If{d($\sigma_{i}, \epsilon_{i},\sigst_e,\epsst_e$) $<$ d($\sigma_{i}, \epsilon_{i},\sigst_d,\epsst_d$)}
+%					\State \Return $\sigst_e,\epsst_e$, Elastic degraded modulus
+%				\Else
+%					\State \Return $\sigst_e,\epsst_e$, Tangent modulus $\left( \parder{\sigst}{\epsst}\right)$
+%				\EndIf
+%			\EndProcedure
+%			\State $i \gets i+1$
+%		\EndWhile 
+%		\State $n \gets n+1$
+%	\end{algorithmic}
+%	\caption{The DD algorithm}\label{alg:the_dd_algorithm}
+%\end{algorithm}
+
 
 \begin{algorithm}
 	\begin{algorithmic}
-		\State Given $\sigma^n, \epsilon^n, \sigst^n, \epsst^n,\Delta \epsilon$ 
-		\State Determine $\sigma^{n+1}, \epsilon^{n+1}, \sigst^{n+1}, \epsst^{n+1}$ 
-		\State $i \gets 1$, $\sigst_{0} = \sigst^{n}, \epsst_{0}= \epsst^{n}$
-		\While{Not Converged} 
-			\Procedure{Mechanical update}{$\sigst_{i-1}, \epsst_{i-1},$Tangent}
-			\State Resolve the Euler Lagrange equations
-			\State \Return $\sigma_{i}, \epsilon_{i}$
-			\EndProcedure
-			\Procedure{Material update}{$\sigma_{i}, \epsilon_{i}$}
-				\State Find the closest point on the elastic branch, equation \ref{elastic_branch_material_state}: $\sigst_e,\epsst_e$
-				\State Find the closest point on the damage branch, equation \ref{damage_branch_material_state}: $\sigst_d,\epsst_d$
-				\If{d($\sigma_{i}, \epsilon_{i},\sigst_e,\epsst_e$) $<$ d($\sigma_{i}, \epsilon_{i},\sigst_d,\epsst_d$)}
-					\State \Return $\sigst_e,\epsst_e$, Elastic degraded modulus
-				\Else
-					\State \Return $\sigst_e,\epsst_e$, Tangent modulus $\left( \parder{\sigst}{\epsst}\right)$
-				\EndIf
-			\EndProcedure
-			\State $i \gets i+1$
-		\EndWhile 
-		\State $n \gets n+1$
+		\State Given $\sigma^n,\epsilon^n,\sigst^n,\epsst^n,\Delta\epsilon$
+		\State Determine $\sigma^{n+1},\epsilon^{n+1},\sigst^{n+1},\epsst^{n+1}$
+		\State $i\gets 1$,\ $\sigst_0=\sigst^n$,\ $\epsst_0=\epsst^n$
+		\While{not converged}
+		\Procedure{Mechanical update}{$\sigst_{i-1},\epsst_{i-1},\mathbf{C}$}
+			\State Resolve the Euler--Lagrange equations
+			\State \Return $\sigma_i,\epsilon_i$
+		\EndProcedure
+		\Procedure{Material update}{$\sigma_i,\epsilon_i,d^n,\mathcal{H}^n$}
+			\State Apply Algorithm~\ref{alg:material_update_detailed}
+			\State \Return $(\epsst_i,\sigst_i,\mathbf{C}_i,d_i)$
+		\EndProcedure
+		\State $i\gets i+1$
+		\EndWhile
+		\State $n\gets n+1$
 	\end{algorithmic}
 	\caption{The DD algorithm}\label{alg:the_dd_algorithm}
 \end{algorithm}
 
 
 \subsection{Application and results}
-The regularization technique is now applied to the DDCM case tested earlier with a body force. The value of $\ell_c$ is taken to be $0.1\si{\meter}$. An arc length solver has been used like in the previous case with similar loading conditions. A piecewise linear and continuous interpolation has been used for displacement and a piecewise constant for the mechanical stress. A dual mesh had been used to impose the constraint on the strain gradient. The strain is taken to be piecewise linear and continuous on the dual mesh, see Figure \ref{mesh_dual_1d}. In this case, the discrete gradient operator $\bfB'$ is calculated on the dual (red) mesh. \textcolor{red}{[Repeat from before?]}
+The regularization technique is now applied to the DDCM case tested earlier with a body force. The value of $\ell_c$ is taken to be $0.1\si{\meter}$. Arc length solver has been used like in the previous case with similar loading conditions. A piecewise linear and continuous interpolation has been used for displacement and a piecewise constant for the mechanical stress. A dual mesh had been used to impose the constraint on the strain gradient. The strain is taken to be piecewise linear and continuous on the dual mesh. See Figure \ref{mesh_dual_1d}. 
 
-\begin{figure}
+\begin{figure}[ht]
 	\centering
 	\includegraphics[width=0.5\linewidth]{./mesh_dual_1d.pdf}
 	\caption{Mesh for displacement and strain}
@@ -728,7 +657,7 @@ The regularization technique is now applied to the DDCM case tested earlier with
 
 
 
-\begin{figure}
+\begin{figure}[ht]
 	\begin{subfigure}{0.45\textwidth}
 		\centering
 		\input{./tikz_figs/force_disp_nonlocal.tex}
@@ -746,7 +675,7 @@ The regularization technique is now applied to the DDCM case tested earlier with
 	\label{fig:Results_with_regularization}
 \end{figure}
 
-The load displacement curves and the strain distribution at failure have been presented in Figures \ref{force_disp_nonlocal} and \ref{strain_dist_nonlocal} for two different mesh sizes (compare with Figure \ref{fig:Results_without_regularization}). A couple of observations warrant a closer look. First, as discussed in \cite{Kamasamudram2023}, the Lipschitz constraint shall be removed from the elements that are fully damaged to allow for the strains to localize in the fully damaged element and prevent the expansion of damage further into the body. The black dot in Figure \ref{force_disp_nonlocal} corresponds to the case when the constraint is deactivated - the force displacement curve suddenly jumps to zero force. This situation is trivial in 1D, but is susceptible to cause convergence issues in 2D. See \cite{Geers1998,Cabot2014,Le2018} and the references therein for similar discussions where the damaged regions extend across the body and various modifications/ adaptations of the corresponding regularization method have been proposed to force a localized damage profile. Second, taking a closer look at the force-displacement curve as in Figure \ref{force_disp_nonlocal_zoom}, a number of smaller snapbacks can be observed. It can be explained as follows: since the regularization is introduced through an inequality constraint, and this constraint is numerically resolved with a finite mesh size, the regularization is inactive until strain localizes in the some region of the body. The strains then grow locally till the constraint becomes active. Once activated, the constraint expands the damage zone further into the neighboring elements, where the strains again grow locally. This process carries on until some part of the body is fully damaged. Thus, the problem switches between a local (albeit with a varying length scale) and non-local problem as the constraint is activated and the damage spreads into other elements. The snapback occurs when the strains localize and the recovery corresponds to the activation of the constraint. It can also be seen that the amplitude of this sawtooth like pattern decreases as the mesh is refined, but the number of tooth increases.
+The load displacement curves and the strain distribution at failure have been presented in Figures \ref{force_disp_nonlocal} and \ref{strain_dist_nonlocal} for two different mesh sizes (compare with Figure \ref{fig:Results_without_regularization}). Several observations warrant further discussion. First, as discussed in \cite{Kamasamudram2023}, the constraint must be removed from the elements that are fully damaged to allow for the strains to localize in the fully damaged element and prevent the expansion of damage further into the body. The black dot in Figure \ref{force_disp_nonlocal} corresponds to the case when the constraint is deactivated - the force displacement curve suddenly jumps to zero force. This situation is trivial in 1D, but is susceptible to cause convergence issues in 2D. See \cite{Geers1998,Cabot2014,Le2018} and the references therein for similar discussions where the damaged regions extend across the body and various modifications/ adaptations of the corresponding regularization method have been proposed to force a localized damage profile. Second, taking a closer look at the force-displacement curve as in figure \ref{force_disp_nonlocal_zoom}, a number of smaller snapbacks can be observed. It can be explained as follows: since the regularization is introduced through an inequality constraint, and this constraint is numerically resolved with a finite mesh size, the regularization is inactive until strain localizes in the some region of the body. The strains then grow locally till the constraint becomes active. Once activated, the constraint expands the damage zone further into the neighboring elements, where the strains again grow locally. This process carries on until some part of the body is fully damaged. Thus, the problem switches between a local (albeit with a varying length scale) and non-local problem as the constraint is activated and the damage spreads into other elements. The snapback occurs when the strains localize and the recovery corresponds to the activation of the constraint. It can also be seen that the amplitude of this sawtooth like pattern decreases as the mesh is refined, but the number of tooth increases.
 
 
 \begin{remark}
@@ -754,24 +683,24 @@ The load displacement curves and the strain distribution at failure have been pr
 \end{remark}
 
 
-\begin{figure}
+\begin{figure}[ht]
 	\centering
 	\input{./tikz_figs/force_disp_nonlocal_zoom.tex}
 	\caption{Force vs Displacement curves for two mesh sizes zoomed in.}
 	\label{force_disp_nonlocal_zoom}
 \end{figure}
 
-Thus, in the 1D case, the proposed regularization technique ensures that the result remains independent of the mesh size, as expected. Though not reported here, the simulations performed in the 2D case reveal convergence issues if the constraint is abruptly deactivated once an element fails completely ($d=1$). Also, the activation-deactivation of elements lead to sawtooth like pattern in the load displacement curve, which may prove tedious to trace in 2D. To address these challenges, an alternative approach is presented below for the 2D case, in which the regularization is gradually weakened as the damage increases.
+Thus, in the 1D case, the proposed regularization technique ensures that the result remains independent of the mesh size, as expected. Though not reported here, the simulations performed in 2D case reveal convergence issues if the constraint is abruptly deactivated once an element fails completely ($d=1$). Also, the activation-deactivation of elements lead to sawtooth like pattern in the load displacement curve, which may prove tedious to trace in 2D. To address these challenges, an alternative approach is presented below for the 2D case, in which the regularization is gradually weakened as the damage increases.
 
 \section{2D Case}
 
 % This, combined with the arc-length method, would render the method tedious and expensive?? 
-As mentioned in the previous section, the strain based Lipschitz constraint introduces a length scale into the problem and results in a mesh independent solution. However, as was seen, the inequality constraint introduces a saw-tooth like pattern in the force-displacement response, which can be tedious to track. Also, to ensure that the damage zone does not extend across the body, the constraint (and thus, the length scale) will have to be removed from the fully damaged regions of the body. Abrupt removal of the constraint will likely lead to issues with convergence as well. Thus, two modifications will be introduced in this section in its extension to 2D. First, the constraint will be gradually weakened as the damage level increases. Second, the inequality constraint will be replaced by a log-barrier-like function. It is expected that the log-barrier like regularization will result in a smaller number of peaks in the saw-tooth pattern reported in the 1D case, if not completely eliminate it. It is also expected that the log-barrier like form delays the effect of the regularization term until the strains start to localize and not become active right from the earlier stages before strain localization occurs (see Figure \ref{comparison_log_quadratic}).
+As mentioned in the previous section, the strain based Lipschitz constraint introduces a length scale into the problem and results in a mesh independent solution. However, as was seen, the inequality constraint introduces a saw-tooth like pattern in the force-displacement response, which can be tedious to track. Also, to ensure that the damage zone does not extend across the body, the constraint (and thus, the length scale) will have to be removed from the fully damaged regions of the body. Abrupt removal of the constraint will likely lead to issues with convergence as well. Thus, two modifications will be introduced in this section in its extension to 2D. First, the constraint will be gradually weakened as the damage level increases. Second, the inequality constraint will be replaced by a log-barrier-like function. It is expected that the log-barrier like regularization will result in a smaller number of peaks in the saw-tooth pattern reported in the 1D case, if not completely eliminate it. It is also expected that the log-barrier like form delays the effect of the regularization term until the strains start to localize and not become active right from the earlier stages before strain localization occurs. See Figure \ref{comparison_log_quadratic}.
 
 
 The body is assumed to be triangulated by constant strain triangles, referred to as the primary mesh. Consequently, the displacement is piecewise linear and continuous across the elements, while the stress field is piecewise constant in each element. Thus, each element is associated with a single mechanical and material state. To impose the constraints on the gradient of strain, a dual mesh is introduced. The dual mesh consists of another set of constant strain triangles defined using the centroids of the triangles of the primary mesh as vertices. The strain field is then interpolated over the dual mesh in a piecewise linear manner. The gradient of strain, is thus piecewise constant over the triangles of the dual mesh.
 
-The distance functional remains expressed as
+The distance functional remains as
 \begin{equation}
 	d(\bfeps,\bfsig,\bfeps^*,\bfsig^*) = \frac{1}{2}(\bfB \bfu - \bfeps^*)^T\mathcal{C}\bfw(\bfB \bfu - \bfeps^*) + \frac{1}{2}(\bfsig - \bfsig^*)^T\mathcal{C}^{-1}\bfw(\bfsig - \bfsig^*).
 \end{equation}
@@ -779,48 +708,48 @@ Similar to the 1D case, the solution is then defined as the one that renders the
 \begin{equation}
 	\Pi  = d -\bfeta ^T \bfB^T \bfw \bfsig - \mu \sum_{i=1}^{N_c} \
 	w_i' \ln s_u{_i} + \mu \sum_{i=1}^{N_c} \
-	w_i' \ln s_\eta{_i} +\sum_{i=1}^{N_c} \lambda_u^ i \left\{ s_u{_i}  - \left[ \frac{1}{\ell_c}- \psi_i(\bfu) \right]  \right\} 
-	+\sum_{i=1}^{N_c} \lambda_\eta^ i \left\{ s_\eta{_i}  - \left[ \frac{1}{\ell_c}- \psi_i(\bfu+\bfeta) \right]  \right\}.
+	w_i' \ln s_\eta{_i} +\sum_{i=1}^{N_c} \lambda^u_i \left\{ s_u{_i}  - \left[ \frac{1}{\ell_c}- \psi_i(\bfu) \right]  \right\} 
+	+\sum_{i=1}^{N_c} \lambda^{\eta u}_ i \left\{ s_\eta{_i}  - \left[ \frac{1}{\ell_c}- \psi_i(\bfu+\bfeta) \right]  \right\}.
 \end{equation}
-The function $\psi$ is the strain-gradient term, as defined in equation (2.3) of \cite{Mindlin1968}. In the current case, it is defined as 
+The function $\psi$ is the strain-gradient term, as defined in equation 2.3 of \cite{Mindlin1968}. In the current case, it is defined as 
 \begin{equation}
 	\psi = 3\,k_{11i}k_{11i}	+ 3\,k_{22i}k_{22i}	+ \frac{1}{2}\,k_{12i}k_{12i}, \label{mindlin_energy}
 \end{equation}
-where $k_{lmn} = \epsilon_{lm,n}$ and Einstein summation convention has been used. Slack variables $s \geq 0$ have been introduced. Using Lagrange multipliers $\lambda_u$, the slack variables are defined as the difference between the strain gradient limit and the strain gradient term. The log term stays small as the slack variables remain small and begins to take over as the constraint is approached. This introduces the length scale into the problem. Inspired from the 1D case as in equation \eqref{big_1D_lagrangian}, a term involving the 'virtual displacements' $\bfeta$ is also included in the above equation in the strain gradient term $\psi$ in addition to the one involving displacement. By taking variations with respect to $\bfeta$, equilibrium equation can be obtained, which consists of the Cauchy stress $\bfsig$ and the Lagrange multipliers $\lambda_{\eta u}$ that act as couple stress. The modified equilibrium equation because of the strain gradients is thus taken care of automatically.
+where $k_{lmn} = \epsilon_{lm,n}$ and Einstein summation convention has been used. Slack variables $s \geq 0$ have been introduced. Using Lagrange multipliers $\lambda^u$, the slack variables are defined as the difference between the strain gradient term and the strain gradient term. The log term stays small as the slack variables remain small and begins to take over as the constraint is approached. This introduces the length scale into the problem. Inspired from the 1D case as in equation \ref{big_1D_lagrangian}, a term involving the 'virtual displacements' $\bfeta$ is also included in the above equation in the strain gradient term $\psi$ in addition to the one involving displacement. By taking variations with respect to $\bfeta$, equilibrium equation can be obtained, which consists of the Cauchy stress $\bfsig$ and the Lagrange multipliers $\lambda^{\eta u}$ that act as couple stress. The modified equilibrium equation because of the strain gradients is thus taken care of automatically.
 
-\textcolor{red}{[Notation is inconsistent with before: $\lambda_{\eta u}$ or $\lambda^{\eta u}$?]}
 
-The displacement field satisfies Dirichlet boundary conditions: $\bfu = \bfu_D$ on $\partial \Omega_D$. The test function $\bfeta$ is equal to $\bf0$ on $\partial \Omega_D$. The factors $ w_i'$ denotes the area of the dual elements and is thus similar to $ \bfw$ in equation \eqref{distance_func_orig}, $s_u{_i},s_\eta{_i}$ are the slack variables, $\lambda^i$ are the Lagrange multipliers that define the slack variables, and $\psi_i$ are the energies associated with the gradient of strain as defined below. When the constraints are to be relaxed gradually, the Lagrangian becomes
+
+The displacement field satisfies Dirichlet boundary conditions - $\bfu = \bfu_D$ on $\partial \Omega_D$. The test function $\bfeta$ is equal to $\bf0$ on $\partial \Omega_D$. The factors $ w_i'$ denotes the area of the dual elements and is thus similar to $ \bfw$ in equation \ref{distance_func_orig}. $s_u{_i},s_\eta{_i}$ are the slack variables. $\lambda_i$ are the Lagrange multipliers that define the slack variables. $\psi_i$ are the energies associated with the gradient of strain as defined below. When the constraints are to be relaxed gradually, the Lagrangian becomes
 \begin{multline}
 	\Pi  = d -\bfeta ^T \bfB^T \bfw \bfsig - \mu \sum_{i=1}^{N_c} \
 	w_i' \ln s_u{_i} + \mu \sum_{i=1}^{N_c} \
-	w_i' \ln s_\eta{_i} +\sum_{i=1}^{N_c} \lambda_u^ i \left\{ s_u{_i}  - \left[ \frac{1}{\ell_c}- g(d_i)\psi_i(\bfu) \right]  \right\} \\
-	+\sum_{i=1}^{N_c} \lambda_\eta^ i \left\{ s_\eta{_i}  - \left[ \frac{1}{\ell_c}-g(d_i) \psi_i(\bfu+\bfeta) \right]  \right\}, \label{lagrangian_interior_point}
+	w_i' \ln s_\eta{_i} +\sum_{i=1}^{N_c} \lambda^u_i \left\{ s_u{_i}  - \left[ \frac{1}{\ell_c}- g(d_i)\psi_i(\bfu) \right]  \right\} \\
+	+\sum_{i=1}^{N_c} \lambda^{\eta u}_ i \left\{ s_\eta{_i}  - \left[ \frac{1}{\ell_c}-g(d_i) \psi_i(\bfu+\bfeta) \right]  \right\}, \label{lagrangian_interior_point}
 \end{multline}
-where $g$ is a function such that $g(0)=1$ and $g(1)=0$. The function $\psi$ from equation \eqref{mindlin_energy} can be written in discrete form over a dual element $i$ as
+where $g$ is a function such that $g(0)=1$ and $g(1)=0$. The function $\psi$ from equation \ref{mindlin_energy} can be written in discrete form over a dual element $i$ as
 \begin{equation}
 	\psi_i(\bfu ) = \bfu ^T \bfG_i ^T \bfG_i \bfu,
 \end{equation}
 where $\bfG_i$ denotes the discrete second gradient operator, written on the $i^{th}$ dual element.
 
 \begin{remark}
-	A couple of observations are warranted. First, the function $g$ is selected so that $g(0)=1$ and $g(1)=0$. This means that when there is no damage, the regularization is fully effective, and when fully damaged, the regularization is removed. The transition between the two states is gradual if $g$ is smooth. Second, in this study, the parameter $\mu$ is fixed to be a finite positive value. It shall be noted that the method resembles the interior point method of resolving inequality constraints in the standard optimization setting, where successive problems are solved with decreasing $\mu$, $\mu \to 0$. Thus, as the parameter $\mu$ is made smaller, the method presented here boils down to the inequality case and the problems/ features about snapback that were observed in the 1D case return. It is expected that taking $\mu$ to be finite and fixed prevents this issue. 
+	A couple of observations are warranted. First, the function $g$ is selected so that $g(0)=1$ and $g(1)=0$. This means that when there is no damage, the regularization is fully effective, and when fully damaged, the regularization is removed. The transition between the two states is gradual if $g$ is smooth. Second, in this study, the parameter $\mu$ is fixed to be a finite positive value. This method resembles the interior point method for resolving inequality constraints in a standard optimization setting, where successive problems are solved with decreasing $\mu$, $\mu \to 0$. Thus, as the parameter $\mu$ is made smaller, the method presented here boils down to the inequality case and the problems/ features about snapback that were observed in the 1D case return. It is expected that taking $\mu$ to be finite and fixed prevents this issue. 
 \end{remark}
 The displacement vector $\bfu$ is split into degrees of freedom that are unknown or free, $\bfu_f$, and the part that follows from the applied boundary conditions, $\bfu_g$. Specifically, if $\bfu \in \mathbb{R}^N$, $\bfu_g \in \mathbb{R}^N$ is a vector of zeros and ones, with ones at places corresponding to the nodes where the boundary conditions are applied. The vector $\bfu_f \in \mathbb{R}^{N_f}$ will be determined from the solution of the problem. Thus, $\bfu = \bfC_f \bfu_f + \lambda_g \bfu_g$, where $\bfC_f \in \mathbb{R}^{N \times N_f} $ is a matrix that relates the total and the free degrees of freedom, $\lambda_g \in \mathbb{R}$ is the strength of the applied boundary condition on $\partial \Omega_D$. Since $\bfeta = \bf0$ on $\partial \Omega_D$, it is simply expressed as $\bfeta = \bfC_f \bfeta_f$. Using the expressions for $\bfu$ and $\bfeta$ in the Lagrangian and taking its variations results in the  Euler Lagrange equations.
 \begin{gather}
-	\bfr_{\bfu_f} = \bfC_f \bfB^T \mathcal{C} \bfw(\bfB \bfu - \bfeps^*) + \sum_{i=1}^{N_c} 2 \lambda_u^ i  g(d_i) \bfC_f \bfG_i ^T \bfG_i \bfu 
-	+\sum_{i=1}^{N_c} 2 \lambda_\eta^ i  g(d_i) \bfC_f \bfG_i ^T \bfG_i (\bfu+\bfeta) = \bf0, \label{all_equations_first_one} \\
+	\bfr_{\bfu_f} = \bfC_f \bfB^T \mathcal{C} \bfw(\bfB \bfu - \bfeps^*) + \sum_{i=1}^{N_c} 2 \lambda^u_i  g(d_i) \bfC_f \bfG_i ^T \bfG_i \bfu 
+	+\sum_{i=1}^{N_c} 2 \lambda^{\eta u}_i  g(d_i) \bfC_f \bfG_i ^T \bfG_i (\bfu+\bfeta) = \bf0, \label{all_equations_first_one} \\
 	\bfr_{\bfeta_f} = -\bfC_f \bfB^T \bfw(\bfsig^*+ \mathcal{C} \bfB \bfeta ) 
-	+\sum_{i=1}^{N_c} 2 \lambda_\eta^ i  g(d_i) \bfC_f \bfG_i ^T \bfG_i (\bfu+\bfeta) = \bf0, \\
+	+\sum_{i=1}^{N_c} 2 \lambda^{\eta u}_i  g(d_i) \bfC_f \bfG_i ^T \bfG_i (\bfu+\bfeta) = \bf0, \\
 	r_{\lambda_u^ i} = \bfu ^T \bfG_i ^T \bfG_i \bfu - \frac{1}{\ell_c} +  s_u{_i} = 0, \\
 	r_{\lambda_\eta^ i} = (\bfu+\bfeta) ^T \bfG_i ^T \bfG_i (\bfu+\bfeta) - \frac{1}{\ell_c} +  s_\eta{_i} = 0, \\ 
-	r_{s_u{_i}} = \lambda_u^ i s_u{_i} - \mu w_i'   = 0, \\
-	r_{s_\eta{_i}} = \lambda_\eta^ i s_\eta{_i} - \mu w_i'   = 0.\label{all_equations_last_one} 
+	r_{s_u{_i}} = \lambda^u_i s_u{_i} - \mu w_i'   = 0, \\
+	r_{s_\eta{_i}} = \lambda^{\eta u}_i s_\eta{_i} - \mu w_i'   = 0.\label{all_equations_last_one} 
 \end{gather}
-The above system is resolved for $\bfu_f, \bfeta_f, \lambda_u,\lambda_\eta,s_u,s_\eta$, knowing $\lambda_g$. When the arc length solver is used, $\lambda_g$ is treated as an unknown and the system is supplemented by the arc-length equation. The tangent matrix used during the Newton iterations is detailed in the appendix. The details of the arc-length solver can be found in Appendix \ref{appen_arc_length}.
+The above system is resolved for $\bfu_f, \bfeta_f, \lambda^u,\lambda^{\eta u},s_u,s_\eta$, knowing $\lambda_g$. When arc length solver is used, $\lambda_g$ is treated as an unknown and the system is supplemented by the arc-length equation. The tangent matrix used during the Newton iterations can be seen in the appendix. The details of the arc-length solver can be found in \ref{appen_arc_length}.
 
 \begin{remark}
-As in the 1D case, at convergence, $\bfeps = \bfeps^*$, and $\bfsig = \bfsig^*$. Thus, $\lambda_\eta^ i = -\lambda_u^ i$. Also, the Lagrange multipliers that take the role of couple stresses are computed as $\lambda_u^ i  =  \mu w_i'/ s_u{_i} >0$ since $s_u{_i} >0$ as a consequence of the log-barrier-like regularization.
+As in the 1D case, at convergence, $\bfeps = \bfeps^*$, and $\bfsig = \bfsig^*$. Thus, $\lambda^{\eta u}_i = -\lambda^u_i$. Also, the Lagrange multipliers that take the role of couple stresses are computed as $\lambda^u_i  =  \mu w_i'/ s_u{_i} >0$ since $s_u{_i} >0$ as a consequence of the log-barrier-like regularization.
 \end{remark}
 
 \section{Applications}
@@ -828,7 +757,7 @@ The formulation presented above will be applied for the case of a bar with a not
 
 
 \subsection{A bar with a notch \label{a_bar_with_a_notch}}
-The regularization technique described above has been applied to a notched bar problem, as illustrated in Figure \ref{2d_1d_bar_dims}. The left end of the bar is fixed, top end of the bar is constrained to move horizontally, and a horizontal displacement has been applied at the right end. The displacement magnitude is controlled using the arc-length method, which is detailed in the Appendix. The displacement field is discretized using constant-strain triangular elements, as described earlier. The strain variable iss subsequently interpolated onto a dual mesh, which is then used to evaluate the strain gradient.
+The regularization technique described above has been applied to a notched bar problem, as illustrated in Figure \ref{2d_1d_bar_dims}. The left end of the bar is fixed, top end of the bar is constrained to move horizontally, and a horizontal displacement has been applied at the right end. The displacement magnitude is controlled using the arc-length method, which is detailed in the Appendix \ref{appen_arc_length}. The displacement field is discretized using constant-strain triangular elements, as described earlier. The strain variable is subsequently interpolated onto a dual mesh, which is then used to evaluate the strain gradient.
 
 \begin{figure}
 	\centering
@@ -838,7 +767,7 @@ The regularization technique described above has been applied to a notched bar p
 \end{figure}
 
 
-\begin{figure}
+\begin{figure}[ht]
 	\begin{subfigure}{\textwidth}
 		\centering
 		\includegraphics[width=\linewidth]{./Images/2d_1d_bar/damage_coarse.pdf}
@@ -862,37 +791,37 @@ The regularization technique described above has been applied to a notched bar p
 		\vfill
 		\includegraphics[width=0.4\linewidth]{./Images/2d_1d_bar/cb.pdf}
 	\end{subfigure}
-	\caption{Results with regularization - A notched bar}
+	\caption{Damage distribution for the notched bar at the final load step, for three mesh sizes}
 	\label{2d_1d_bar_damage}
 \end{figure}
 
-The geometry of the bar is shown in Figure \ref{2d_1d_bar_dims}. The material parameters used for this study were $E = 210E9, \nu = 0.3, Y_c = 2E6, k=10, \ell_c = 0.5$, see \ref{app_mat_update}. The parameter $\mu = 2E6$ in equation \eqref{lagrangian_interior_point}. The function $g$ is taken same as in equation \eqref{degradation_function}. \textcolor{red}{[Units !!! GPa, MPa ? $\ell_c$ = 0.5 m, longer than the bar??]}
+The geometry of the bar is shown in Figure \ref{2d_1d_bar_dims}. The material parameters used for this study were $E = \SI{210}{\giga \pascal}, \nu = 0.3, Y_c = \SI{2E6}{\joule \per \meter ^3}, k=10, \ell_c = \SI{0.5}{\meter}$, see Appendix \ref{app_mat_update}. \textcolor{red}{Because the strain-gradient term $\psi$ is modulated by the damage-dependent function $g$, the regularization strength dynamically evolves during the simulation. Consequently, the effective regularization length is significantly smaller than the prescribed parameter $\ell_c$, as demonstrated in the following examples.} The parameter $\mu = 2E6$ in equation \ref{lagrangian_interior_point}. The function $g$ is taken same as in equation \ref{degradation_function}. 
 
-Figure \ref{2d_1d_bar_damage} shows the damage distribution attached to the material states associated with each element. The results are for three mesh sizes, where the ratio of element sizes of the coarse mesh to the intermediate mesh, and of the intermediate mesh to the fine mesh is 2. Compared with Figure \ref{conv_check_2D}, the damage profile is spread over multiple elements and is mesh independent. The variation of damage value across the center of the bar, from $(0.08,0.01)$ to $(0.12,0.01)$, where the origin is at the bottom left corner of the bar, can be seen in Figure \ref{1D_comparison_x}. Force-displacement curves for all the three mesh sizes can be seen in Figure \ref{1D_force_displacement}. The results are different from the ones presented in Figure \ref{comparison_conv_check} without any regularization.
+Figure \ref{2d_1d_bar_damage} shows the damage distribution attached to the material states associated with each element. The results are for three mesh sizes, where the ratio of element sizes of the coarse mesh to the intermediate mesh, and of the intermediate mesh to the fine mesh is 2. Compared with Figure \ref{conv_check_2D}, the damage profile is spread over multiple elements and is mesh independent. The variation of damage value across the center of the bar, from $(\SI{0.08}{\meter},\SI{0.01}{\meter})$ to $(\SI{0.12}{\meter},\SI{0.01}{\meter})$, where the origin is at the bottom left corner of the bar, can be seen in figure \ref{1D_comparison_x}. Force-displacement curves for all the three mesh sizes can be seen in figure \ref{1D_force_displacement}. The results are different from the ones presented in Figure \ref{comparison_conv_check} without any regularization.
 
-\begin{figure}
+\begin{figure}[h]
 	\centering
 	\input{./tikz_figs/1D_comparison_x.tex}
 	\caption{Variation of damage along the center of the bar, $y=0$, $x \in [-0.02,0.02]$ \unit{\meter}.}
 	\label{1D_comparison_x}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[ht]
 	\centering
 	\input{./tikz_figs/1D_force_displacement.tex}
 	\caption{Force displacement curves of the notched bar for three different meshes.}
 	\label{1D_force_displacement}
 \end{figure}
 
-It can be seen that in all the cases, the results are independent of the mesh size. The width of the damage zone does not change as the mesh is refined. Likewise, the force-displacement curve also remains the same for all the mesh sizes. A severe snap-back can be seen in Figure \ref{1D_force_displacement}, which has been captured by the arc length solver. It shall be noted that the saw-tooth-like pattern that has been observed in the 1D case, where the constraint is strictly enforced, is again observed even in the current scenario. Perhaps testing with different values of $\mu$ in the solver or using a different arc length solver might smoothen the results. This has not been pursued further in this article and can be the focus of future work.
+It can be seen that in all the cases, the results are independent of the mesh size. The width of the damage zone does not change as the mesh is refined. Likewise, the force-displacement curve also remains the same for all the mesh sizes. A severe snap-back can be seen in the figure \ref{1D_force_displacement}, which has been captured by the arc length solver. The saw-tooth-like pattern observed in the 1D case (where the constraint is strictly enforced) is also present in this scenario. Perhaps testing with different values of $\mu$ in the solver or using a different arc length solver might smoothen the results. This has not been pursued further in this article and can be the focus of future work.
 
 
 \subsection{L Beam}
 
 
-The regularization technique has also been applied to an L-shaped beam (L-beam) problem. This example allows to examine the regularization effects when the crack path is curved. The bottom horizontal face of the beam is fully constrained, enforcing $u_x,u_y=0$, while a prescribed vertical displacement was applied on the left vertical face, see Figure \ref{L_beam_dims}. The magnitude of this displacement is controlled using the arc-length method to accurately capture the nonlinear response and post-peak behavior. 
+The regularization technique has also been applied to an L-shaped beam (L-beam) problem. This example allows to examine the regularization effects when crack path is curved. The horizontal face of the beam is fully constrained, enforcing $u_x,u_y=0$, while a prescribed vertical displacement was applied on the vertical face. See Figure \ref{L_beam_dims}. The magnitude of this displacement is controlled using the arc-length method to accurately capture the nonlinear response and post-peak behavior. 
 
-The material parameters are the same as the previous example except $\ell_c = 1$ \textcolor{red}{[Unit?]}. A crack is expected to initiate at the inner corner of the L-beam due to the pronounced stress concentration in this region.
+The material parameters are the same as the previous example except $\ell_c = \SI{1}{\meter}$. A crack is expected to initiate at the inner corner of the L-beam due to the pronounced stress concentration in this region.
 
 \begin{figure}
 	\centering
@@ -901,7 +830,7 @@ The material parameters are the same as the previous example except $\ell_c = 1$
 	\label{L_beam_dims}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[ht]
 	\begin{subfigure}{0.32\textwidth}
 		\centering
 		\includegraphics[width=0.9\textwidth]{./Images/L/damage_coar.pdf}
@@ -924,18 +853,18 @@ The material parameters are the same as the previous example except $\ell_c = 1$
 		\vfill
 		\includegraphics[width=0.4\linewidth]{./Images/L/cb.pdf}
 	\end{subfigure}
-	\caption{Results of the L beam with regularization}
+	\caption{Damage distribution for the L-beam at the final load step, for three mesh sizes}
 	\label{fig:L_beam_coarse_fine}
 \end{figure}
 
 
 Simulations have been performed using coarse, intermediate, and fine meshes. The corresponding characteristic element sizes in the damaged region, computed as $ 4A/\sqrt{3}$, where $A$ is the area of the triangle in that region, are $\SI{0.0056}{\meter},\SI{0.0048}{\meter},\SI{0.0036}{\meter}$ for the coarse, intermediate, and fine mesh, respectively. The resulting damage fields for the three discretizations are shown in Figure \ref{fig:L_beam_coarse_fine}.
 
-To further examine mesh sensitivity, the variation of the damage variable along a vertical section at $x=0.08$, $y\in [-0.01,0.05]$ \textcolor{red}{[units?]} is plotted in Figure \ref{L_comparison_y}. The width of the damage zone remains nearly constant across all meshes, indicating satisfactory mesh objectivity. The position of the maximum damage varies slightly, with the peaks for the intermediate and fine meshes differing by approximately $\SI{0.005}{\meter}$. The force-displacement responses for all three mesh levels are compared in Figure \ref{L_force_displacement}. The overall behavior is consistent across discretizations, confirming convergence of the global response. Nevertheless, the characteristic sawtooth pattern observed previously in the one-dimensional test case reappears, despite the use of the interior-point regularization to relax the strict inequality constraint. This behavior suggests that, while the proposed formulation improves numerical stability, some degree of non-smoothness still remains in the progressive damage evolution.
+To further examine mesh sensitivity, the variation of the damage variable along a vertical section at $x=\SI{0.08}{\meter}$, $y\in [\SI{-0.01}{\meter},\SI{0.05}{\meter}]$ is plotted in Figure \ref{L_comparison_y}. The width of the damage zone remains nearly constant across all meshes, indicating satisfactory mesh objectivity. The position of the maximum damage varies slightly, with the peaks for the intermediate and fine meshes differing by approximately $\SI{0.005}{\meter}$. The force-displacement responses for all three mesh levels are compared in Figure \ref{L_force_displacement}. The overall behavior is consistent across discretizations, confirming convergence of the global response. Nevertheless, the characteristic sawtooth pattern observed previously in the one-dimensional test case reappears, despite the use of the interior-point regularization to relax the strict inequality constraint. This behavior suggests that, while the proposed formulation improves numerical stability, some degree of non-smoothness still remains in the progressive damage evolution.
 
 
 
-\begin{figure}
+\begin{figure}[ht]
 	\begin{subfigure}{0.49\textwidth}
 		\centering
 		\input{./tikz_figs/L_comparison_y.tex}
@@ -949,7 +878,7 @@ To further examine mesh sensitivity, the variation of the damage variable along 
 		\caption{}
 		\label{L_force_displacement}
 	\end{subfigure}
-	\caption{Results for the L beam. (a) Variation of damage along, $x=0.85$, $y \in [-0.01,0.05]$ \unit{\meter}. (b) Force displacement curves for three different meshes.}
+	\caption{Results for the L beam. (a) Variation of damage along the line $x=0.08$ \unit{\meter}, $y \in [-0.01,0.05]$ \unit{\meter}. The inner corner of the L-beam is taken as the origin. (b) Force displacement curves for three different meshes.}
 	
 \end{figure}
 
@@ -959,17 +888,16 @@ To further examine mesh sensitivity, the variation of the damage variable along 
 
 
 \section{Discussion}
+%In the presence of damage-induced non-convexity, these two sources of difficulty can interact in a manner that obscures the intrinsic properties of the solver. By considering the infinite-database limit, the present study provides a controlled setting in which convergence mechanisms, instabilities, and the role of additional algorithmic ingredients can be examined independently.
 
 
-The present study employs a constitutive model for the material update within the data-driven computational mechanics framework.\textbf{ This choice corresponds to the limit of an infinitely dense material database and is adopted to isolate the algorithmic behavior of the alternating minimization scheme from database-resolution effects.} In the presence of damage-induced non-convexity, these two sources of difficulty can interact in a manner that obscures the intrinsic properties of the solver. By considering the infinite-database limit, the present study provides a controlled setting in which convergence mechanisms, instabilities, and the role of additional algorithmic ingredients can be examined independently.
-
-The results demonstrate that, in problems involving material softening, the choice of hyper-parameters and continuation strategy in data-driven solvers influences not only convergence rates but also the physical character of damage localization. In particular, the combination of an arc-length solver with tangent-based hyper-parameters is shown to be essential for correctly capturing localization and snap-back behavior. This choice yields robust convergence properties that are insensitive to mesh refinement, while alternative combinations may lead to diffuse damage patterns or a complete loss of convergence as the mesh is refined. Tangent-based hyper-parameters may not always be positive definite. Thus, these set of hyper-parameters may be reserved for the mechanical update process in the corresponding Euler-Lagrange equations and a positive definite secant modulus can be used for hyper-parameters during the material update. This may lead to a loss of rate of convergence, put preserve the instability tracking ability of the hyper-parameter - arc-length combination while dealing with discrete databases.
+The present study employs a constitutive model for the material update within the data-driven computational mechanics framework. The results demonstrate that, in problems involving material softening, the choice of hyper-parameters and continuation strategy in data-driven solvers influences not only convergence rates but also the physical character of damage localization. In particular, the combination of an arc-length solver with tangent-based hyper-parameters is shown to be essential for correctly capturing localization and snap-back behavior. This choice yields robust convergence properties that are insensitive to mesh refinement, while alternative combinations may lead to diffuse damage patterns or a complete loss of convergence as the mesh is refined. Tangent-based hyper-parameters may not always be positive definite. Thus, these set of hyper-parameters may be reserved for the mechanical update process in the corresponding Euler-Lagrange equations and a positive definite secant modulus can be used for hyper-parameters during the material update. This may lead to a loss of rate of convergence, put preserve the instability tracking ability of the hyper-parameter - arc-length combination while dealing with discrete databases. This aspect has not been investigated and is a possible future research direction.
 
 The need for algorithmic modifications in the presence of instabilities has been recognized previously in the data-driven literature. Kuang et al. \cite{Kuang2023}, for example, considered instabilities arising from geometric nonlinearities and demonstrated that appropriate modifications to the solution strategy are required to correctly trace snap-back responses. In an analogous manner, the present study shows that employing the local material tangent as a hyper-parameter allows the data-driven equilibrium operator to develop zero eigenvalues when a snap-back response is expected. When combined with an arc-length solver, this modification enables the data-driven formulation to capture material instabilities in a manner consistent with softening behavior.
 
 Tangent-based hyper-parameters have previously been explored in data-driven methods primarily as a means of accelerating convergence, and only in settings where instabilities are absent \cite{Pham2023,Nguyen2022,Kanno2019}. To the best of the authors’ knowledge, the present work is the first to demonstrate that the choice of hyper-parameters, together with an appropriate continuation strategy, plays a critical role in the treatment of material instabilities within a data-driven framework.
 
-The observed behavior can be interpreted in close analogy with finite element formulations employing constitutive models. In such settings, non-convexity arising from material softening is known to cause standard Newton iterations to fail, motivating the use of arc-length solvers and consistent material tangents to robustly trace snap-back responses. In this context, the present data-driven formulation using an arc-length solver together with tangent-based hyper-parameters may be viewed as the analogue of a monolithic Newton method equipped with a consistent material tangent. Also, the regularization method introduced relies on the gradient of the strain variable, and the regularization is removed once the damage variable reaches $1$. In \cite{le2018strain}, the effectiveness of regularization in such cases has been analyzed, leading to the conclusion that regularization in such cases is ineffective and the damage evolution is discontinuous. Coupling the method with an arc-length solver, however, forces the damage evolution to be continuous and is likely to keep the regularization effective, as demonstrated.
+The observed behavior can be interpreted in close analogy with finite element formulations employing constitutive models. In such settings, non-convexity arising from material softening is known to cause standard Newton iterations to fail, motivating the use of arc-length solvers and consistent material tangents to robustly trace snap-back responses. In this context, the present data-driven formulation using an arc-length solver together with tangent-based hyper-parameters may be viewed as the analogue of a monolithic Newton method equipped with a consistent material tangent. Also, the regularization method introduced relies on the gradient of the strain variable, and the regularization is removed once the damage variable reaches $1$. \cite{le2018strain} analyzes the effectiveness of regularization in such cases and concludes that the regularization in such cases is ineffective and the damage evolution is discontinuous. Coupling the method with an arc-length solver, however, forces the damage evolution to be continuous and keeps the regularization effective, as demonstrated.
 
 Having established the algorithmic requirements for handling instabilities, the role of regularization becomes central in ensuring mesh-independent responses. Incorporating strain-based Lipschitz regularization within the data-driven framework yields mesh-independent damage profiles in one and two dimensions. At the same time, the results highlight practical challenges associated with inequality-based regularization, including oscillatory force-displacement responses.
 
@@ -977,60 +905,19 @@ In the two-dimensional setting, the regularization strategy was therefore modifi
 
 The use of inequality- or barrier-based regularization in the present work is motivated by the desire to delay the influence of strain-gradient effects, rather than activating them from the onset of deformation as in classical gradient elasticity formulations such as those of Mindlin or Toupin. In this sense, the regularization acts primarily as a stabilization mechanism that becomes relevant only once localization develops, rather than as a constitutive modification that alters the material response throughout the loading process.
 
-Finally, the alternating minimization strategy employed in the present work bears conceptual similarities to search-direction-based methods such as LATIN \cite{ladeveze1989large}. Exploring hybrid formulations that combine data-driven material representations with such solution strategies represents a promising direction for future research. \textcolor{red}{[I am not sure what you mean here!? And would not engage in this direction at this point.]}
+%Finally, the alternating minimization strategy employed in the present work bears conceptual similarities to search-direction-based methods such as LATIN \cite{ladeveze1989large}. Exploring hybrid formulations that combine data-driven material representations with such solution strategies represents a promising direction for future research.
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-%
-%
-%
-%
-%---------------------------------------------------
-%
-%The present study employs a constitutive model to perform the material update within the DDCM framework. This choice effectively represents the limit of an infinitely dense material database and is made to isolate the algorithmic aspects of the alternating minimization scheme from database-resolution effects. In the presence of damage-induced non-convexity, these two sources of difficulty can interact in a manner that obscures the intrinsic behavior of the solver. By considering the infinite-database limit, the present study provides a setting in which convergence mechanisms, instabilities, and the role of additional algorithmic ingredients can be examined in isolation.
-%
-%The article proceeds in an incremental manner. First, a one-dimensional bar with a single element on the softening branch and the remaining elements on the elastic branch is analyzed. Employing a constitutive model for the material update allows the data-driven iterations to be expressed as a repeated application of a linear operator, thereby enabling a direct investigation of the convergence behavior of the algorithm. Through examination of different algorithmic choices, it is shown that the use of an arc-length solver in combination with the tangent at the corresponding material point is necessary to obtain proper localization of damage. The spectral radius of the linear operator has been observed to be $0.5$ for the arc-length and tangent hyper-parameter combination, regardless of the material parameters and the mesh size. As a result, convergence is achieved at an optimal rate that is insensitive to mesh refinement. The robustness of this choice is then demonstrated for a one-dimensional bar subjected to a body force, where the arc-length solver captures the expected mesh-dependent snap-back response. In contrast, when a two-dimensional notched specimen is analyzed using elastic-modulus-based hyper-parameters together with direct displacement control, the solution exhibits a diffuse damage pattern even in the absence of regularization. This behavior is purely algorithmic and mesh dependent, as this combination fails to converge within a reasonable number of iterations upon mesh refinement. The arc-length and tangent hyper-parameter combination again yields optimal convergence and damage localization that varies with mesh resolution.
-%
-%
-%The need for modifications in DD solvers when instabilities are present has been discussed previously in the literature. For instance, Kuang et al. \cite{Kuang2023} investigated instabilities arising from geometric nonlinearities, where the stiffness matrix develops a zero eigenvalue. To correctly trace snap-back, the initial guess at the critical load step was modified using the corresponding eigenvector and the loading direction was reversed. Without these adaptations, the DD solution was shown to deviate from the expected non-DD response; see Figures 6, 7, and 16 of that reference. In an analogous manner, the present study shows that modifying the hyper-parameters by using the local tangent $\parder{\sigst}{\epsst}$ allows the matrix on the left-hand side of Eq. \ref{disp_equation_normaldd} to also develop zero eigenvalues when a snapback response is expected (verified in 1D). When this choice is combined with an arc-length solver, the DD formulation is able to trace material instabilities in a manner consistent with softening behavior.
-%
-%The use of tangent-based metrics in DD methods has been considered previously \cite{Pham2023,Nguyen2022,Kanno2019}, but primarily as a means of accelerating convergence, and only for problems in which no instabilities are present. To the best of the authors’ knowledge, the present work is the first to demonstrate that the choice of metric, together with the use of an arc-length solver, plays a critical role when material instabilities are encountered within a DD framework.
-%
-%The observed behavior with and without an arc-length solver can be interpreted in close analogy with finite element formulations employing constitutive models. In such settings, the resulting non-convex problem may cause Newton iterations to fail \cite{Farrell2017,Gerasimov2016}. Various remedies have been proposed, including staggered schemes interpreted as block Gauss-Seidel methods \cite{Farrell2017}, line-search strategies that allow negative step lengths \cite{Gerasimov2016}, and dissipation-based arc-length solvers \cite{Singh2016,bharali2022robust}. The latter have been shown to robustly trace snap-back responses without reported difficulties. In this context, the present DD formulation using an arc-length solver together with a negative value of $C$ may be viewed as the analogue of a monolithic Newton method equipped with a consistent material tangent, where the value of $C$ for an element on the damage branch corresponds to $\parder{\sigst}{\epsst}$. 
-%
-%
-%Having established the algorithmic requirements for handling instabilities, the discussion now turns to the role of regularization in ensuring mesh-independent responses. The regularization technique introduced in \cite{Kamasamudram2023} for the non-DD setting was subsequently formulated within the DD framework. The one-dimensional bar subjected to a body force was re-examined with the regularization included, and the resulting solutions were found to be mesh independent. Two issues were nevertheless observed. First, a saw-tooth pattern appeared in the force-displacement response. Although the amplitude of this pattern decreased with mesh refinement, the number of oscillations increased as the mesh was refined. This behavior is associated with the evolution of the damage profile along the bar and with the activation of inequality constraints within the damage zone. While tracking this saw-tooth response is straightforward in one dimension, it may become cumbersome in two dimensions. Second, as noted in \cite{Kamasamudram2023}, if the constraint remains active in regions where the damage variable reaches the value of $1$, the damage zone spreads through the body rather than remaining localized. To avoid this, the constraint was deactivated in regions where the damage variable reached $1$. In the DD setting, however, simply deactivating the constraint at the end of the computation led to convergence difficulties in two dimensions. Similar issues have been reported in the context of non-local damage models, see \cite{Geers1998} and the references therein.
-%
-%To address these potential difficulties in two dimensions, the regularization strategy was modified. Inequality constraints are commonly treated using interior point methods, which introduce a log-barrier functional multiplied by a parameter controlling the strength of the barrier. The inequality constraint is recovered in the limit as this parameter tends to zero. The first modification consists of choosing a finite value for this parameter and keeping it fixed throughout the simulation. This effectively weakens the constraint and is intended to reduce the severity of the saw-tooth response. The second modification involves gradually weakening the constraint as damage evolves. To this end, the barrier functional is multiplied by a damage-dependent function that vanishes as the damage variable approaches $1$, resulting in a smooth removal of the constraint rather than an abrupt deactivation.
-%
-%The modified regularization approach was applied to a bar with a notch and to an L-beam. The material update was still performed analytically, with the value of $C$ obtained at the material point as $\parder{\sigst}{\epsst}$. In the notched bar, the width of the damage profile did not change with mesh refinement, and the location of the element exhibiting maximum damage remained nearly identical across the three mesh resolutions considered. Similar conclusions were obtained for the L-beam, where both the position and width of the damage zone were observed to be essentially mesh independent. A saw-tooth response was still present in the force-displacement curve. A smoother response may have been obtained by selecting a different value for the log-barrier parameter; however, this possibility was not investigated further.
-% 
-%Finally, alternatively imposing the equilibrium condition and searching for a stress-strain pair that satisfies the constitutive model, that is, searching for a point in the material database bears resemblance with what is typically used in LATIN method \cite{ladeveze1989large}. The method does not need any additional tools such as the arc-length solver used in this article to simulate materials undergoing damage \cite{bhattacharyya2018latin}. It is thus possible to replace the alternate minimization procedure that is presented in this article with that of the search directions used in LATIN, where the material model is now replaced by a stress-strain database to take advantage of both the worlds.
-%
 
 
 \section{Conclusion}
 
 This work examined the behavior of DDCM minimization algorithm in the presence of damage-induced softening and snapback instabilities. By analytically defining the material response, database discretization effects have been removed and the algorithmic aspects have been isolated.
 
-It has been shown that, for softening materials, the convergence and correctness of DD solutions depend critically on the choice of hyper-parameters and on the use of continuation strategies. In particular, hyper-parameters consistent with the local material state tangent response are necessary to obtain stable convergence and to follow localized damage branches. Moreover, displacement control alone has been found to be insufficient to traverse snapback instabilities, while arc-length continuation enables robust tracking of bifurcated equilibrium paths.
+The choice of hyper-parameter is shown to govern not only convergence rate but also branch selection under softening; tangent-based hyper-parameters combined with arc-length continuation are required to recover localized solutions. In the absence of regularization, the data-driven algorithm reproduces the expected mesh-dependent localization behavior, provided the algorithmic ingredients are chosen appropriately. A strain-gradient-based regularization strategy was then introduced within the DD setting, yielding mesh-objective localization widths in both one- and two-dimensional problems.
 
-In the absence of regularization, the data-driven formulation \textcolor{red}{algorithm?} reproduces the expected mesh-dependent localization behavior, provided the algorithmic ingredients are chosen appropriately. A strain-gradient-based regularization strategy was then introduced within the DD setting, yielding mesh-objective localization widths in both one- and two-dimensional problems.
-
-Overall, the results demonstrate that damage and fracture can be consistently addressed within the data-driven paradigm, provided that non-convexity is handled through appropriate algorithmic choices. These findings establish essential guidelines for extending data-driven methods to failure problems and form a foundation for future studies based on experimentally derived material databases.
+Overall, the algorithmic behavior was determined using an analytical database to keep it free of sampling effects. With that resolved, the criteria identified here carry over directly to discrete experimental databases.
 
 \appendix
 
@@ -1112,13 +999,13 @@ At convergence, $\bfa^{n+1} \approx \bfa^{n} \approx \bfa$. Thus, $\bfe^{n+1} = 
 \subsubsection*{With arc length solver}
 Snapback occurs when the mesh and thus, the size of the damage zone, is refined. In this case, an arc length solver is needed to track the full damage evolution in the element. So, this case will first be presented and the effect of metric on the rate of convergence will be studied.
 
-Using an arc length solver corresponds to when the displacement at the end of the bar, $u_D$, is treated as an unknown. This results in the number of unknowns increasing by $1$. The additional equation that is needed to fully resolve the system is the arc length constraint, stated in equation \eqref{onedarclength} is $\eps_2 = \eps_0+ \Delta \eps$. This changes the equations to be resolved in the previous section to 
+Using an arc length solver corresponds to when the displacement at the end of the bar, $u_D$, is treated as an unknown. This results in the number of unknowns increasing by $1$. The additional equation that is needed to fully resolve the system is the arc length constraint, stated in equation \ref{onedarclength} is $\eps_2 = \eps_0+ \Delta \eps$. This changes the equations to be resolved in the previous section to 
 
 
 \begin{multline}
 	\begin{bmatrix}
-		1 & 0& 0&  -C_2/(C_1+NC_2) \ell_e \\
-		0 & 1 & 0 & -C_1/(C_1+NC_2) \ell_e \\
+		1 & 0& 0&  -C_2/(C_1+NC_2)/ \ell_e \\
+		0 & 1 & 0 & -C_1/(C_1+NC_2)/ \ell_e \\
 		0 & 0 & 1 & 0 \\
 		0 & 1 & 0 & 0
 	\end{bmatrix}
@@ -1179,7 +1066,7 @@ The material updates remain unchanged and can be found by taking the variations 
 	\end{bmatrix} .\label{big_update_mat_al}
 \end{equation}
 
-Thus, even in this case, the update can be cast into the form of equation \eqref{combined_equn} and can be analyzed similarly.
+Thus, even in this case, the update can be cast into the form of equation \ref{combined_equn} and can be analyzed similarly.
 
 \section{Analysis with a different starting point\label{different_starting_point}}
 The analysis of section \ref{conv_method_rate} have been repeated using a different starting point that is further down the damage branch. That is, $\sig=\sig_1^*=\sig_2^*=50,\eps_1=\eps_1^* =0.5,\eps_2=\eps_2^* =7.99$. Two cases have been analyzed: without snapback under displacement control, and with snapback using arc-length solver. 
@@ -1188,7 +1075,7 @@ The analysis of section \ref{conv_method_rate} have been repeated using a differ
 The bar is discretized with $11$ elements. Under displacement control and in the absence of a snapback, the trajectories of the mechanical and the material states for the elements on the elastic and the damage branch with $C_2 = g(d) E$ (the degraded modulus) and $C_2 = m$ have been presented in Figures \ref{bad_metric_nosnap_no_al_diffpt} and \ref{good_metric_nosnap_no_al_diffpt}. When $C_2 = g(d) E$, the damage level $d$ is computed dynamically using the material state strain as $(\epsilon - \epsilon_0)/(\epsilon_f - \epsilon_0)$, $\epsilon_f=-c/m$, $\epsilon_0=c/(E-m)$, and $g=(1-d)/(1+(k-1)d)$, $k=\epsilon_f/\epsilon_0$.
 
 
-\begin{figure}
+\begin{figure}[t!]
 	\begin{subfigure}{0.45\textwidth}
 		\centering
 		\includegraphics[scale=0.6]{./conv_figs/bad_metric_nosnap_no_al_diffpt.pdf}
@@ -1202,7 +1089,7 @@ The bar is discretized with $11$ elements. Under displacement control and in the
 		\caption{}
 		\label{good_metric_nosnap_no_al_diffpt}
 	\end{subfigure}
-	\caption{Results from the 1D analysis with a different starting point. Successive mechanical and material states, connected by arrows as indicated in Figure \ref{conv_figs_legend}. No snapback, and displacement control. (a) $C_2= g(d) E$.  (b) $C_2=m$. }
+	\caption{Results from the 1D analysis with a different starting point. Successive mechanical and material states. No snapback, and displacement control. (a) $C_2= g(d) E$.  (b) $C_2=m$. }
 \end{figure}
 
 The trajectory is similar to that presented in Figures \ref{bad_metric_no_snap} and \ref{good_metric_no_snap}, however with a slightly faster rate of convergence. The spectral radius for $C_2 = g(d) E$ (which now evolves with iterations) drops to $0.994$, which is still larger than $0.5$ for $C_2=m$. With $C_2 = g(d) E$, while the states remain on their respective branches, the iterates begin to accumulate when the mechanical and the material states are still further apart. With $C_2 = m$, the mechanical and the material states almost coincide after $7$ iterations.
@@ -1210,7 +1097,7 @@ The trajectory is similar to that presented in Figures \ref{bad_metric_no_snap} 
 \subsection*{Arc-length control with snapback}
 The bar is discretized with $101$ elements. With an arc-length control and in the presence of a snapback, The trajectories of the mechanical and the material states for the elements on the elastic and the damage branch with $C_2 = g(d) E$ (the degraded modulus) and $C_2 = m$ have been presented in Figures \ref{bad_metric_snap_arc_length_diff_pt} and \ref{good_metric_snap_arc_length_diff_pt}.
 
-\begin{figure}
+\begin{figure}[t!]
 	\begin{subfigure}{0.45\textwidth}
 		\centering
 		\includegraphics[scale=0.6]{./conv_figs/bad_metric_snap_arc_length_diff_pt.pdf}
@@ -1224,10 +1111,8 @@ The bar is discretized with $101$ elements. With an arc-length control and in th
 		\caption{}
 		\label{good_metric_snap_arc_length_diff_pt}
 	\end{subfigure}
-	\caption{Results from the 1D analysis with a different starting point. Successive mechanical and material states, connected by arrows as indicated in Figure \ref{conv_figs_legend}. Snapback and arc-length constraint included. (a) $C_2= g(d) E$. (b) $C_2=m$. }
+	\caption{Results from the 1D analysis with a different starting point. Successive mechanical and material states. Snapback and arc-length constraint included. (a) $C_2= g(d) E$. (b) $C_2=m$. }
 \end{figure}
-
-\textcolor{red}{[Same remarks on these figures as for those in the text]}
 
 The trajectory is similar to that presented in Figures \ref{bad_metric_snap_arc_length} and \ref{good_metric_snap_arc_length}. With $C_2 = g(d) E$, while the states begin to diverge and move far apart, while With $C_2 = m$, the mechanical and the material states almost coincide after $7$ iterations.
 
@@ -1307,7 +1192,7 @@ The constraint on the strain gradient can thus be written as
 \end{equation}
 Figure \ref{comparison_log_quadratic} compares the energy responses of different terms used to enforce the strain-gradient constraint. The standard quadratic form increases rapidly for small deviations from zero, leading to early activation near the origin. In contrast, the log-barrier-type term remains nearly flat in a neighborhood of zero, thereby postponing the onset of localization until the strain gradients begin to concentrate.
 
-\begin{figure}
+\begin{figure}[ht]
 	\centering
 	\input{./tikz_figs/comparison_log_quadratic.tex}
 	\caption{Log barrier function vs quadratic functional}
@@ -1357,18 +1242,18 @@ Realizing that $\sigst_i = g(d) E_{ij} \epsst_j$, the derivative can be written 
 \end{gather}
 Thus, the equation to be resolved can be seen to be
 \begin{equation}
-	r_k = \left(\frac{\sqrt{k Y_c}}{2(k-1)\psi_0 \sqrt{\psi_0}} \sigsthat_i \sigsthat_k + g(D) E_{ik} \right) S_{ij} (\sig - \sigst)_j -  C_{kj}(\eps-\epsst)_j = 0.
+	r_k = \left(\frac{\sqrt{k Y_c}}{2(k-1)\psi_0 \sqrt{\psi_0}} \sigsthat_i \sigsthat_k + g(D) E_{ik} \right) S_{ij} (\sig - \sigst)_j -  C_{kj}(\eps-\epsst)_j = 0.\label{app_residual}
 \end{equation}
-The above equation is non-linear and requires newton's method to solve. This needs the derivative of residual, which can be seen to be
+The above equation is non-linear and requires newton's method to solve. This requires the derivative of the residual, which is given by
 \begin{multline}
 	\parder{r_k}{\epsst_p} = \left\{  \frac{\sqrt{k Y_c}}{2(k-1)} \left[ \frac{ E_{kp} \sigsthat_i + \sigsthat_k E_{ip} + \sigsthat_p E_{ik} }{\psi_0 \sqrt{\psi_0}}-\frac{3}{2} \psi_0^{-5/2} \sigsthat_i \sigsthat_k \sigsthat_p \right] S_{ij} (\sig - \sigst)_j  \right\} +  \\ 
-	\left(\frac{\sqrt{k Y_c}}{2(k-1)\psi_0 \sqrt{\psi_0}} \sigsthat_i \sigsthat_k + g(D) E_{ik} \right) S_{ij} \left(\frac{\sqrt{k Y_c}}{2(k-1)\psi_0 \sqrt{\psi_0}} \sigsthat_j \sigsthat_p + g(D) E_{jp} \right) + C_{kp}.
+	\left(\frac{\sqrt{k Y_c}}{2(k-1)\psi_0 \sqrt{\psi_0}} \sigsthat_i \sigsthat_k + g(D) E_{ik} \right) S_{ij} \left(\frac{\sqrt{k Y_c}}{2(k-1)\psi_0 \sqrt{\psi_0}} \sigsthat_j \sigsthat_p + g(D) E_{jp} \right) + C_{kp}.  \label{app_hessian}
 \end{multline}
 
 The elastic case can be obtained by taking $g'=0$ in equation \ref{app_damage_tangent}. 
 
 \section{Arc length constraint\label{appen_arc_length}}
-The arc length constraint is simpler in 1D case than in 2D case as it involves selecting degrees of freedom where a certain quantity is monotone increasing. For instance, in \cite{} \textcolor{red}{missing citation}, the damage variables are used to write the arc length constraint. In the current case, for the 1D bar, the mechanical strain variable at the left end of the bar is chosen to impose the arc length constraint. The constraint can be expressed as
+The arc length constraint is simpler in 1D case than in 2D case as it involves selecting degrees of freedom where a certain quantity is monotone increasing. For instance, in \textcolor{red}{\cite{Bharali2022,Singh2016}}, the damage variables are used to write the arc length constraint. In the current case, for the 1D bar, the mechanical strain variable at the left end of the bar is chosen to impose the arc length constraint. The constraint can be expressed as
 \begin{equation}
 	\epsilon^{n+1} - \epsilon^{n} = \Delta, \label{onedarclength}
 \end{equation}
@@ -1392,112 +1277,92 @@ r_{diss} = \sum_e A_e
 \right] - \Delta = 0.
 \end{equation}
 This equation is added to the system of equations \ref{all_equations_first_one} - \ref{all_equations_last_one} and solved using the Newton method.
-%
-%We define the dissipative residual and its sensitivities as
-%\[
-%\mathbf{r}_d = 0, \qquad 
-%\frac{\partial \mathbf{r}_d}{\partial \mathbf{u}_f} = \mathbf{0}, 
-%\qquad 
-%\frac{\partial \mathbf{r}_d}{\partial \lambda} = 0.
-%\]
-%
-%
-%
-%The variation of the energy with respect to the displacement field reads
-%\[
-%\frac{\partial \psi_0^{(e)}}{\partial \mathbf{u}}
-%= \mathbf{B}^{(e)T}\boldsymbol{\sigma}^{(e)}.
-%\]
-%
-%
-%
-%Its derivative with respect to the energy is
-%\[
-%\frac{\partial d^{(e)}}{\partial \psi_0^{(e)}}
-%= \frac{\sqrt{k}}{2 (k-1)\sqrt{Y_c\,\psi_0^{(e)}}}.
-%\]
-%
-%Hence, the derivative with respect to the displacement field becomes
-%\[
-%\frac{\partial d^{(e)}}{\partial \mathbf{u}}
-%=
-%\frac{\partial \psi_0^{(e)}}{\partial \mathbf{u}}\,
-%\frac{\partial d^{(e)}}{\partial \psi_0^{(e)}}.
-%\]
-%
-%The contribution to the global residual is then
-%\[
-%\frac{\partial \mathbf{r}_d}{\partial \mathbf{u}_f}
-%= \mathbf{C}^T \sum_e A_e
-%\frac{\partial d^{(e)}}{\partial \mathbf{u}},
-%\qquad
-%\frac{\partial \mathbf{r}_d}{\partial \lambda}
-%= \mathbf{u}_g^T \sum_e A_e
-%\frac{\partial d^{(e)}}{\partial \mathbf{u}},
-%\]
-%
 
+\section{Material update}
 
+\begin{algorithm}
+	\begin{algorithmic}[1]
+		\Require Mechanical state $(\sigma_i,\epsilon_i)$; previous damage $d^n$; previous projection $\epsst^n$;
+		history $\mathcal{H}^n$; hyper-parameter $\mathbf{C}$; $\mathbf{H}_0$; $(k,Y_c)$;
+		cap $d_{\max}$; tolerance $\eta$; iteration cap $N_{\max}$
+		\Ensure   $(\epsst_{i+1},\sigst_{i+1},\partial\sigst/\partial\epsst,\,d^{n+1})$
+		
+		\Statex \textbf{Part A --- Closest point on the elastic (degraded) branch}
+		\State $g_n \gets g(d^n)$ via eq.~\eqref{degradation_function};\ \ $\mathbf{C}_e \gets g_n\,\mathbf{H}_0$
+		\State $(\mathbf{H}_e,\mathbf{r}_e)\gets$ \Call{Assemble}{$\epsilon_i,\sigma_i,\epsilon_i,\mathbf{C}_e,d^n;\,\textsc{Elastic}$}
+		\State $\epsst_e \gets \epsilon_i - \mathbf{H}_e^{-1}\mathbf{r}_e$
+		\Comment{closed-form analogue of eq.~\eqref{elastic_branch_material_state} via one Newton step}
+		\State $\sigst_e \gets \mathbf{C}_e\,\epsst_e$;\ \ $\psi_0^e \gets \tfrac12\,\epsst_e\!\cdot\!\mathbf{H}_0\,\epsst_e$;\ \ $Y_e \gets g'(d^n)\,\psi_0^e$
+		
+		\Statex \textbf{Part B --- Closest point on the damage branch}
+		\State $\epsst_d \gets \epsst^n$;\ \ $\mathbf{C}_d \gets \mathbf{C}$;\ \ $\mathrm{state}_d^{\text{conv}}\gets\texttt{True}$
+		\State $(\mathbf{H}_d,\mathbf{r}_d,\mathbf{T}_d) \gets$ \Call{Assemble}{$\epsst_d,\sigma_i,\epsilon_i,\mathbf{C}_d,d^n;\,\textsc{Damage}$}
+		\Comment{residual eq.~\eqref{app_residual}, Hessian eq.~\eqref{app_hessian}}
+		\State $\mathbf{C}_d \gets \mathbf{T}_d$;\ re-assemble $(\mathbf{H}_d,\mathbf{r}_d,\mathbf{T}_d)$
+		\For{$j=1,\dots,N_{\max}$}
+		\State $\Delta\epsst \gets -\mathbf{H}_d^{-1}\mathbf{r}_d$;\ \ $\epsst_d \gets \epsst_d + \Delta\epsst$
+		\State Re-assemble $(\mathbf{H}_d,\mathbf{r}_d,\mathbf{T}_d)$ at the new $\epsst_d$;\ \ $\mathbf{C}_d \gets \mathbf{T}_d$
+		\If{$\|\Delta\epsst\| < \eta$}\ \textbf{break}\ \EndIf
+		\EndFor
+		\If{$j=N_{\max}$}\ $\mathrm{state}_d^{\text{conv}}\gets\texttt{False}$\ \EndIf
+		\State $\psi_0^d \gets \tfrac12\,\epsst_d\!\cdot\!\mathbf{H}_0\,\epsst_d$;\ \ $d \gets \big(\sqrt{k\psi_0^d}-\sqrt{Y_c}\big)/\big((k-1)\sqrt{Y_c}\big)$;\ \ $\sigst_d \gets g(d)\,\mathbf{H}_0\,\epsst_d$
+		
+		\Statex \textbf{Part C --- Full-damage saturation}
+		\If{$d > d_{\max}$}
+		\State $d \gets d_{\max}$; recompute $(\epsst_d,\sigst_d)$ by one elastic-style Newton step at $g(d_{\max})$
+		\State \Return $(\epsst_d,\sigst_d,\mathbf{T}_d,d)$
+		\EndIf
+		
+		\Statex \textbf{Part D --- Admissibility and selection}
+		\State $\mathrm{state}_e \gets (\psi_0^e < \mathcal{H}^n)$
+		\State $\mathrm{state}_d \gets (d > d^n)\,\wedge\,\mathrm{state}_d^{\text{conv}}$
+		\State $\delta_e \gets 2\,\mathcal{F}(\epsst_e;\mathbf{C}_e)$,\ \ $\delta_d \gets 2\,\mathcal{F}(\epsst_d;\mathbf{C}_d)$
+		\If{$\mathrm{state}_e \wedge \mathrm{state}_d$}
+		\State \Return $(\epsst_e,\sigst_e,\mathbf{C}_e,d^n)$ if $|\delta_e|<|\delta_d|$, else $(\epsst_d,\sigst_d,\mathbf{T}_d,d)$
+		\ElsIf{$\mathrm{state}_e \wedge \neg\,\mathrm{state}_d$}
+		\State \Return $(\epsst_e,\sigst_e,\mathbf{C}_e,d^n)$
+		\ElsIf{$\neg\,\mathrm{state}_e \wedge \mathrm{state}_d$}
+		\State \Return $(\epsst_d,\sigst_d,\mathbf{T}_d,d)$
+		\Else
+		\State $\alpha \gets \sqrt{Y_c/Y_e}$
+		\State \Return $(\alpha\,\epsst_e,\,\alpha\,\sigst_e,\,\mathbf{T}_d,\,d^n)$ \Comment{forced projection onto yield surface}
+		\EndIf
+	\end{algorithmic}
+	\caption{Material update with branch admissibility (per-Gauss-point)}
+	\label{alg:material_update_detailed}
+\end{algorithm}
 
-% \section{Trash Appendix}
-%The notion of Data Driven Computational Mechanics has been introduced in \cite{KO}, where the constitutive model for the material is replaced by a database of stresses and strains (material states). The solution for the boundary value problem is sought as the stress-strain pair that satisfy the equations of equilibrium and compatibility conditions (mechanical states) while being as close as possible to the database (material states). Formally, the distance functional between the mechanical and material states is introduced as 
-%\begin{equation}
-%	d(\bfeps,\bfsig,\bfeps^*,\bfsig^*) = \frac{\mathcal{C}}{2}(\bfeps - \bfeps^*):(\bfeps - \bfeps^*) + \frac{\mathcal{C}^{-1}}{2}(\bfsig - \bfsig^*):(\bfsig - \bfsig^*).
-%\end{equation}
-%The solution to the BVP then becomes
-%\begin{equation}
-%	\text{Sol } \in \arg \min_{(\bfeps,\bfsig) \in \mathcal{E}, (\bfeps^*,\bfsig^*) \in \mathcal{D}} d(\bfeps,\bfsig,\bfeps^*,\bfsig^*),
-%\end{equation}
-%where 
-%\begin{equation}
-%	\mathcal{E} = \{(\bfeps,\bfsig) \text{ sufficiently regular }: \bfeps = \sym \nabla \bfu, \bfu = \bfu_D \text{ on } \partial \Omega_d \text{ and } \divop \bfsig = 0     \},
-%\end{equation}
-%and $\mathcal{D}$ denotes the material database. Compatibility can be ensured by directly using $\bfeps = \sym \nabla\bfu$ in the distance functional, while the equilibrium constraints can be imposed by using Lagrange multipliers. The discrete version of the above equations can be seen as (with the compatibility conditions used directly in the distance functional and imposing equilibrium through Lagrange multipliers)
-%\begin{equation}
-%	\Pi(\bfeps,\bfsig,\bfeps^*,\bfsig^*) = \frac{1}{2}(\bfB \bfu - \bfeps^*)^T\mathcal{C}(\bfB \bfu - \bfeps^*) + \frac{1}{2}(\bfsig - \bfsig^*)^T\mathcal{C}^{-1}(\bfsig - \bfsig^*) - \bfeta^T \bfB^T \bfsig .
-%\end{equation}
-%Assuming the material states to be given, taking the variations of the Lagrangian with respect to the mechanical states results in the Euler-Lagrange equations as
-%\begin{gather}
-%	\bfB ^T \bfD \bfB \bfu = \bfB \bfD \bfeps^*, \\
-%	\bfsig  = \bfsig^* + \bfD \bfB \bfeta, \\
-%	\bfB ^T \bfsig = 0.
-%\end{gather}
-%The second and third of the above equations result in
-%\begin{equation}
-%	\bfB ^T \bfD \bfB \bfeta = -\bfB ^T \bfsig^*.
-%\end{equation}
-%The material states are then found as the points in the database that minimize the distance functional, given the mechanical states.
-%
-%\subsection{Inclusion of the constraint}
-%The Lipschitz constraint on the strain variable can be introduced in data driven case as described below. It shall be noted that the inclusion of constraints modifies the equations of equilibrium, where the Lagrange multipliers take the place of couple stress. As in the earlier case, the distance functional is defined as 
-%\begin{equation}
-%	d(\bfeps,\bfsig,\bfeps^*,\bfsig^*) = \frac{1}{2}(\bfB \bfu - \bfeps^*)^T\mathcal{C}(\bfB \bfu - \bfeps^*) + \frac{1}{2}(\bfsig - \bfsig^*)^T\mathcal{C}^{-1}(\bfsig - \bfsig^*).
-%\end{equation}
-%The objective now is to see the minimizers of the above functional so that the strain field satisfies the Lipschitz constraint. The Lagrange multipliers that enforce the constraint on the strain field act as couple stresses.
-%\begin{equation}
-%	\text{Sol } \in \arg \min_{(\bfeps,\bfsig) \in \mathcal{E}, (\bfeps^*,\bfsig^*) \in \mathcal{D}} d(\bfeps,\bfsig,\bfeps^*,\bfsig^*),
-%\end{equation}
-%where, the equilibrium manifold is now defined as (in discrete form)
-%
-%\begin{equation}
-%	\mathcal{E} = \{(\bfeps,\bfsig) : \bfeps = \bfB \bfu, \bfeps \text{ satisfies equation \ref{discrete_constraint}},\bfu = \bfu_D \text{ on } \partial \Omega_d,
-%	\text{ and } \bfB ^T \bfsig - \bfP^T \bftau = 0     \},
-%\end{equation}
-%where $\bftau$ is as defined in equation \ref{couple_stress}. Euler Lagrange equations can be obtained by taking the variation of the following Lagrangian and equating the corresponding variations to $0$. The Lagrangian can be defined to be
-%\begin{multline}
-%	\Pi = d(\bfeps,\bfsig,\bfeps^*,\bfsig^*) - \bfeta^T \bfB ^T \bfsig + \sum_{i=1}^{N_c} \lambda^u_i \left( (\bfP \bfu )_i^T \bfLam (\bfP \bfu)_i - \frac{1}{\ell_c^2}   \right) + \sum_{i=1}^{N_c} \lambda^{\eta u}_i \left( (\bfP (\bfu + \bfeta) )_i^T \bfLam (\bfP (\bfu + \bfeta))_i - \frac{1}{\ell_c^2}   \right).
-%\end{multline}
-%Here, $N_c$ denotes the number of active constraints and $\lambda_i \geq 0$ are the Lagrange multipliers dual to the constraint on the gradient of strain. $\lambda^{\eta u}_i = -\lambda^{ u}_i$ at convergence, take the role of the couple stresses as in equation \ref{equilibruim_in_index}. Plainly stating, the above equation states that the displacement field satisfies the inequality constraints, and in the places where the constraint is satisfied as an equality, the \textit{perturbed solution (with $\bfeta$)} should also satisfy the constraints.
-%
-%
-%
-%The EL equations can be seen to be
-%\begin{gather}
-%	\bfr_{\bfu} = \bfB^T \mathcal{C} \bfB \bfu - \bfB^T \mathcal{C} \bfeps ^* + \sum_{i=1}^{N_c} \lambda_i^u \left( 2 \bfP_i ^T \bfLam \bfP_i \bfu \right) + \sum_{i=1}^{N_c} \lambda_i^{\eta u} \left( 2 \bfP_i ^T \bfLam \bfP_i (\bfu+\bfeta) \right) =0, \\
-%	\bfr_{\bfeta} = -\bfB^T \mathcal{C} \bfB \bfeta - \bfB^T \bfsig ^* + \sum_{i=1}^{N_c} \lambda_i^{\eta u} \left( 2 \bfP_i ^T \bfLam \bfP_i (\bfu+\bfeta) \right) =0, \\
-%	r_{\lambda^u_i} = (\bfP \bfu )_i^T \bfLam (\bfP \bfu)_i - \frac{1}{\ell_c^2}  =0, \\
-%	r_{\lambda^{\eta u}_i} = \bfP (\bfu + \bfeta) )_i^T \bfLam (\bfP (\bfu + \bfeta))_i - \frac{1}{\ell_c^2}  =0. 
-%\end{gather}
+\begin{algorithm}
+	\begin{algorithmic}[1]
+		\Procedure{Assemble}{$\epsst,\sigma_i,\epsilon_i,\mathbf{C},d^n;\,\textsc{mode}$}
+		\State $\mathbf{S}\gets\mathbf{C}^{-1}$;\ \ $\boldsymbol{\hat\sigma}_0 \gets \mathbf{H}_0\epsst$;\ \ $\psi_0 \gets \tfrac12\,\epsst\!\cdot\!\boldsymbol{\hat\sigma}_0$
+		\If{\textsc{mode}=\textsc{Elastic}}
+		\State $D \gets d^n$
+		\Else
+		\State $D \gets (\sqrt{k\psi_0}-\sqrt{Y_c})/((k-1)\sqrt{Y_c})$,\ clamped to $[0,1]$
+		\EndIf
+		\State $g \gets g(D)$ via eq.~\eqref{degradation_function};\ \ $\sigst \gets g\,\mathbf{H}_0\epsst$
+		\If{\textsc{mode}=\textsc{Elastic} \textbf{or} $D$ clamped}
+		\State $\mathbf{T} \gets g\,\mathbf{H}_0$ \Comment{$g'\!=\!0$ limit of eq.~\eqref{app_damage_tangent}}
+		\Else
+		\State $\mathbf{T} \gets g\,\mathbf{H}_0\,-\,\dfrac{\sqrt{kY_c}}{2(k-1)\,\psi_0^{3/2}}\,\boldsymbol{\hat\sigma}_0\!\otimes\!\boldsymbol{\hat\sigma}_0$
+		\Comment{eq.~\eqref{app_damage_tangent}}
+		\EndIf
+		\State $\mathbf{r} \gets -\mathbf{T}\,\mathbf{S}\,(\sigma_i-\sigst)\,-\,\mathbf{C}\,(\epsilon_i-\epsst)$ \Comment{eq.~\eqref{app_residual}}
+		\If{\textsc{mode}=\textsc{Damage} \textbf{and} $D$ not clamped}
+		\State $\mathbf{H} \gets \mathcal{T}:\!\mathbf{S}(\sigma_i-\sigst)\,+\,\mathbf{T}\,\mathbf{S}\,\mathbf{T}\,+\,\mathbf{C}$
+		\Comment{eq.~\eqref{app_hessian}}
+		\Else
+		\State $\mathbf{H} \gets \mathbf{T}\,\mathbf{S}\,\mathbf{T}\,+\,\mathbf{C}$
+		\Comment{$g'\!=\!0$ limit of eq.~\eqref{app_hessian}}
+		\EndIf
+		\State \Return $(\mathbf{H},\mathbf{r},\mathbf{T})$
+		\EndProcedure
+	\end{algorithmic}
+	\caption{Residual and Hessian assembly for the material update Newton iteration.}
+	\label{alg:assemble}
+\end{algorithm}
+
 %
 % \bibliography{library}
 %\bibliography{data_driven_damage}
