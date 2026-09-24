@@ -69,12 +69,19 @@
 % Just print the contents of the addedblock environment
 \newenvironment{addedblock}{}{}
 
-
 \usepackage[super]{nth}
 
-% CHANGED TO BACKEND=BIBER TO MATCH YOUR BBL FILE
 \usepackage[backend=biber]{biblatex} 
 \addbibresource{library_DD.bib}
+
+% For algorithm
+\makeatletter
+\newcommand{\customlabel}[2]{%
+	\protected@edef\@currentlabel{#2}%
+	\phantomsection% needed if you use hyperref
+	\label{#1}%
+}
+\makeatother
 
 \input{conco}
 
@@ -308,12 +315,16 @@ Thus the rate of convergence of the method (and whether it converges at all) can
 
 With this framework, the 1D bar in Figure \ref{1D_bar_dam_elem} will now be analyzed for various cases. 
 \begin{addedblock}
-	\begin{enumerate}
-		\item\label{case:rate} \emph{Effect of the hyper-parameter on convergence rate for continuous evolution.} Displacement-driven system without snapback, examining two choices of $C_2$.
-		\item\label{case:necessity_metric} \emph{Effect of the hyper-parameter under snapback.} Arc-length solver, examining the same two choices of $C_2$.
-		\item\label{case:necessity_solver} \emph{Effect of the driving mechanism under snapback.} Examining displacement control against arc-length continuation, with two choices of $C_2$.
-	\end{enumerate}
+	\begin{definition}[Test cases]\label{def:cases}
+		The following three cases are examined in this section and referenced throughout the remainder of the article:
+		\begin{enumerate}
+			\item\label{case:rate} \emph{Effect of the hyper-parameter on convergence rate for continuous evolution.} Displacement-driven system without snapback, examining two choices of $C_2$.
+			\item\label{case:necessity_metric} \emph{Effect of the hyper-parameter under snapback.} Arc-length solver, examining the same two choices of $C_2$.
+			\item\label{case:necessity_solver} \emph{Effect of the driving mechanism under snapback.} Examining displacement control against arc-length continuation, with two choices of $C_2$.
+		\end{enumerate}
+	\end{definition}	
 \end{addedblock}
+
 
 It will be assumed that the solution at some load step $n$ is known. The external load $u_D$ is then varied. The intent is to find the solution to the 1D problem, given the state at step $n$, under the new loading condition. \added{The evolution of the mechanical and the material states through the DDCM iterations will be examined in two ways. First, using the distance function in equation \ref{1D_short_dist_func} with $C_1=C_2=E$. Thus, }
 \begin{equation}
@@ -353,8 +364,7 @@ The analysis begins by taking $C_1,C_2$ equal to $E$. \added{The distance functi
 \deleted{At some point, successive iterates can no longer be distinguished in Figure \ref{bad_metric_no_snap}, even though the mechanical and the material states are still further apart and the distance functional still assumes higher values. }\added{This is in line with the observations reported in Figures \ref{dist_evol_1} and \ref{dist_evol_1_zoom}.}
 
 
-The reason behind this observation can be obtained by analyzing the matrix $\bfA \bfC$ in equation \eqref{comb_update_short}. The matrix $\bfA \bfC$ is not symmetric. But for the parameters listed above, its eigenvalues are real. Thus, the rate of convergence of the iterations in equation \eqref{comb_update_short} can be obtained from the spectral radius of the matrix $\bfA  \bfC$. When $C_1,C_2$ are taken equal to $E$ in equations \eqref{big_update_mech} and \eqref{big_update_mat}, the spectral radius of $\bfA \bfC$ is $0.9994$. This implies that the fixed point iterations in equation \eqref{comb_update_short} are contractive and hence converge, albeit at a very slow rate. This explains the closeness of the successive iterates in Figure \ref{bad_metric_no_snap} \added{and the slowness of the decay in the distance reported in Figures \ref{dist_evol_1} and \ref{dist_evol_1_zoom}}. If a discrete database were used instead of the analytical expressions, an extremely fine database would be required to ensure that the distance functional reduces sufficiently at convergence. 
-
+The reason behind this observation can be obtained by analyzing the matrix $\bfA \bfC$ in equation \eqref{comb_update_short}. The matrix $\bfA \bfC$ is not symmetric. But for the parameters listed above, its eigenvalues are real. Thus, the rate of convergence of the iterations in equation \eqref{comb_update_short} can be obtained from the spectral radius of the matrix $\bfA  \bfC$. When $C_1,C_2$ are taken equal to $E$ in equations \eqref{big_update_mech} and \eqref{big_update_mat}, the spectral radius of $\bfA \bfC$ is $0.9994$. This implies that the fixed point iterations in equation \eqref{comb_update_short} are contractive and hence converge, albeit at a very slow rate. This explains the closeness of the successive iterates in Figure \ref{bad_metric_no_snap} \added{and the slowness of the decay in the distance reported in Figures \ref{dist_evol_1} and \ref{dist_evol_1_zoom}}. If a discrete database were used instead of the analytical expressions, an extremely fine database would be required to ensure that the distance functional reduces sufficiently at convergence. \added{In practice, DDCM implementations declare convergence when successive iterates cease to move, since with a sparse database the distance functional cannot in general be driven to zero. Under $C_2 = E$, however, the iterates move imperceptibly between AM steps long before the mechanical-material gap has sufficiently reduced; the near-stationarity of the iterates would then spuriously imply convergence while the distance remains large. Diagnosing this pathology in practice requires either an implicit database, as employed here, or a discrete database sampled finely enough that the material projection follows the mechanical state closely between iterations.}
 
 Following this, the scenario $C_2 = m$, \added{which corresponds to the derivative $\partial \sig^*/ \partial \eps ^*$}, is examined to assess how this choice affects the rate of convergence. Since $m < 0$, this formally corresponds to assigning a negative weight to the strain term in the distance functional, which would be inadmissible if used to define the metric itself. For this reason, $C_2 = m$ is employed only in the Euler-Lagrange equations \eqref{big_update_mech} and \eqref{big_update_mat}. \deleted{Convergence can still be evaluated exclusively using the distance functional \eqref{1D_short_dist_func} with $C_2 = E$.} The choice $C_2 = m$ therefore does not alter the underlying metric and should be interpreted solely as an algorithmic modification used to probe its effect on convergence behavior. In the Euler-Lagrange equations, the choice $C_2=m$ results in a left-hand side that corresponds to a consistent linearization of the condensed energy density, since $m=\partial \sig^*/ \partial \eps ^*$. The positive-definite distance interpretation and the associated variational structure are lost, but the operator now reflects the indefiniteness intrinsic to softening.
 
@@ -540,19 +550,19 @@ In contrast to the analytical study of Section \ref{conv_method_rate}, no branch
 
 \begin{addedblock}
 \subsubsection*{Material update}
-At each Gauss point, the converged solution at load step $n$ carries a damage variable $d^n$ and a strain-history variable $\epsilon_{\max}^n = \max_{k \leq n} \epsilon^k$. These are the state variables the material update reads at iteration $i$ of load step $n+1$.
+At each Gauss point, the converged solution at load step $n$ carries a damage variable $d^n$ and a strain-history variable $\epsilon_{\max}^n = \max_{k \leq n} \epsilon^k$. To be noted is that these are not independent - $d^n$ can be evaluated using $\epsilon_{\max}^n$. These are the state variables the material update reads at iteration $i$ of load step $n+1$.
 
 The constitutive model, detailed in Appendix~\ref{app_mat_update}, is the linear-softening damage law $\sigma = g(d) E \epsilon$, with degradation function
 \begin{equation}
-	g(d) = \frac{1-d}{1 + (k-1) d}, \qquad k = \epsilon_f/\epsilon_i,
+	g(d) = \frac{1-d}{1 + (k-1) d}, \qquad k = \epsilon_f/\epsilon_i, \label{degrad_func_1D}
 \end{equation}
 where $\epsilon_i$ is the strain at damage initiation and $\epsilon_f$ is the strain at $d = 1$. The damage evolution is
 \begin{equation}
-	d = \frac{\epsilon_{\max} - \epsilon_i}{\epsilon_f - \epsilon_i}, \qquad \epsilon_{\max} \geq \epsilon_i.
+	d = \frac{\epsilon_{\max} - \epsilon_i}{\epsilon_f - \epsilon_i}, \qquad \epsilon_{\max} \geq \epsilon_i. \label{1D_damage_def}
 \end{equation}
 The piecewise-affine model of Section~\ref{conv_method_rate} is recovered with $m = E\epsilon_i/(\epsilon_i - \epsilon_f)$ and $c = -m \epsilon_f$.
 
-At iteration $i$ of load step $n+1$, given the current mechanical strain $\epsilon$ at a Gauss point, the material update proceeds as follows:
+At iteration $i$ of load step $n+1$, given the current mechanical state $(\epsilon,\sigma)$ at a Gauss point, the material update proceeds as follows:
 \begin{enumerate}
 	\item If $\epsilon < \epsilon_{\max}^n$: the element is unloading. The material state is the closest point on the elastic branch $\sigma^* = g(d^n) E \epsilon^*$.
 	\item If $\epsilon_{\max}^n \leq \epsilon < \epsilon_i$: the element is reloading toward the yield point, no new damage. Same as case 1.
@@ -604,13 +614,63 @@ The force at the right end of the bar vs the applied displacement until complete
 \added{The 1D case examined so far uses a linear softening model in which the tangent $m = \partial \sigma^* / \partial \epsilon^*$ on the damage branch is constant. This constancy is what made the closed-form spectral analysis of Section~\ref{conv_method_rate} possible. In 2D, the derivative $\partial \sigst / \partial \epsst$ evolves with the strain state and $\bfA\bfC$ can no longer be characterized analytically. The following section examines whether the tangent-consistent plus arc-length combination retains its necessity properties in this setting.}
 
 \subsection{2D case - Bar with a notch}
-The tests performed above in 1D case have been repeated in 2D. The example used is same as the one used later on to demonstrate the effect of introducing a length into the problem. The details about the geometry, loading, and the material properties have been presented in section \ref{a_bar_with_a_notch}. The simulations have been performed without introducing any length scale. Thus, the damage is expected to localize over a one element wide region. As earlier, three cases have been analyzed
-\begin{itemize}
-	\item Degraded elastic moduli of the corresponding material states are taken as the hyper-parameters. The system is displacement driven and an arc-length solver has not been used.
-	\item Tangent moduli of the corresponding material states are taken as the hyper-parameters. The system is displacement driven and an arc-length solver has not been used.
-	\item Tangent moduli of the corresponding material states are taken as the hyper-parameters. Arc-length solver has been used.
-\end{itemize}
-The results obtained for the damage profile at the center section of the bar in Figure \ref{2d_1d_bar_dims} have been presented in Figure \ref{conv_check_2D} and the load-displacement response in Figure \ref{comparison_conv_check}.
+
+\begin{addedblock}
+The analysis presented earlier is now performed on a 2D example. A bar with a notch is considered - the same example will be revisited in Section~\ref{sec:length_scale} to demonstrate the regularization. The geometry and the loading used are presented in Figure \ref{2d_1d_bar_dims}. The left end of the bar is fixed, top end of the bar is constrained to move horizontally, and a horizontal displacement is applied at the right end. Since there is no length scale yet, the damage is expected to localize over a one-element-wide region.
+\end{addedblock}
+
+
+\begin{addedblock}
+
+\subsubsection*{Material update}
+The material updates take the irreversibility into consideration using a damage variable $d^n$ and a history variable $\mathcal{H}^n = \max_{k \leq n} \psi_0(\bfeps^k)$, defined using the converged solution at load step $n$. Here, $\psi_0(\bfeps) = \tfrac{1}{2}\,\bfeps^{T}\bfC\bfeps$, $\bfC$  is the elastic stiffness tensor. The update is performed at each Gauss point during an iteration $i$ of load step $n+1$ using $d^n$ and $\mathcal{H}^n$.
+
+The constitutive model, detailed in Appendix~\ref{app_mat_update}, is the linear-softening damage law $\bfsig = g(d) \bfC \bfeps$, with degradation function $g$ defined in equation \ref{degrad_func_1D}. The damage evolution is
+\begin{equation}
+	d = \frac{\sqrt{k \psi_0} - \sqrt{Y_c}}{(k-1)\sqrt{Y_c}}, \label{damage_2D_definition}
+\end{equation}
+where $k, Y_c$ are material parameters. Damage initiates when $\psi_0 \geq Y_c/k$. The 1D relation in equation \ref{1D_damage_def} can be recovered by taking $Y_c=1/2 E \epsilon_i \epsilon_f$ and $k=\epsilon_f/\epsilon_i$.
+
+At iteration $i$ of load step $n+1$, given the current mechanical state $(\bfeps,\bfsig)$ at a Gauss point, the material update proceeds as follows:
+\begin{enumerate}
+	\item If $\psi_0(\bfeps) < \mathcal{H}^n$: the element is unloading. The material state is the closest point on the elastic branch $\bfsig^* = g(d^n) \bfC \bfeps^*$.
+	\item If $\mathcal{H}^n \leq \psi_0(\bfeps) < Y_c/k$: the element is reloading toward the yield point, no new damage. Same as case 1.
+	\item If $\psi_0(\bfeps) \geq \max(Y_c/k,\mathcal{H}^n)$ and $d^n < 1$: damage may increase. In this case, the steps followed during the material update are given in algorithm \ref{alg:material_update_detailed}. 
+	\begin{itemize}
+		\item The closest point is computed on the elastic (degraded) branch $\bfsig^* = g(d^n) \bfC \bfeps^*$ as outlined in Part-A in Algorithm \ref{alg:material_update_detailed}. 
+		\item The closest point is computed on the softening branch $\bfsig^* = g(d(\bfeps^*)) \bfC \bfeps^*$ as outlined in Part-B in Algorithm \ref{alg:material_update_detailed}.
+		\item If the damage computed above exceeds the maximum damage (typically $d_{\rm max}=1-\texttt{TOL}$), the Part-C computes the closest point on the branch $\bfsig^* = g(d_{\rm max}) \bfC \bfeps^*$.
+		\item Parts D and E then check the admissibility of the computed elastic and damage material states. Then depending on which states are admissible, they then return the appropriate material state $(\bfeps^*, \bfsig ^*)$, together with the updated tangent. The tangent in this case is a second-order tensor computed using equation \ref{app_damage_tangent}. In 1D, it reduces to $g(d)E$ on the elastic branch and to $m$ on the softening branch.
+	\end{itemize}
+\end{enumerate}
+
+
+At convergence of the AM iterations for load step $n+1$, the state variables are updated: $\mathcal{H}^{n+1} = \max(\mathcal{H}^n, \psi_0(\bfeps^{n+1}))$ and  $d^{n+1}$ is obtained by substituting $\psi_0 = \mathcal{H}^{n+1}$ into equation \ref{damage_2D_definition}.
+
+\subsubsection*{Mechanical update}
+The 2D mechanical update is described in Section~\ref{2d_cases_with_ell}. The element-wise hyper-parameter supplied by the material update is used in the Euler-Lagrange equations to carry out the mechanical update.
+\end{addedblock}
+
+\begin{deletedblock}
+	The tests performed above in 1D case have been repeated in 2D. The example used is same as the one used later on to demonstrate the effect of introducing a length into the problem. The details about the geometry, loading, and the material properties have been presented in section \ref{a_bar_with_a_notch}. The simulations have been performed without introducing any length scale. Thus, the damage is expected to localize over a one element wide region. As earlier, three cases have been analyzed.
+	\begin{itemize}
+		\item Degraded elastic moduli of the corresponding material states are taken as the hyper-parameters. The system is displacement driven and an arc-length solver has not been used.
+		\item Tangent moduli of the corresponding material states are taken as the hyper-parameters. The system is displacement driven and an arc-length solver has not been used. 
+		\item Tangent moduli of the corresponding material states are taken as the hyper-parameters. Arc-length solver has been used. 
+	\end{itemize}
+\end{deletedblock}
+
+
+\begin{addedblock}
+	\begin{definition}[Scenarios]\label{def:scenarios}
+		The scenarios tested in section \ref{conv_method_rate} are considered in 2D, but now without the branch restrictions, as follows:
+		\begin{enumerate}
+			\item\label{sc:one} Degraded elastic moduli of the corresponding material states are taken as the hyper-parameters. The system is displacement driven and an arc-length solver has not been used. \added{This corresponds to cases \ref{case:rate} and \ref{case:necessity_solver} tested in section \ref{conv_method_rate}, with $C_2=g(d) E$.}
+			\item\label{sc:two} Tangent moduli of the corresponding material states are taken as the hyper-parameters. The system is displacement driven and an arc-length solver has not been used. \added{This corresponds to cases \ref{case:rate} and \ref{case:necessity_solver} tested in section \ref{conv_method_rate}, with $C_2=m$.}
+			\item\label{sc:three} Tangent moduli of the corresponding material states are taken as the hyper-parameters. Arc-length solver has been used. \added{This corresponds to case \ref{case:necessity_metric} tested in section \ref{conv_method_rate}, with $C_2=m$.}
+		\end{enumerate}
+	\end{definition}	
+\end{addedblock}
 
 \begin{figure}[h]
 	\centering
@@ -632,12 +692,12 @@ The results obtained for the damage profile at the center section of the bar in 
 		\caption{}
 		\label{conv_checkdam_al}
 	\end{subfigure}
-	\begin{subfigure}{0.19\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{fig_12d.pdf}
-		\caption{}
-		\label{conv_checkdam_fine_tan_noal}
-	\end{subfigure}
+%	\begin{subfigure}{0.19\textwidth}
+%		\centering
+%		\includegraphics[width=\textwidth]{fig_12d.pdf}
+%		\caption{}
+%		\label{conv_checkdam_fine_tan_noal}
+%	\end{subfigure}
 	\begin{subfigure}{0.19\textwidth}
 		\centering
 		\includegraphics[width=\textwidth]{fig_12e.pdf}
@@ -645,33 +705,32 @@ The results obtained for the damage profile at the center section of the bar in 
 		\label{conv_checkdamage_fine}
 	\end{subfigure}
 	%\includegraphics[width=\linewidth]{Images/conv_check/conv_check_2D.pdf}
-	\caption{Damage distribution without regularization corresponding to the final load step in the force-displacement response in Figure \ref{comparison_conv_check}. (a) Damaged elastic modulus used for hyper-parameter and no AL, (b) Tangent modulus used for hyper-parameter and no AL, (c) Tangent modulus used for hyper-parameter with AL solver, (d) Fine mesh - Tangent modulus used for hyper-parameter and no AL, (e) Fine mesh - Tangent modulus used for hyper-parameter with AL solver  \label{conv_check_2D}}
+	\caption{Damage distributions without regularization, each shown at its final converged load step, marked by a solid circle in Figure~\ref{comparison_conv_check} for the corresponding load-displacement curves. (a) Coarse mesh - Damaged elastic modulus used for hyper-parameter and no AL (scenario \ref{sc:one}), (b) Coarse mesh - Tangent modulus used for hyper-parameter and no AL (scenario \ref{sc:two}), (c) Coarse mesh - Tangent modulus used for hyper-parameter with AL solver (scenario \ref{sc:three}), (d) Fine mesh - Tangent modulus used for hyper-parameter with AL solver (scenario \ref{sc:three}). \label{conv_check_2D}}
+	% (d) Fine mesh - Tangent modulus used for hyper-parameter and no AL (scenario \ref{sc:two}), 
 \end{figure}
 
 \begin{figure}[h]
 	\centering
 	\includegraphics[scale=0.8]{fig_13.pdf}
-	\caption{Load - displacement response for the bar with a notch. AL stands for Arc Length. Elastic - no AL corresponds to case (a), Tangent - no AL corresponds to case (b), AL corresponds to case (c), AL - fine corresponds to case (e) of Figure \ref{conv_check_2D}. \label{comparison_conv_check}}
+	\caption{Load - displacement response for the bar with a notch. AL stands for Arc Length. Elastic - no AL corresponds to Figure \ref{conv_checkdam_el_met_noal} - scenario \ref{sc:one}, Tangent - no AL corresponds to Figure \ref{conv_checkdam_neg_met_noal} - scenario \ref{sc:two}, AL corresponds to Figure \ref{conv_checkdam_al} - scenario \ref{sc:three}, AL - fine corresponds to Figure \ref{conv_checkdamage_fine} - scenario \ref{sc:three}. Solid circles represent the final load-step at which a converged solution is obtained. \label{comparison_conv_check}}
 \end{figure}
 
-When the damaged elastic moduli are taken as the hyper-parameter, the damage profile is diffuse as presented in Figure \ref{conv_checkdam_el_met_noal}, even if there is no regularization in the problem. This is in line with the earlier discussion regarding the path taken by the mechanical and the material states in 1D, presented in Figures \ref{bad_metric_no_snap} and \ref{bad_metric_snap_no_al}, where the direction of strain increment in an element may result in a transition towards a homogeneous solution branch. The corresponding load-displacement curve in Figure \ref{comparison_conv_check} is still almost straight when the simulation is terminated. The simulation has been terminated early since the number of iterations till convergence (till successive material points are close) are very high. The distance functional remains large even though the successive material iterates are closer.
+The results obtained for the damage profile \added{at the final converged load step} at the center section of the bar in Figure \ref{2d_1d_bar_dims} are presented in Figure \ref{conv_check_2D} and the load-displacement response in Figure \ref{comparison_conv_check}. \deleted{When the damaged elastic moduli are taken as the hyper-parameters, the}\added{In scenario \ref{sc:one}, the} damage profile is diffuse as presented in Figure \ref{conv_checkdam_el_met_noal}\deleted{, even if there is no regularization in the problem}. This is in line with the earlier discussion regarding the path taken by the mechanical and the material states in 1D, presented in Figures \ref{bad_metric_no_snap} and \ref{bad_metric_snap_no_al}, where the direction of strain increment in an element may result in a transition towards a homogeneous solution branch. The corresponding load-displacement curve in Figure \ref{comparison_conv_check} is still almost straight when the simulation is terminated. \deleted{The simulation has been terminated early since the number of iterations till convergence (till successive material points are close) are very high. The distance functional remains large even though the successive material iterates are closer.}\added{As in Case \ref{case:rate} of Section \ref{conv_method_rate}, the iterates barely move between AM steps while the distance functional remains bounded away from zero; the practical implications for discrete-database implementations are discussed in Section \ref{conv_method_rate}.}
 
-When the tangent moduli are taken as the hyper-parameter, the damage profile initially localizes until a certain load step, as presented in Figure \ref{conv_checkdam_neg_met_noal}. After this, a snapback response is expected. Since the system is displacement driven, it is expected that the system jumps through and the fully damaged band develops over the entire section instantaneously in a single load step. However, as presented in Figure \ref{conv_checkdam_neg_met_noal}, after the initial localized profile, the damage becomes diffuse as in the earlier case, and also as presented in Figure \ref{good_metric_snap_no_al}. The corresponding load-displacement curve in Figure \ref{comparison_conv_check} reveals a similar behavior. At the point where a snapback is expected, there is a small drop in the load, which later on recovers and starts to increase again. 
- 
-The next combination is the arc-length solver with the tangent moduli as the hyper-parameter. As in the 1D case, the damage localizes to a one-element-wide region as shown in Figure \ref{conv_checkdam_al}. The arc length solver is able to track the severe snapback response of the bar as presented in Figure \ref{comparison_conv_check}. This also demonstrates the robustness of the arc-length constraint, which will be described in detail later.
+When the tangent moduli are taken as the hyper-parameter\added{ (scenario \ref{sc:two})}, the damage profile initially localizes until a certain load step, as presented in Figure \ref{conv_checkdam_neg_met_noal}. After this, a snapback response is expected. Since the system is displacement driven, it is expected that the system jumps through and the fully damaged band develops over the entire section instantaneously in a single load step. However, as presented in Figure \ref{conv_checkdam_neg_met_noal}, after the initial localized profile, the damage becomes diffuse as in the earlier case, and also as presented in Figure \ref{good_metric_snap_no_al}. The corresponding load-displacement curve in Figure \ref{comparison_conv_check} reveals a similar behavior. At the point where a snapback is expected, there is a small drop in the load, which later on recovers and starts to increase again. 
 
-
-When similar combinations are tested for a fine mesh, the elastic-no arc length combination needed an extremely large number of iterations to converge, once the damage begins to increase. This is clear from the analysis in the previous section, where the spectral radius of the matrix $\bfA \bfC $ gets much closer to $1$ as the mesh is refined. The tangent-no arc length combination converges at an optimal rate until the snapback instability occurs. At that point, it fails to converge at all. The resulting damage profile from Figure \ref{conv_checkdam_fine_tan_noal}, however, resembles the one obtained by using an arc-length solver in Figure \ref{conv_checkdamage_fine}. The load-displacement curve for this case has not been presented, since the curve is almost linear and shows no special features till the point of unconvergence. The tangent-arc length combination presented in Figure \ref{conv_checkdamage_fine} presents a damage band that is one-element wide, exhibiting the expected mesh sensitivity. The load-displacement curve, presented in Figure \ref{comparison_conv_check}, shows a snapback response that is different from the coarse mesh case.
+The next combination is the arc-length solver with the tangent moduli as the hyper-parameter\added{ (scenario \ref{sc:three})}. As in the 1D case, the damage localizes to a one-element-wide region as shown in Figure \ref{conv_checkdam_al}. The arc length solver is able to track the severe snapback response of the bar as presented in Figure \ref{comparison_conv_check}. This also demonstrates the robustness of the arc-length constraint, which will be described in detail later.
 
 
+When similar combinations are tested for a fine mesh, the \deleted{elastic-no arc length}\added{scenario \ref{sc:one}} combination need\deleted{ed}\added{s} an extremely large number of iterations to converge, once the damage begins to increase. This is clear from the analysis in the previous section, where the spectral radius of the matrix $\bfA \bfC $ gets much closer to $1$ as the mesh is refined. \deleted{The tangent-no arc length combination converges at an optimal rate until the snapback instability occurs. At that point, it fails to converge at all. The resulting damage profile from Figure \ref{conv_checkdam_fine_tan_noal}, however, resembles the one obtained by using an arc-length solver in Figure \ref{conv_checkdamage_fine}. The load-displacement curve for this case has not been presented, since the curve is almost linear and shows no special features till the point of unconvergence.}\added{Scenario \ref{sc:two} at the refined mesh (not shown) exhibits the same pre-snapback localization and the same loss of convergence at snapback.} The \deleted{tangent-arc length combination}\added{scenario \ref{sc:three} case at the refined mesh, }presented in Figure \ref{conv_checkdamage_fine}\added{,} presents a damage band that is one-element wide, exhibiting the expected mesh sensitivity. The load-displacement curve, presented in Figure \ref{comparison_conv_check}, shows a snapback response that is different from the coarse mesh case.
 
 
 \begin{remark}
-	Results from the analysis performed in appendix \ref{appx_convergence} reveals that an optimal rate of convergence is obtained when the metric in the distance functional is taken equal to the tangent, $\parder{\sigma^*}{\epsilon^*}$, obtained from the corresponding material state. For materials that undergo damage, this derivative is negative. Thus, during the alternating minimization process, for the elements that undergo damage, $C$ is smaller than zero. The convergence of the solver is still judged based on the metric that equals the elastic modulus, while the tangent is used only during the alternating minimization and the corresponding Newton iterations (equations \ref{disp_equation_normaldd} and \ref{eta_equation_normaldd}).
+	Results from the analysis performed in appendix \ref{appx_convergence} reveal that an optimal rate of convergence is obtained when the metric in the distance functional is taken equal to the tangent, ${\partial \sigma^*}/{\partial \epsilon^*}$, obtained from the corresponding material state. For materials that undergo damage, this derivative is negative. Thus, during the alternating minimization process, for the elements that undergo damage, $C$ is smaller than zero. The convergence of the solver is still judged based on the metric that equals the elastic modulus, while the tangent is used only during the alternating minimization and the corresponding Newton iterations (equations \ref{disp_equation_normaldd} and \ref{eta_equation_normaldd}).
 \end{remark}
 
 
-In a non-DD setting, the problem involves minimizing a functional that is non-convex. The energy density depends on displacement and damage, and is separately convex with respect to each variable. Consequently, the minimization is carried out by alternating between the two variables. This procedure allows the minimizers to jump through instabilities such as snapbacks under displacement control (although this may require a larger number of iterations). It should be noted that using a monolithic (Newton) solver for such a non-convex problem, without additional refinements or an arc-length constraint, may lead to non-convergence \cite{Farrell2017, Gerasimov2016, Singh2016, Bharali2022}. In the DD setting, however, the database resembles that in Figure \ref{1D_bar_dam_elem}, and thus the non-convexity is inherently embedded in the stored data. For this reason, an arc-length method has been employed to trace the entire bifurcation branch without requiring any jumps. As presented, not using an arc-length solver may result in a widened damage profile even in the absence of regularization. This may result in a mesh-dependent behavior even after the introduction of a length scale.
+In a non-DD setting, the problem involves minimizing a functional that is non-convex. The energy density depends on displacement and damage, and is separately convex with respect to each variable. Consequently, the minimization is carried out by alternating between the two variables. This procedure allows the minimizers to jump through instabilities such as snapbacks under displacement control (although this may require a larger number of iterations). It should be noted that using a monolithic (Newton) solver for such a non-convex problem, without additional refinements or an arc-length constraint, may lead to non-convergence \cite{Farrell2017, Gerasimov2016, Singh2016, Bharali2022}. In the DD setting, however, the database resembles that in Figure \ref{database_actual}, and thus the non-convexity is inherently embedded in the stored data. For this reason, an arc-length method has been employed to trace the entire bifurcation branch without requiring any jumps. As presented, not using an arc-length solver may result in a widened damage profile even in the absence of regularization. This may result in a mesh-dependent behavior even after the introduction of a length scale.
 
 To conclude, with the ingredients presented (the arc length solver and the choice of hyper-parameters), the data driven solver is able to exhibit the expected mesh dependence of the solution as expected when there is no regularization. To emphasize, the emergence of localized or diffuse damage in this setting is not enforced but results entirely from the interaction between the DD hyper-parameters, continuation strategy, and material non-convexity. 
 
@@ -810,7 +869,7 @@ The load displacement curves and the strain distribution at failure have been pr
 
 Thus, in the 1D case, the proposed regularization technique ensures that the result remains independent of the mesh size, as expected. Though not reported here, the simulations performed in 2D case reveal convergence issues if the constraint is abruptly deactivated once an element fails completely ($d=1$). Also, the activation-deactivation of elements lead to sawtooth like pattern in the load displacement curve, which may prove tedious to trace in 2D. To address these challenges, an alternative approach is presented below for the 2D case, in which the regularization is gradually weakened as the damage increases.
 
-\section{2D Case}
+\section{2D Case\label{2d_cases_with_ell}}
 
 As mentioned in the previous section, the strain based Lipschitz constraint introduces a length scale into the problem and results in a mesh independent solution. However, as was shown, the inequality constraint introduces a saw-tooth like pattern in the force-displacement response, which can be tedious to track. Also, to ensure that the damage zone does not extend across the body, the constraint (and thus, the length scale) will have to be removed from the fully damaged regions of the body. Abrupt removal of the constraint will likely lead to issues with convergence as well. Thus, two modifications will be introduced in this section in its extension to 2D. First, the constraint will be gradually weakened as the damage level increases. Second, the inequality constraint will be replaced by a log-barrier-like function. It is expected that the log-barrier like regularization will result in a smaller number of peaks in the saw-tooth pattern reported in the 1D case, if not completely eliminate it. It is also expected that the log-barrier like form delays the effect of the regularization term until the strains start to localize and not become active right from the earlier stages before strain localization occurs, see Figure \ref{comparison_log_quadratic}.
 
@@ -1304,14 +1363,14 @@ The point on the elastic branch can be found by simply using $m=E, c=0$ in the a
 \end{equation}
 
 \subsection*{In 2D}
-The generating model is $\sigst_i = g(D) E_{ij} \epsst_j$. $g$ is the degradation function of the damage variable, $D$. The damage evolution in the present case is taken to be a function of strain as 
-\begin{equation}
+The generating model is $\sigst_i = g(D) E_{ij} \epsst_j$. $g$ is the degradation function of the damage variable, $D$. The damage evolution in the present case is taken to be a function of strain as (see equation \ref{damage_2D_definition})
+\begin{equation*}
 D = \frac{\sqrt{k \psi_0(\bfeps^*)} - \sqrt{Y_c}}{(k-1)\sqrt{Y_c}}.
-\end{equation}
-$\psi_0$ is the strain energy density. $Y_c$ and $k$ are material parameters. $g$ is then defined as
-\begin{equation}
-	g(D) = \frac{1-D}{1+(k-1)D}. \label{degradation_function}
-\end{equation}
+\end{equation*}
+$\psi_0$ is the strain energy density. $Y_c$ and $k$ are material parameters. $g$ is then defined as (see equation \ref{degrad_func_1D})
+\begin{equation*}
+	g(D) = \frac{1-D}{1+(k-1)D}.
+\end{equation*}
 
 The distance functional, written in index form is
 \begin{equation}
@@ -1348,7 +1407,7 @@ where $n+1$ and $n$ denote the load steps. $\Delta$ is the arc length, which in 
 In 2D case, the method is slightly involved. The aim is to identify the degrees of freedom where a specific quantity is always increasing. For this purpose, the elements whose material states lie on the 'damage branch' are first identified. The damage levels in these elements are thus increasing in the load step under consideration. Then, an equivalent strain energy density of the mechanical states corresponding to these elements are computed using the mechanical strains. The arc length constraint is now written using these degrees of freedom and their equivalent strain energy density. 
 Let the damage-driving energy over an element $e$ be
 \begin{equation}
-	\psi_0^{(e)} = \tfrac{1}{2}\,\boldsymbol{\varepsilon}^{(e)T}\mathbf{C}\boldsymbol{\varepsilon}^{(e)}.
+	\psi_0^{(e)} = \tfrac{1}{2}\,\boldsymbol{\varepsilon}^{(e)T}\mathbf{C}\boldsymbol{\varepsilon}^{(e)}. \label{undamaged_energy_func}
 \end{equation}
 The damage evolution term is defined as
 \begin{equation}
@@ -1376,7 +1435,7 @@ See Algorithms \ref{alg:material_update_detailed} and \ref{alg:assemble}.
 		\Ensure   $(\epsst_{i+1},\sigst_{i+1},\partial\sigst/\partial\epsst,\,d^{n+1})$
 		
 		\Statex \textbf{Part A --- Closest point on the elastic (degraded) branch}
-		\State $g_n \gets g(d^n)$ via eq.~\eqref{degradation_function};\ \ $\mathbf{C}_e \gets g_n\,\mathbf{H}_0$
+		\State $g_n \gets g(d^n)$ via eq.~\eqref{degrad_func_1D};\ \ $\mathbf{C}_e \gets g_n\,\mathbf{H}_0$
 		\State $(\mathbf{H}_e,\mathbf{r}_e)\gets$ \Call{Assemble}{$\epsilon_i,\sigma_i,\epsilon_i,\mathbf{C}_e,d^n;\,\textsc{Elastic}$}
 		\State $\epsst_e \gets \epsilon_i - \mathbf{H}_e^{-1}\mathbf{r}_e$
 		\Comment{closed-form analogue of eq.~\eqref{elastic_branch_material_state} via one Newton step}
