@@ -1337,6 +1337,42 @@ The trajectory is similar to that presented in Figures \ref{bad_metric_no_snap} 
 
 
 \section{Discrete version of the constraint\label{discrete_version_of_gradient}}
+
+\begin{addedblock}
+Considering that the total energy can be expressed as a sum of quadratic energies of the strain and the strain gradient terms, the solution is the collection that renders the Lagrangian stationary. In discrete setting, using $\bfu$ for displacement, $\bfB \bfu$ for symmetric gradient of the displacement, and $\bfeps$ for strain, the Lagrangian is
+\begin{equation}
+\Pi = \frac{1}{2} \bfu ^T \bfK \bfu + \frac{1}{2} \bfeps ^T \bfL \bfeps + \bf \Lambda ^T \left(\bfeps - \bfB \bfu \right),
+\end{equation}
+where $\bfK,\bfL $ denote the stiffness matrix corresponding to strain and strain gradient, respectively. $\Lambda$ denotes the array of Lagrange multipliers that enforce the relation between the strain $\bfeps$ and the symmetric gradient of displacement $\bfB \bfu$. The values of $\bfB \bfu$ at the centroids of displacement mesh are used to evaluate the nodal values of $\bfeps $ on the strain mesh. The discrete form $\bf \Lambda ^T \left(\bfeps - \bfB \bfu \right)$ can thus be used to define its continuous counterpart as
+\begin{equation}
+ \int \lambda \left( \eps - {\rm sym \; grad}(u) \right) \diff \Omega.
+\end{equation}
+Using $\lambda = \sum_{i=1}^{N} \Lambda_i \delta (x-x_i) $, with $x_i$ denoting the coordinates of the centroids of the displacement mesh, the discrete version of the constraint term can be obtained.
+
+
+After taking variations of $\Pi$, the bilinear term associated with constraints can be identified as
+\begin{equation}
+	b(\bfU,\bf \Lambda) = \bf \Lambda ^T \left(\bfeps - \bfB \bfu \right),
+\end{equation}
+where $\bfU = [\bfu ; \bfeps ]^T$. Considering the term 
+\[    \frac{ b(\bfU,\bf \Lambda)}{\|\bfU \| \| \bf \Lambda\|} , \]
+with $ \|\bfU \|$ denoting the norm of the vector $[\bfu ; \bfeps ]^T$, and evaluating it when $\bfu = \bf 0$, $\bfeps = \bf \Lambda$,
+\begin{equation}
+	\frac{ b(\bfU,\bf \Lambda)}{\|\bfU \| \| \bf \Lambda\|} =  \frac{\bf \Lambda ^T \bf \Lambda }{\| \bf \Lambda\|^2} = 1.
+\end{equation}
+Thus,
+\begin{equation}
+	\sup _{\bfU} \frac{ b(\bfU,\bf \Lambda)}{\|\bfU \| \| \bf \Lambda\|}  \geq 1,
+\end{equation}
+and thus,
+\begin{equation}
+	\inf_{\bf \Lambda} \sup _{\bfU} \frac{\bf \Lambda ^T \bf \Lambda }{\| \bf \Lambda\|^2} \geq 1 = \beta.
+\end{equation}
+Thus, the displacement-strain combination satisfies the stability requirements independently of the mesh size, with a constant of $1$.
+
+\end{addedblock}
+
+
 To impose the constraint on the strain variable, a dual mesh (also called the lip mesh) is defined along with the FE mesh as in \cite{Chevaugeon2021}. To compute the derivative of the strain variable, in discrete formulation, the lip mesh is used. The strain variables are computed from the displacements as $\bfeps = \bfB \bfu$, where $\bfB$ is the discrete gradient operator, computed on the FE mesh. Defining the discrete gradient operator on the lip mesh and representing it in a matrix form as $\bfG$, the gradients of strain can be expressed in terms of the displacements as 
 \begin{equation}
 	\bfk = \nabla \bfeps = \bfB' \bfB \bfu = \bfG \bfu.
