@@ -464,6 +464,8 @@ $D=C_1+NC_2$. Thus, the spectral radius is $\rho(C_2,N) = \max(|\lambda_+|,|\lam
 \end{equation}
 \added{Under snapback, the AM fixed-point map is contractive only for $C_2$ strictly negative. Since $E>0$ and $N>0$, no positive value of $C_2$ satisfies \eqref{eq:c2_bound}. The tangent-consistent choice $C_2=m$ lies in the admissible range because for a snapback to take place, $N>-E/m \implies m<-E/N$ and thus $C_2=m<-E/N$; it is the unique choice that is simultaneously an interpretable derivative of the constitutive response and an admissible hyper-parameter for contraction. }\deleted{Since $E >0,N>0$, any positive $C_2$ will result in a spectral radius larger than $1$.}
 
+\added{The analysis can also be used to establish the conditions for convergence in the absence of snapback as in case \ref{case:rate}, when the system is driven by an arc-length solver. In the absence of snapback, $N< -E/m$, and so $E+Nm>0$. Convergence therefore requires $E+NC_2>0$, that is $C_2 > -E/N$. In this case, both choices $C_2=m >-E/N$ and $C_2=E >-E/N$ result in convergence, albeit at varying rates, with the choice $C_2=E$ resulting in a spectral radius close to $1$.}
+
 
 \subsubsection*{Failure with snapback and displacement control}
 
