@@ -1340,21 +1340,21 @@ Using $\lambda = \sum_{i=1}^{N} \Lambda_i \delta (x-x_i) $, with $x_i$ denoting 
 
 After taking variations of $\Pi$, the bilinear term associated with constraints can be identified as
 \begin{equation}
-	b(\bfU,\bf \Lambda) = \bf \Lambda ^T \left(\bfeps - \bfB \bfu \right),
+	b^h(\bfU,\bf \Lambda) = \bf \Lambda ^T \left(\bfeps - \bfB \bfu \right),
 \end{equation}
 where $\bfU = [\bfu ; \bfeps ]^T$. Considering the term 
-\[    \frac{ b(\bfU,\bf \Lambda)}{\|\bfU \| \| \bf \Lambda\|} , \]
+\[    \frac{ b^h(\bfU,\bf \Lambda)}{\|\bfU \| \| \bf \Lambda\|} , \]
 with $ \|\bfU \|$ denoting the norm of the vector $[\bfu ; \bfeps ]^T$, and evaluating it when $\bfu = \bf 0$, $\bfeps = \bf \Lambda$,
 \begin{equation}
-	\frac{ b(\bfU,\bf \Lambda)}{\|\bfU \| \| \bf \Lambda\|} =  \frac{\bf \Lambda ^T \bf \Lambda }{\| \bf \Lambda\|^2} = 1.
+	\frac{ b^h(\bfU,\bf \Lambda)}{\|\bfU \| \| \bf \Lambda\|} =  \frac{\bf \Lambda ^T \bf \Lambda }{\| \bf \Lambda\|^2} = 1.
 \end{equation}
 Thus,
 \begin{equation}
-	\sup _{\bfU} \frac{ b(\bfU,\bf \Lambda)}{\|\bfU \| \| \bf \Lambda\|}  \geq 1,
+	\sup _{\bfU} \frac{ b^h(\bfU,\bf \Lambda)}{\|\bfU \| \| \bf \Lambda\|}  \geq 1,
 \end{equation}
 and so,
 \begin{equation}
-	\inf_{\bf \Lambda} \sup _{\bfU} 	\frac{ b(\bfU,\bf \Lambda)}{\|\bfU \| \| \bf \Lambda\|}  \geq 1 = \beta.
+	\inf_{\bf \Lambda} \sup _{\bfU} 	\frac{ b^h(\bfU,\bf \Lambda)}{\|\bfU \| \| \bf \Lambda\|}  \geq 1 = \beta.
 \end{equation}
 Thus, the displacement-strain combination satisfies the stability requirements independently of the mesh size, with a constant of at least $1$. The appropriate functional spaces of the variables and the corresponding stability conditions are beyond the scope of this article.
 
