@@ -218,15 +218,30 @@ As mentioned earlier, the behavior of the alternate minimization (AM) algorithm 
 
 Two properties are expected of the DDCM algorithm in this regime. First, in local damage models without a length scale, the damage localization region is mesh-dependent, shrinking to a zone of zero measure as the mesh is refined. The DDCM algorithm, when used with a 'local' database, must inherit this behavior; a diffuse damage zone in that setting would indicate a spurious algorithmic effect, not a physical one. Second, when a proper continuation strategy is employed, the evolution of the DDCM solution through softening-induced instabilities such as snapback can be tracked continuously. Both requirements need to be established before the algorithm can be employed in more general settings.
 
-To isolate these algorithmic effects from database sampling artifacts, the material database is replaced by the underlying constitutive model itself. Replacing the collection of finite number of data points by a material model is akin to considering a material database with an infinite number of points. Any failure of the DDCM solver to converge to the (correct) solution in this case will necessarily imply its failure with a finite material database. Under this substitution, the material update at each Gauss point becomes
+%To isolate these algorithmic effects from database sampling artifacts, the material database is replaced by the underlying constitutive model itself. Replacing the collection of finite number of data points by a material model is akin to considering a material database with an infinite number of points. Any failure of the DDCM solver to converge to the (correct) solution in this case will necessarily imply its failure with a finite material database. Under this substitution, the material update at each Gauss point becomes
+%\begin{equation}
+%	(\epsst,\sigst) = \arg \min_{(\tilde{\epsst},\tilde{\sigst})} d(\bfeps,\bfsig,\tilde{\epsst},\tilde{\sigst}) \quad \text{   s.t.   }\quad \tilde{\sigst}=f(\tilde{\epsst}),
+%\end{equation}
+%where $f$ is the constitutive model that relates the material stresses and strains. Then,
+%\begin{equation}
+%	\parder{}{\tilde{\epsst}} \tilde{d}(\tilde{\epsst},f(\tilde{\epsst});\bfeps,\bfsig  )    =0,
+%\end{equation}
+%where $\tilde{d}(\tilde{\epsst},f(\tilde{\epsst});\bfeps,\bfsig) = d(\bfeps,\bfsig,\tilde{\epsst},\tilde{\sigst})$. The mechanical update is left as is. The overall algorithm in a general setting is presented in Algorithm \ref{alg:the_dd_algorithm}, explained later.
+
+
+
+To isolate algorithmic effects from database sampling artifacts, the material database is replaced by the underlying constitutive model itself. Replacing a finite collection of data points by a material model is equivalent to considering a database with an infinite number of points. Any failure of the DDCM solver to converge to the correct solution in this setting necessarily implies failure with a finite database. Under this substitution, the material update at each Gauss point becomes
 \begin{equation}
-	(\epsst,\sigst) = \arg \min_{(\tilde{\epsst},\tilde{\sigst})} d(\bfeps,\bfsig,\tilde{\epsst},\tilde{\sigst}) \quad \text{   s.t.   }\quad \tilde{\sigst}=f(\tilde{\epsst}),
+	(\epsst,\sigst) = \arg \min_{(\tilde{\epsst},\tilde{\sigst})} d(\bfeps,\bfsig,\tilde{\epsst},\tilde{\sigst}) \quad \text{   s.t.   }\quad \tilde{\sigst}=f(\tilde{\epsst};\,\mathcal{H}),
 \end{equation}
-where $f$ is the constitutive model that relates the material stresses and strains. Then,
+where $f$ is the constitutive model relating material stresses and strains, and $\mathcal{H}$ is a history variable carried from the converged solution of the previous load step. The role of $\mathcal{H}$ is to encode irreversibility and to select the appropriate branch of the (multi-valued) softening response; its precise content, together with the branch-selection logic implemented by $f(\cdot;\mathcal{H})$, is given in Section~\ref{mat_update_2D} and in Algorithm~\ref{alg:material_update_detailed} (Appendix~\ref{app_mat_update}). The optimality condition then reads
 \begin{equation}
-	\parder{}{\tilde{\epsst}} \tilde{d}(\tilde{\epsst},f(\tilde{\epsst});\bfeps,\bfsig  )    =0,
+	\parder{}{\tilde{\epsst}} \tilde{d}(\tilde{\epsst},f(\tilde{\epsst};\mathcal{H});\bfeps,\bfsig)    =0,
 \end{equation}
-where $\tilde{d}(\tilde{\epsst},f(\tilde{\epsst});\bfeps,\bfsig) = d(\bfeps,\bfsig,\tilde{\epsst},\tilde{\sigst})$. The mechanical update is left as is. The overall algorithm in a general setting is presented in Algorithm \ref{alg:the_dd_algorithm}, explained later.
+with $\tilde{d}(\tilde{\epsst},f(\tilde{\epsst};\mathcal{H});\bfeps,\bfsig) = d(\bfeps,\bfsig,\tilde{\epsst},\tilde{\sigst})$. The mechanical update is left unchanged. The overall alternating-minimization algorithm in this general setting is given as Algorithm~\ref{alg:the_dd_algorithm} and discussed in Sections \ref{1d_bar_with_bf} and \ref{2d_with_notch}, where it is first exercised. In the analytical study of Section~\ref{conv_method_rate} that follows, $\mathcal{H}$ is held fixed within a load step through the branch restriction (Definition~\ref{def:branch_restrictions}), which isolates the fixed-point behavior of the alternating minimization on an already bifurcated branch.
+
+
+
 
 
 In a 1D setting, if the material has linear softening, substituting a collection of data points with an implicit database further allows the successive iterates of the AM algorithm to be expressed as an affine map, and the fixed-point behavior of the DDCM iteration to be characterized analytically for the combinations of update operator and continuation strategy examined below. The constitutive model, serving here as an implicit database, is represented by a set of piecewise affine relations: $\sigma = E\epsilon$ for the elastic regime, $\sigma = m\epsilon + c$ ($m<0$) for the softening regime, and $\sigma = E_i \epsilon$ for the $i$th unloading branch (see Figure \ref{database_actual}). The material update is performed directly using the analytical expression of the constitutive model, as detailed in Appendix \ref{app_mat_update}. 
@@ -543,7 +558,7 @@ The analysis performed so far restricts the elements on the elastic and damage b
 \end{addedblock}
 
 
-\subsection{A 1D bar with a body force}
+\subsection{A 1D bar with a body force\label{1d_bar_with_bf}}
 In contrast to the analytical study of Section \ref{conv_method_rate}, no branch restriction is imposed in the following example. The material update is allowed to select the material state at each iteration as described below, and the observed behavior therefore reflects the intrinsic branch-selection properties of the DD algorithm. \added{The solution evolution still has to satisfy the irreversibility of damage: the material cannot heal. Also, when the implicit database consists of elastic and softening branches (see Figure \ref{database_actual}) it is necessary to determine the appropriate solution branch depending on the current loading and the solution history. The material update phase of the AM iterations, considering these requirements is presented in Algorithm \ref{alg:material_update_detailed}. A condensed version for 1D case is presented below and will be followed by a detailed description in the 2D case that will follow. The overall mechanical and material updates follow the structure presented in algorithm \ref{alg:the_dd_algorithm}.}
 
 \begin{addedblock}
@@ -624,7 +639,7 @@ The force at the right end of the bar vs the applied displacement until complete
 
 \added{The 1D case examined so far uses a linear softening model in which the tangent $m = \partial \sigma^* / \partial \epsilon^*$ on the damage branch is constant. This constancy is what made the closed-form spectral analysis of Section~\ref{conv_method_rate} possible. In 2D, the derivative $\partial \sigst / \partial \epsst$ evolves with the strain state and $\bfA\bfC$ can no longer be characterized analytically. The following section examines whether the tangent-consistent plus arc-length combination retains its necessity properties in this setting.}
 
-\subsection{2D case - Bar with a notch}
+\subsection{2D case - Bar with a notch\label{2d_with_notch}}
 
 \begin{addedblock}
 The analysis presented earlier is now performed on a 2D example. A bar with a notch is considered - the same example will be revisited in Section~\ref{a_bar_with_a_notch} to demonstrate the regularization. The geometry and the loading used are presented in Figure \ref{2d_1d_bar_dims}. The left end of the bar is fixed, top end of the bar is constrained to move horizontally, and a horizontal displacement is applied at the right end. Since there is no length scale yet, the damage is expected to localize over a one-element-wide region.
