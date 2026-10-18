@@ -1,8 +1,8 @@
 \documentclass[10pt]{article}
 
-%\usepackage{xr-hyper}
-%\usepackage[hidelinks]{hyperref}
-%\externaldocument{./build/data_driven_damage}
+\usepackage{xr-hyper}
+\usepackage[hidelinks]{hyperref}
+\externaldocument{./build/data_driven_damage}
 
 \usepackage{sectsty}
 \usepackage{graphicx}
@@ -27,6 +27,9 @@
 \pgfplotsset{compat=1.17}
 \usepackage{tikz} 
 \input{conco}
+
+\usepackage[backend=biber]{biblatex} 
+\addbibresource{library_DD.bib}
 
 % Margins
 %
@@ -326,7 +329,7 @@ Minor remarks:
 \color{black}
 \end{enumerate}
 
-
+\printbibliography
 \end{document}
 
 
