@@ -1,8 +1,8 @@
 \documentclass[10pt]{article}
 
-%\usepackage{xr-hyper}
-%\usepackage[hidelinks]{hyperref}
-%\externaldocument{./build/data_driven_damage}
+\usepackage{xr-hyper}
+\usepackage[hidelinks]{hyperref}
+\externaldocument{./build/data_driven_damage}
 
 \usepackage{sectsty}
 \usepackage{graphicx}
@@ -56,6 +56,7 @@
 
 We thank the reviewers for their careful reading of the manuscript and for the constructive comments. The feedback has led to significant improvements in both the depth and clarity of the work through the addition of new sections and appendices. We have addressed all the points raised, and provide a point-by-point response below. For ease of reference, Reviewer comments are reproduced in italics, followed by our responses. All changes in the revised manuscript are highlighted: \textcolor{blue}{additions are shown in blue} and \textcolor{red}{deletions in red.}
 
+\color{blue}
 \section*{Common response regarding Section 3.1}
 The reviewers' comments indicate that Section 3.1 was insufficiently motivated in the submitted version. Accordingly, the section has been rewritten with an explicit statement of its purpose and scope.
 
@@ -64,8 +65,7 @@ Before a length scale is introduced, it must be established that any localizatio
 A second concern is that the performance of the DDCM solver also depends on the resolution of the database, particularly under non-homogeneous strain increments within a load step. It is therefore necessary to determine whether a given pathology observed in a DDCM setting with a local model is a consequence of the algorithm itself or of insufficient database resolution. One way to isolate algorithmic effects from database sampling artifacts, and to make an analytical treatment tractable, is to replace the database by the underlying constitutive model. This is the motivation for using the model directly during the material update, now stated at lines www--xxx of the unmarked manuscript. On this basis, three cases are studied in Section 3.1 to analyze the effect of the hyperparameter and of the choice of solver (arc-length vs. direct displacement control): the hyperparameter choice under continuous evolution, the hyperparameter choice under snapback, and the continuation strategy under snapback. These three cases together establish the ingredients required for DDCM to inherit the correct behavior of a local damage model.
 
 
-%\textcolor{blue}{\textbf{Additional Author Correction: }During our revisions, we realized that the derivation between equations 22 and 24 in the revised manuscript does not need the use of L'H\^opital's rule. Consequently, those intermediate steps have been removed to simplify the text.}
-
+\color{black}
 
 \section*{Reviewer 1}
 
@@ -151,7 +151,7 @@ The full per-Gauss-point procedure, including the Newton iteration on the soften
 \item The rest of the paper is actually much easier to follow, in particular it is clear how the Lipschitz regularization is introduced as a constraint on the norm of the strain gradient. The arc-length is not discussed in detail in the main text but it is well described in Appendix E, where Eq. 61 expresses the constraint in terms of the strain mechanical field. Thus, these extra constraints and regularizations are in terms of the mechanical strain field. The question about how to handle the history dependence on the material stress-strain pairs still bothers me because it is not well covered in the main text.
 \color{blue}
 
-\textbf{Response.} Beyond the Section 3.2 and 3.3 expositions discussed above, Algorithm \ref{alg:material_update_detailed} (per-Gauss-point material update, including the admissibility logic) has been added to the appendix. Together with the state variables $(d^n, \mathcal{H}^n, \epsilon^n_{\max})$ carried across load steps, this makes the handling of history dependence explicit.
+\textbf{Response.} Beyond the Section 3.2 and 3.3 expositions discussed above, Algorithm \ref{alg:material_update_detailed} (per-Gauss-point material update, including the admissibility logic) has been added to the appendix. Together with the state variables $(d^n, \mathcal{H}^n)$ carried across load steps, this makes the handling of history dependence explicit.
 
 \color{black}
 \end{enumerate}
@@ -231,21 +231,42 @@ To make this role explicit, three \emph{Scenarios} are now defined (Definition \
 \color{black}
 \item Section 4 - Why is the mesh adopted for the strain called "dual" with respect to the one used for displacements? The same order of interpolation is used for displacement and strain, does this ensure the fulfilment of the Babuska-Brezzi conditions? What are the consequences of these interpolations?
 
+\color{blue}
+\textbf{Response.} We thank the reviewer. Following the terminology of \cite{Chevaugeon2021}, the auxiliary mesh is now called the \emph{lip-mesh} throughout. The term ``dual'' was used only because its vertices are the centroids of the primal mesh; it carries no further meaning. A stability analysis of the displacement-strain pairing is provided in Appendix \ref{stab_check_lip_disp}: writing the compatibility constraint $\bfeps = \bfB \bfu$ in weak form, $\int \mu(\varepsilon - Bu)\, dx = 0$ with $\mu$ chosen as a sum of Diracs at the centroids of the primal mesh, recovers the discrete system in use. The resulting inf-sup constant then satisfies
+\begin{equation*}
+	\beta = \inf_{\bf \Lambda} \sup_{\bfU} \frac{b^h(\bfU, \bf \Lambda)}{\|\bfU\|\,\|\bf \Lambda\|} \geq 1
+\end{equation*}
+independently of the mesh, so the displacement-strain pairing satisfies the Babuska-Brezzi condition and no spurious modes arise from this interpolation choice. A separate inf-sup condition arises from the active-set multipliers that enforce the Lipschitz inequality; a formal analysis of this active-set formulation is beyond the scope of this article, and the stability of the discretized problem is instead assessed numerically through mesh refinement, as reported in Sections 4 and 5.
 
-\textbf{Response.} We thank the reviewer. Following the terminology of \cite{Chevaugeon2021}, the auxiliary mesh is now called the \emph{lip-mesh} throughout. A stability check of the displacement-strain pairing is provided in Appendix \ref{stab_check_lip_disp}: writing the compatibility constraint through its weak form $\int \mu(\varepsilon - Bu)\, dx = 0$ with $\mu$ chosen as a sum of Diracs at the centroids of the primal mesh recovers the discrete system in use, and evaluating the discrete inf-sup ratio for $\bfu = \bf 0, \bfeps = \bf\Lambda$ gives $\beta \geq 1$ independently of the mesh. A separate inf-sup arises from the active-set multipliers that enforce the Lipschitz inequality; a formal analysis of this active-set formulation is beyond the scope of this article and the stability of the discretized problem is instead assessed numerically through mesh refinement, as reported in Sections 4 and 5.
-
+\color{black}
 \item The removal of the constraint in order to reach failure (zero force), see fig 15, is artificial and put in evidence a non-physical behavior of the model. Also, in the L shape example failure cannot be reached. What is the reason of this?
 
-\textbf{Response.} We agree that the deactivation of the constraint at $d = 1$ is an artificial device, and this is now stated plainly in Section 4.2. The deactivation is tractable in 1D because failure is contained in a single element; in 2D it causes convergence difficulties, and it has been replaced by a damage-dependent weakening of the constraint and a log-barrier formulation in Section 5. On the L-beam: the database used in Section 6.2 is tension-compression symmetric, so damage develops in the compressive region once the global response is well into the softening regime. The simulation is stopped at that point. A tension-compression split in the DDCM setting is a direction we are currently investigating and is mentioned in the Discussion.
+\color{blue}
+\textbf{Response.} We agree that the deactivation of the constraint at $d = 1$ is an artificial numerical device rather than a physical statement, and this is now stated plainly in Section 4.2. The deactivation is tractable in 1D because failure is contained in a single element and the discontinuity it introduces does not propagate; in 2D it causes convergence difficulties, and it has been replaced in Section 5 by a principled alternative: a damage-dependent weakening of the constraint combined with a log-barrier formulation. The 2D results reported in Sections 5 and 6 therefore rely on this smooth alternative, not on the hard deactivation.
 
+Regarding the L-beam: the database used in Section 6.2 is tension-compression symmetric, as is standard for the elastic-damage models used throughout the paper. The simulation is stopped once the global response is well into the softening regime because, beyond that point, damage begins to develop in the compressive region near the right edge of the beam. In a tension-compression symmetric model this damage is spurious with respect to the physical behavior of the material. By contrast, the notched bar of Section 6.1 is a pure tension problem; no compressive region develops there, and the simulation can therefore be driven all the way to failure. A general strategy for incorporating a tension-compression split within the DDCM framework is not yet established and is left open for future work.
 
+\color{black}
 \item \textit{The length lc is fixed in an arbitrary way: could you please discuss the issue?}
 
-\textbf{Response.} $\ell_c$ sets the width of the regularized localization band. In the DDCM-Lipschitz setting considered here, it also has a direct energetic interpretation: as reported in \cite[eq.~55]{Kamasamudram2023}, $G_c = Y_c \ell_c$, so that $\ell_c$ is determined by the pair (peak stress through $Y_c/k$, dissipated energy from damage initiation to complete failure). This relation is now stated after equation \ref{discrete_constraint} in Section 4.1.
+\color{blue}
+\textbf{Response.} We agree that the choice of $\ell_c$ warranted more discussion. $\ell_c$ sets the width of the regularized localization band and plays the same role as the length-scale parameter in gradient-damage and phase-field formulations. In the DDCM-Lipschitz setting considered here, it has in addition a direct energetic interpretation: as reported in \cite[eq.~55]{Kamasamudram2023},
+\begin{equation*}
+	G_c = Y_c \ell_c,
+\end{equation*}
+so that $\ell_c$ is determined by the pair (peak stress through $Y_c/k$, dissipated energy from damage initiation to complete failure). This relation is now stated in Section 4.1.
 
+The specific values of $\ell_c$ used in the examples ($\SI{0.1}{\meter}$ in the 1D bar, $\SI{0.5}{\meter}$ in the 2D cases) were chosen for illustration rather than calibrated against a specific fracture energy; in practice, $\ell_c$ would be fixed by the measured $G_c$ and peak stress of the material. We also note that in the 2D case the effective regularization length is smaller than $\ell_c$ itself, because the constraint is weakened by the damage-dependent function $g$ (Section 6.1), so that the observed band width is narrower than $\ell_c$ alone would predict.
+
+\color{black}
 \item \textit{The claim at page 28, line 713 that oscillation are reduced is not justified by the results.}
 
-\textbf{Response.} We agree. The sentence has been removed. The Discussion now states that the comparative claim is not supported here: ``Whether the log-barrier reduces the oscillation amplitude relative to the strict-inequality formulation is not tested here. It is nevertheless plausible that alternative choices of the barrier parameter may further smooth the global response, a possibility that was not explored here.''
+\color{blue}
+\textbf{Response.} We agree. The unsupported claim has been removed. The Discussion now states that the comparison with the strict-inequality formulation is not tested here:
+
+\begin{quote}
+	``Whether the log-barrier reduces the oscillation amplitude relative to the strict-inequality formulation is not tested here. It is nevertheless plausible that alternative choices of the barrier parameter may further smooth the global response, a possibility that was not explored here.''
+\end{quote}
 
 
 \end{enumerate}
@@ -254,10 +275,42 @@ Minor remarks:
 
 \begin{enumerate}
 \item In figure 2 one cannot distinguish the two arrows
+
+\color{blue}
+\textbf{Response.} The former Figure 2 has been removed (see our response to Reviewer 1, comments 3 and 4). The conventions it illustrated are now stated in the text of Section 3.1.
+\color{black}
+
 \item At page 7, line 214, Blue should be purple
+
+\color{blue}
+
+\textbf{Response.} We thank the reviewer. The color scheme has been unified throughout Section 3.1: blue for the elastic branch and red for the damage branch, matching Figure \ref{1D_bar_dam_elem}. The sentence in question has been rewritten.
+
+\color{black}
 \item At page 22, line 577 the elements cannot be called constant strain triangles since the strain is linearly interpolated
+
+\color{blue}
+
+\textbf{Response.} We agree. The lip-mesh elements are now described as piecewise-affine triangles. The term ``constant strain triangles'' is kept only for the primal displacement mesh, where the strain is indeed constant.
+
+
+\color{black}
 \item Pag 23, line 607, the name of appendix lacks
+
+\color{blue}
+
+\textbf{Response.} Corrected. The references at L923 now explicitly name the appendices: ``Appendix \ref{app_mat_update}'' for the tangent matrix and ``Appendix \ref{appen_arc_length}'' for the arc-length solver.
+
+
+\color{black}
 \item Ref 31 is incomplete
+
+\color{blue}
+
+\textbf{Response.} Corrected. Reference 31 is now Ref. 33, and includes the full publication details (journal, volume, pages, DOI).
+
+
+\color{black}
 \end{enumerate}
 
 
