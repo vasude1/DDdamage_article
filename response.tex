@@ -1,8 +1,8 @@
 \documentclass[10pt]{article}
 
-\usepackage{xr-hyper}
-\usepackage[hidelinks]{hyperref}
-\externaldocument{./build/data_driven_damage}
+%\usepackage{xr-hyper}
+%\usepackage[hidelinks]{hyperref}
+%\externaldocument{./build/data_driven_damage}
 
 \usepackage{sectsty}
 \usepackage{graphicx}
@@ -64,6 +64,15 @@ Before a length scale is introduced, it must be established that any localizatio
 
 A second concern is that the performance of the DDCM solver also depends on the resolution of the database, particularly under non-homogeneous strain increments within a load step. It is therefore necessary to determine whether a given pathology observed in a DDCM setting with a local model is a consequence of the algorithm itself or of insufficient database resolution. One way to isolate algorithmic effects from database sampling artifacts, and to make an analytical treatment tractable, is to replace the database by the underlying constitutive model. This is the motivation for using the model directly during the material update, now stated at lines www--xxx of the unmarked manuscript. On this basis, three cases are studied in Section 3.1 to analyze the effect of the hyperparameter and of the choice of solver (arc-length vs. direct displacement control): the hyperparameter choice under continuous evolution, the hyperparameter choice under snapback, and the continuation strategy under snapback. These three cases together establish the ingredients required for DDCM to inherit the correct behavior of a local damage model.
 
+\section*{Other general modifications}
+
+In addition to the items detailed below, the revision includes the following clarifications, made at our own initiative to support the arguments of Section~3.1 and the 2D examples:
+\begin{itemize}
+	\item A paragraph delimiting the range of validity of the spectral analysis has been added at the start of ``Failure with snapback and displacement control’’. It states that $\rho(\bfA\bfC)$ governs the AM iteration only while the material projection remains interior to the admissibility constraints of Definition~\ref{def:branch_restrictions}; when either constraint activates, the iteration leaves the regime governed by $\bfA\bfC$. This clarifies why the $C_2 = E$ snapback iterates do not diverge even though $\rho > 1$ -- the plateau is a constraint-saturation effect, not a divergence.
+	\item The three cases of Section~3.1 are now summarized in Table~\ref{tab:necessity_summary}, which gathers the regime, hyper-parameter choices, and outcomes in one place.
+	\item The behavior under arc-length control without snapback (case~\ref{case:rate} driven by arc length) is now treated explicitly: $C_2 > -E/N$ is required for convergence, so both $C_2 = m$ and $C_2 = E$ converge under arc length, with $C_2 = E$ approaching a spectral radius close to one. This closes the (snapback vs.\ no snapback) $\times$ (arc-length vs.\ displacement control) grid.
+	\item Section~6.1 and the Discussion now acknowledge that the formulation does not include a tension-compression split of the strain energy, with references to \cite{amor2009regularized, miehe2010phase}. For the notched bar this is immaterial because the loading produces a purely tensile stress state along the crack path; the implementation of a tension-compression split in the data-driven setting is identified as an open problem in the Discussion.
+\end{itemize}
 
 \color{black}
 
@@ -108,7 +117,7 @@ Please see below for the response.
 \color{blue}
 \textbf{Response.} We thank the reviewer. The figure structure of Section 3.1 has been reorganized as follows:
 \begin{itemize}
-	\item Two figures now present the evolution of the normalized distance functional with iterations, one covering the arc-length cases and one covering the displacement-controlled cases. The distance functional is now the primary vehicle for conveying convergence behavior, as also suggested by the reviewer in a later comment.
+	\item Two figures now present the evolution of the normalized distance functional with iterations (Figures \ref{fig:dist_all_cases} and \ref{dist_evol_2}), together covering the four cases studied in Section~3.1 and the additional starting point of Appendix~\ref{different_starting_point}. The distance functional is now the primary vehicle for conveying convergence behavior, as also suggested by the reviewer in a later comment.
 	\item Three figures in the main text present the trajectories of the iterates on the $\sigma$--$\epsilon$ plane, as a complementary view that exposes the mechanism underlying each case (direction of the first increments, saturation at the peak or irreversibility bound).
 	\item The legend-only figure (former Figure 2) has been removed. Its content - mechanical states as crosses, material states as circles, elastic branch in blue, damage branch in red (matching Figure \ref{1D_bar_dam_elem}) - is now stated in the text of Section 3.1 before the first trajectory figure.
 	\item The two zoom figures (former Figures 4 and 6) have been removed. The information they carried - the direction of the first strain increments and the near-coincidence of successive iterates - is now described in prose, together with the distance-evolution plots.
@@ -120,13 +129,13 @@ A common color scheme is used throughout: elements on the elastic branch in blue
 \item Fig 9 has barely any information.
 
 \color{blue}
-\textbf{Response.} We hae removed this figure. The loading and the geometry are directly described in the prose.
+\textbf{Response.} We have removed this figure. The loading and the geometry are directly described in the prose in Section 3.2.
 
 \color{black}
 \item Overall I had a very hard time following the argument surrounding the convergence plots in Figs 3-6 and corresponding text in the article. It seems that a more direct visualization of Eq. 15 and 16 would work better. Also, normalizing with respect to the true value would help seeing when is the algorithm pushing the softening branch toward lower strains (below the max stress strain). How are the branches forced to stay within their respective branches? That's not clear at all from Eq 12. To be frank, I had a really hard time with this example and corresponding plots. To me, this example is almost better as supplemental material, as it distracts from the more valuable core of the paper stemming from the 1D problem with body force and the 2D problems.
 
 \color{blue}
-\textbf{Response.} We thank the reviewer for this suggestion. Section 3.1 has been substantially rewritten, both to clarify the \emph{branch restriction} and the admissibility constraints that complement it (Definition \ref{def:branch_restrictions}), and to change the way convergence is reported. The convergence behavior for each case is now first conveyed through the evolution of the distance functional of Eqs. 15--16 (Figures \ref{fig:dist_all_cases} and \ref{dist_evol_2}), which is the direct visualization the reviewer suggested. We normalize the distance by the first-iteration value, so that all cases start at one and their decay rates can be compared on a single plot. The trajectory plots are retained as a complementary view that exposes the underlying mechanism (direction of the first mechanical and material increments, saturation at the peak or irreversibility bound), but they are no longer the primary vehicle for conveying convergence.
+\textbf{Response.} We thank the reviewer for this suggestion. Section 3.1 has been substantially rewritten, both to clarify the \emph{branch restriction} and the admissibility constraints that complement it (Definition \ref{def:branch_restrictions}), and to change the way convergence is reported. The convergence behavior for each case is now first conveyed through the evolution of the distance functional governed by the iterates from Eq. \ref{comb_update_short} (Figures \ref{fig:dist_all_cases} and \ref{dist_evol_2}), which is the direct visualization the reviewer suggested. We normalize the distance by the first-iteration value, so that all cases start at one and their decay rates can be compared on a single plot. The trajectory plots are retained as a complementary view that exposes the underlying mechanism (direction of the first mechanical and material increments, saturation at the peak or irreversibility bound), but they are no longer the primary vehicle for conveying convergence.
 
 Regarding the question of iterates pushing below the maximum-stress strain: the admissibility constraints in Definition \ref{def:branch_restrictions} (irreversibility and the peak cap) explicitly prevent this. Section~3.1 now shows that, when either constraint becomes active, the AM iteration leaves the regime governed by the matrix $\bfA\bfC$, and that this constraint-saturation mechanism is precisely what causes the displacement-controlled snapback case to stagnate at a finite distance rather than diverge.
 
@@ -139,7 +148,8 @@ The analysis is separated into three cases to isolate the role of the hyper-para
 \textbf{Response.} We agree, and this concern is tied to our response to comment~[1]. As noted there, the opening of Section~3 now writes the constitutive relation as $\tilde{\sigst}=f(\tilde{\epsst};\mathcal{H})$, with $\mathcal{H}$ a history variable carried from the converged solution of the previous load step. The present comment prompted us to make the content of $\mathcal{H}$ and the logic encoded in $f(\cdot;\mathcal{H})$ explicit in the main text, in two dedicated subsubsections:
 
 \begin{itemize}
-	\item Section~3.2 (\emph{Material update}, 1D). The state variables are $(d^n, \epsilon_{\max}^n)$, updated at convergence of each load step. The material update classifies the current state as unloading, reloading below the yield point, or damaging, and selects among the elastic (degraded) branch, the softening branch, and saturation at $d_{\max}$.
+	\item Section~3.2 (\emph{Material update}, 1D). The state variables are $(d^n, \epsilon_{\max}^n)$, updated at convergence of each load step; the three-case classification (unloading, reloading below the yield point, damaging) is detailed in Section \ref{mat_update_2D} with the 2D treatment and reduces to the 1D case through Eqs. \ref{degrad_func_1D}-\ref{1D_damage_def}.
+	
 	\item Section~\ref{mat_update_2D} (\emph{Material update}, 2D). The state variables are $(d^n, \mathcal{H}^n)$ with $\mathcal{H}^n = \max_{k \leq n} \psi_0(\bfeps^k)$. The classification follows the same three cases, with an additional \emph{forced yield-surface projection} used when neither the elastic nor the softening branch yields an admissible state.
 \end{itemize}
 
@@ -151,7 +161,7 @@ The full per-Gauss-point procedure, including the Newton iteration on the soften
 \item The rest of the paper is actually much easier to follow, in particular it is clear how the Lipschitz regularization is introduced as a constraint on the norm of the strain gradient. The arc-length is not discussed in detail in the main text but it is well described in Appendix E, where Eq. 61 expresses the constraint in terms of the strain mechanical field. Thus, these extra constraints and regularizations are in terms of the mechanical strain field. The question about how to handle the history dependence on the material stress-strain pairs still bothers me because it is not well covered in the main text.
 \color{blue}
 
-\textbf{Response.} Beyond the Section 3.2 and 3.3 expositions discussed above, Algorithm \ref{alg:material_update_detailed} (per-Gauss-point material update, including the admissibility logic) has been added to the appendix. Together with the state variables $(d^n, \mathcal{H}^n)$ carried across load steps, this makes the handling of history dependence explicit.
+\textbf{Response.} Beyond the Section 3.2 and 3.3 material-update subsections discussed in our response to comment [7], an introductory paragraph has been added at the start of Appendix \ref{app_mat_update_algo} that links Algorithm \ref{alg:material_update_detailed} to those sections. Together with the state variables $(d^n, \mathcal{H}^n)$ carried across load steps, this makes the handling of history dependence explicit.
 
 \color{black}
 \end{enumerate}
@@ -167,9 +177,9 @@ However, in the reviewer opinion, there are some points that deserve further imp
 \color{blue}
 We thank the reviewer for the comment. The motivation for substituting the database with an underlying model has now been presented in Section 3.1. As stated in the common response, the intent of this substitution is to analyze the convergence properties of the DDCM algorithm analytically in a simple 1D setting, which cannot be carried out directly with a finite database.
 
-The case of the explicit model is a ``best case scenario'' check for DDCM: failure of the DDCM algorithm (for instance, to properly localize) with the substitution will necessarily imply its eventual failure with a finite database, since a finite database introduces further sources of error (sampling, limited coverage of the state space) that can only degrade the behavior observed here. The three cases examined in Section 3.1 therefore establish the ingredients necessary in the DDCM setting, and these conclusions are verified in the more complicated, 2D setting of Sections 3.2 and 3.3.
+The case of the explicit model is a ``best case scenario'' check for DDCM: failure of the DDCM algorithm (for instance, to properly localize) with the substitution will necessarily imply its eventual failure with a finite database, since a finite database introduces further sources of error (sampling, limited coverage of the state space) that can only degrade the behavior observed here. The three cases examined in Section 3.1 therefore establish the ingredients necessary in the DDCM setting, and these conclusions are verified first in Section 3.2 (1D bar with body force, with branch restriction removed) and then in the 2D setting of Section 3.3.
 
-We agree with the reviewer that this analysis establishes necessary rather than sufficient conditions for the behavior of the full DD method, which may still suffer from issues with database sampling. Empirical validation on finite databases is left for future work.
+The algorithmic criteria identified in this work are therefore expected to carry over to the finite-database setting; the only remaining source of discrepancy between the two settings is the database itself (sampling density, phase-space coverage), whose systematic study is left as future work.
 
 
 \color{black}
@@ -216,9 +226,12 @@ Beyond these four cases, the characteristic polynomial of $\mathbf{A}\mathbf{C}$
 \item Figures 3, 4, 5, 6 are unclear. If they represent the global response of the whole bar, one would expect just one blue curve of material states and one red of mechanical states. If they refer to the different elements (purple or teal inside the bar), this must be visible. Also, the initial and final points should be marked.
 
 \color{blue}
-\textbf{Response.} In Section 3.1, the 1D bar is meshed with $N+1$ elements, each carrying its own mechanical and material state. Figures 3, 4 and 6 of the revised manuscript present the trajectories of these mechanical and material states during the DDCM iterations within a single load step. Since the damage is localized to one element and all remaining elements unload uniformly, each figure shows the trajectory of two representative elements: one on the elastic branch and the damaging one. These trajectories therefore characterize the local convergence behavior of the DDCM algorithm, not the global response of the bar. The former Figure 5 of the submitted version has been replaced by the normalized distance functional (now Figure~\ref{fig:dist_all_cases}), introduced in the response to the previous comment.
+\textbf{Response.} In Section 3.1, the 1D bar is meshed with $N+1$ elements, each carrying its own mechanical and material state. Figures 3, 4 and 6 of the revised manuscript present the trajectories of these mechanical and material states during the DDCM iterations within a single load step. Since the damage is localized to one element and all remaining elements unload uniformly, each figure shows the trajectory of two representative elements: one on the elastic branch and the damaging one. These trajectories therefore characterize the local convergence behavior of the DDCM algorithm, not the global response of the bar. The former Figures 4 and 6 (zoom panels of the trajectory figures) have been removed; the information they carried - the direction of the first strain increments and the near-coincidence of successive iterates - is now summarized in prose and in the normalized distance plot (Figure~\ref{fig:dist_all_cases}), introduced in the response to the previous comment.
 
 The trajectory figures now use a single, uniform color scheme: states associated with elements on the elastic branch in blue, states associated with the damaging element in red, matching Figure~\ref{1D_bar_dam_elem}. Mechanical states are drawn as crosses and material states as circles. Initial iterates are marked with black asterisks. Final iterates are not separately marked, since a meaningful final state is defined only when the algorithm converges; in that case it coincides with the intersection of the mechanical and material trajectories and is directly visible in the figure. For the non-converging cases, no distinct final state exists. This convention is stated in the text of Section 3.1 before the first trajectory figure.
+
+
+
 
 \color{black}
 \item The 2D example selected exhibits an extremely brittle behaviour which prevents to follow the evolution of damage with some detail (see figure 12 and 13). Maybe another geometry would help to appreciate the mesh dependence and the following regularization. The sentence at page 16 (line 445) is not justified by the comparison between fig 12d and 12e.
@@ -244,7 +257,7 @@ independently of the mesh, so the displacement-strain pairing satisfies the Babu
 \color{blue}
 \textbf{Response.} We agree that the deactivation of the constraint at $d = 1$ is an artificial numerical device rather than a physical statement, and this is now stated plainly in Section 4.2. The deactivation is tractable in 1D because failure is contained in a single element and the discontinuity it introduces does not propagate; in 2D it causes convergence difficulties, and it has been replaced in Section 5 by a principled alternative: a damage-dependent weakening of the constraint combined with a log-barrier formulation. The 2D results reported in Sections 5 and 6 therefore rely on this smooth alternative, not on the hard deactivation.
 
-Regarding the L-beam: the database used in Section 6.2 is tension-compression symmetric, as is standard for the elastic-damage models used throughout the paper. The simulation is stopped once the global response is well into the softening regime because, beyond that point, damage begins to develop in the compressive region near the right edge of the beam. In a tension-compression symmetric model this damage is spurious with respect to the physical behavior of the material. By contrast, the notched bar of Section 6.1 is a pure tension problem; no compressive region develops there, and the simulation can therefore be driven all the way to failure. A general strategy for incorporating a tension-compression split within the DDCM framework is not yet established and is left open for future work.
+Regarding why the L-beam simulation cannot be driven to complete failure: the L-beam develops a compressive region on the right side of the beam under the applied loading. The present formulation does not include a tension-compression split of the strain energy (see \cite{amor2009regularized, miehe2010phase}), so under purely compressive stress the model allows the damage variable to grow, which is unphysical. The simulation is therefore terminated at the load step where damage in the compressive zone begins to increase. This is now stated explicitly in Section~6.2. By contrast, the notched bar of Section 6.1 is a pure tension problem; no compressive region develops there, and the simulation can therefore be driven all the way to failure. The implementation of a tension-compression split in the data-driven setting is identified as an open problem in the Discussion.
 
 \color{black}
 \item \textit{The length lc is fixed in an arbitrary way: could you please discuss the issue?}
@@ -256,7 +269,7 @@ Regarding the L-beam: the database used in Section 6.2 is tension-compression sy
 \end{equation*}
 so that $\ell_c$ is determined by the pair (peak stress through $Y_c/k$, dissipated energy from damage initiation to complete failure). This relation is now stated in Section 4.1.
 
-The specific values of $\ell_c$ used in the examples ($\SI{0.1}{\meter}$ in the 1D bar, $\SI{0.5}{\meter}$ in the 2D cases) were chosen for illustration rather than calibrated against a specific fracture energy; in practice, $\ell_c$ would be fixed by the measured $G_c$ and peak stress of the material. We also note that in the 2D case the effective regularization length is smaller than $\ell_c$ itself, because the constraint is weakened by the damage-dependent function $g$ (Section 6.1), so that the observed band width is narrower than $\ell_c$ alone would predict.
+The specific values of $\ell_c$ used in the examples were chosen for illustration rather than calibrated against a specific fracture energy; in practice, $\ell_c$ would be fixed by the measured $G_c$ and peak stress of the material. We also note that in the 2D case the effective regularization length is smaller than $\ell_c$ itself, because the constraint is weakened by the damage-dependent function $g$ (Section 6.1), so that the observed band width is narrower than $\ell_c$ alone would predict.
 
 \color{black}
 \item \textit{The claim at page 28, line 713 that oscillation are reduced is not justified by the results.}
