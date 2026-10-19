@@ -96,9 +96,9 @@ In this paper, the authors adopt the framework of data-driven damage mechanics i
 %
 where $\mathcal{H}$ is a history variable carried from the converged solution of the previous load step, whose role is to encode irreversibility and to select the appropriate branch of the (multi-valued) softening response. The content of $\mathcal{H}$ and the branch-selection logic implemented by $f(\cdot;\mathcal{H})$ depend on the setting:
 \begin{itemize}
-	\item In the analytical study of Section 3.1, $\mathcal{H}$ is held fixed within a load step through the \emph{branch restriction} (Definition \ref{def:branch_restrictions}): the mechanical and material iterates are confined to the branch each element occupies at the beginning of the step, so that the fixed-point behavior of the alternating minimization on an already bifurcated branch can be isolated. Equations 10 and 11 of the original submission describe this restricted setting.
+	\item In the analytical study of Section 3.1, $\mathcal{H}$ is held fixed within a load step through the branch restriction and the admissibility constraints (Definition \ref{def:branch_restrictions}): the mechanical and material iterates are confined to the branch each element occupies at the beginning of the step, so that the fixed-point behavior of the alternating minimization on an already bifurcated branch can be isolated. Equations 10 and 11 of the original submission describe this restricted setting.
 	\item In 1D (Section 3.2), $\mathcal{H}=(d^n,\epsilon^n_{\max})$ is updated at convergence of each load step and selects, through $f(\cdot;\mathcal{H})$, among the elastic (degraded) branch, the softening branch, and saturation at $d_{\max}$.
-	\item In 2D (Section \ref{mat_update_2D}), $\mathcal{H}=(d^n,\mathcal{H}^n)$ with $\mathcal{H}^n = \max_{k \leq n} \psi_0(\bfeps^k)$, and the branch selection is given there and specified algorithmically in Algorithm \ref{alg:material_update_detailed} (Appendix \ref{app_mat_update}).
+	\item In 2D (Section \ref{mat_update_2D}), $\mathcal{H}=(d^n,\mathcal{H}^n)$ with $\mathcal{H}^n = \max_{k \leq n} \psi_0(\bfeps^k)$, and the branch selection is given there and specified algorithmically in Algorithm \ref{alg:material_update_detailed} (Appendix \ref{app_mat_update_algo}).
 \end{itemize}
 %
 History dependence is therefore no longer hidden in the equations preceding Section 3.1, and the restricted character of the analytical study is stated where it is used.
@@ -120,7 +120,7 @@ Please see below for the response.
 \color{blue}
 \textbf{Response.} We thank the reviewer. The figure structure of Section 3.1 has been reorganized as follows:
 \begin{itemize}
-	\item Two figures now present the evolution of the normalized distance functional with iterations (Figures \ref{fig:dist_all_cases} and \ref{dist_evol_2}), together covering the four cases studied in Section~3.1 and the additional starting point of Appendix~\ref{different_starting_point}. The distance functional is now the primary vehicle for conveying convergence behavior, as also suggested by the reviewer in a later comment.
+	\item Two figures now present the evolution of the normalized distance functional with iterations (Figures \ref{fig:dist_all_cases} and \ref{dist_evol_2}), together covering the three cases studied in Section~3.1 and the additional starting point of Appendix~\ref{different_starting_point}. The distance functional is now the primary vehicle for conveying convergence behavior, as also suggested by the reviewer in a later comment.
 	\item Three figures in the main text present the trajectories of the iterates on the $\sigma$--$\epsilon$ plane, as a complementary view that exposes the mechanism underlying each case (direction of the first increments, saturation at the peak or irreversibility bound).
 	\item The legend-only figure (former Figure 2) has been removed. Its content - mechanical states as crosses, material states as circles, elastic branch in blue, damage branch in red (matching Figure \ref{1D_bar_dam_elem}) - is now stated in the text of Section 3.1 before the first trajectory figure.
 	\item The two zoom figures (former Figures 4 and 6) have been removed. The information they carried - the direction of the first strain increments and the near-coincidence of successive iterates - is now described in prose, together with the distance-evolution plots.
@@ -153,10 +153,10 @@ The analysis is separated into three cases to isolate the role of the hyper-para
 \begin{itemize}
 	\item Section~3.2 (\emph{Material update}, 1D). The state variables are $(d^n, \epsilon_{\max}^n)$, updated at convergence of each load step; the three-case classification (unloading, reloading below the yield point, damaging) is detailed in Section \ref{mat_update_2D} with the 2D treatment and reduces to the 1D case through Eqs. \ref{degrad_func_1D}-\ref{1D_damage_def}.
 	
-	\item Section~\ref{mat_update_2D} (\emph{Material update}, 2D). The state variables are $(d^n, \mathcal{H}^n)$ with $\mathcal{H}^n = \max_{k \leq n} \psi_0(\bfeps^k)$. The classification follows the same three cases. When neither the elastic nor the damage branch is feasible, the cusp at the intersection of the elastic branch with the damage branch is returned, together with the tangent corresponding to the damage branch.
+	\item Section~\ref{mat_update_2D} (\emph{Material update}, 2D). The state variables are $(d^n, \mathcal{H}^n)$ with $\mathcal{H}^n = \max_{k \leq n} \psi_0(\bfeps^k)$. The classification follows the same three cases. When neither the elastic nor the damage branch is feasible, the cusp at the intersection of the elastic branch with the damage branch is returned, together with the tangent corresponding to the damage branch. This fallback is specified in Part D of Algorithm~\ref{alg:material_update_detailed}.
 \end{itemize}
 
-The full per-Gauss-point procedure, including the Newton iteration on the softening branch and the admissibility checks (irreversibility and the peak cap of Definition~\ref{def:branch_restrictions}), is given as Algorithm~\ref{alg:material_update_detailed} in Appendix~\ref{app_mat_update}. Together, the revised Section~3 opening and these two subsubsections make the handling of history dependence explicit in the main text, as the reviewer suggested.
+The full per-Gauss-point procedure, including the Newton iteration on the softening branch and the admissibility checks (irreversibility and the peak cap of Definition~\ref{def:branch_restrictions}), is given as Algorithm~\ref{alg:material_update_detailed} in Appendix~\ref{app_mat_update_algo}. Together, the revised Section~3 opening and these two subsubsections make the handling of history dependence explicit in the main text, as the reviewer suggested.
 
 
 
@@ -222,7 +222,7 @@ Section 3.1 and summarized in Table~\ref{tab:necessity_summary}:
 	\item \emph{Snapback, arc-length, $C_2 = m$}: $\rho = 1/2$. Converges in a handful of iterations.
 \end{itemize}
 
-Beyond these four cases, the characteristic polynomial of $\mathbf{A}\mathbf{C}$ in the arc-length setting yields a closed-form bound equation~\eqref{eq:c2_bound},  a derivation made possible by the substitution of the discrete database by the underlying analytical model: under snapback, the AM fixed-point map is contractive only when $C_2$ is strictly negative ($<-E/N$). No positive hyper-parameter is admissible, and $C_2 = m$ is the unique interpretable derivative of the constitutive response that lies in the admissible range. Figure 3a is therefore one entry in a complete analytical map, and the behavior it displays is the predicted signature of the only $C_2 > 0$ case that even converges in principle.
+Beyond these four cases, the characteristic polynomial of $\mathbf{A}\mathbf{C}$ in the arc-length setting yields a closed-form bound equation~\eqref{eq:c2_bound},  a derivation made possible by the substitution of the discrete database by the underlying analytical model: under snapback, the AM fixed-point map is contractive only when $C_2$ is strictly negative ($<-E/N$). No positive hyper-parameter is admissible, and $C_2 = m$ is the unique interpretable derivative of the constitutive response that lies in the admissible range. Figure \ref{bad_metric_no_snap} is therefore one entry in a complete analytical map, and the behavior it displays is the predicted signature of the only $C_2 > 0$ case that even converges in principle.
 
 \color{black}
 
@@ -252,7 +252,7 @@ To make this role explicit, three \emph{Scenarios} are now defined (Definition \
 \begin{equation*}
 	\beta = \inf_{\bf \Lambda} \sup_{\bfU} \frac{b^h(\bfU, \bf \Lambda)}{\|\bfU\|\,\|\bf \Lambda\|} \geq 1
 \end{equation*}
-independently of the mesh, so the displacement-strain pairing satisfies the Babuska-Brezzi condition and no spurious modes arise from this interpolation choice. A separate inf-sup condition arises from the active-set multipliers that enforce the Lipschitz inequality; a formal analysis of this active-set formulation is beyond the scope of this article, and the stability of the discretized problem is instead assessed numerically through mesh refinement, as reported in Sections 4 and 5.
+independently of the mesh, so the displacement-strain pairing satisfies the Babuska-Brezzi condition and no spurious modes arise from this interpolation choice. A separate inf-sup condition arises from the active-set multipliers that enforce the Lipschitz inequality; a formal analysis of this active-set formulation is beyond the scope of this article, and the stability of the discretized problem is instead assessed numerically through mesh refinement, as reported in Sections 4 and 6.
 
 \color{black}
 \item The removal of the constraint in order to reach failure (zero force), see fig 15, is artificial and put in evidence a non-physical behavior of the model. Also, in the L shape example failure cannot be reached. What is the reason of this?
