@@ -392,7 +392,7 @@ For all the cases considered below, the material parameters are taken as $ E=100
 	\hfill
 	\begin{subfigure}{0.45\textwidth}
 		\centering
-		\includegraphics[width=\linewidth]{dist_evol_1_zoom.pdf}
+		\includegraphics[width=1.1\linewidth]{dist_evol_1_zoom.pdf}
 		\caption{Linear zoom of the $C_2=E$ cases over iterations 30--100. Note the different scales on the two axes: the plot compares slopes (contraction vs.\ non-contraction).}
 		\label{dist_evol_1_zoom}
 	\end{subfigure}
@@ -1447,12 +1447,12 @@ The analyses of section \ref{conv_method_rate} \added{corresponding to cases \re
 		\caption{}
 		\label{good_metric_snap_arc_length_diff_pt}
 	\end{subfigure}
-	\caption{Results from the 1D analysis with a different starting point. Successive mechanical and material states. Snapback and arc-length constraint included. (a) $C_2= g(d) E$. (b) $C_2=m$. }
+	\caption{Results from the 1D analysis with a different starting point. Successive mechanical and material states. Case \ref{case:necessity_metric}: Snapback and arc-length constraint included. (a) $C_2= g(d) E$. (b) $C_2=m$. }
 \end{figure}
 
 The trajectory is similar to that presented in Figures \ref{bad_metric_snap_arc_length} and \ref{good_metric_snap_arc_length}. \added{The choice $C_2 = g(d) E > 0$ violates the bound of equation~\eqref{eq:c2_bound}, so $\rho(\bfA\bfC) > 1$. The irreversibility constraint~\ref{br:irreversibility} becomes active and the iterations stagnate after moving apart initially.}\deleted{ while the states begin to diverge and move far apart, while }With $C_2 = m$, the mechanical and the material states almost coincide after $7$ iterations.
 
-
+s
 \begin{addedblock}
 \subsection*{Displacement control with snapback}
 Under a displacement control and in the presence of a snapback, the evolution of distance is presented in Figure \ref{dist_evol_2}. For both $C_2=g(d) E$ (the secant modulus) and $C_2=m$, the distance stagnates after a few iterations. The corresponding trajectories of the mechanical and the material states for the elements on the elastic and the damage branch are presented in Figures \ref{bad_metric_snap_disp_diff_pt} and \ref{good_metric_snap_disp_diff_pt}.	
@@ -1470,11 +1470,10 @@ Under a displacement control and in the presence of a snapback, the evolution of
 		\caption{}
 		\label{good_metric_snap_disp_diff_pt}
 	\end{subfigure}
-	\caption{Results from the 1D analysis with a different starting point. Successive mechanical and material states. Displacement control under snapback. (a) $C_2= g(d) E$. (b) $C_2=m$. }
+	\caption{Results from the 1D analysis with a different starting point. Successive mechanical and material states. Case \ref{case:necessity_solver}: Displacement control under snapback. (a) $C_2= g(d) E$. (b) $C_2=m$. }
 \end{figure}
 The trajectory is similar to that presented in Figures \ref{bad_metric_snap_no_al} and \ref{good_metric_snap_no_al}. Both choices for $C_2$ result in iterates that move further apart and stagnate. The irreversibility constraint \ref{br:irreversibility} is active in both the scenarios while the peak stress constraint \ref{br:peak_cap} becomes active when $C_2=m$, as presented in Figure \ref{good_metric_snap_disp_diff_pt}.
 \end{addedblock}
-
 
 \begin{deletedblock}
 \subsection*{Displacement control without snapback}
