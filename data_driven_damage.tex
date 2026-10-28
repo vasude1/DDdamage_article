@@ -49,14 +49,34 @@ commandnameprefix=ifneeded]{changes}
 % Optional: make additions more visible (e.g., underlined blue)
 \setaddedmarkup{\textcolor{blue}{{#1}}} % \uline
 %\usepackage[soul]{lua-ul}
+\usepackage[most]{tcolorbox}
+\usetikzlibrary{patterns}
+
+\pgfdeclarepatternformonly{mystrikeout}{\pgfqpoint{-1pt}{-1pt}}{\pgfqpoint{11pt}{11pt}}{\pgfqpoint{10pt}{10pt}}%
+{
+	\pgfsetlinewidth{0.4pt}
+	\pgfpathmoveto{\pgfqpoint{0pt}{0pt}}
+	\pgfpathlineto{\pgfqpoint{10.1pt}{10.1pt}}
+	\pgfusepath{stroke}
+}
+\newtcolorbox{tcbstrikeout}{breakable,
+	enhanced jigsaw,
+	opacityback=0,
+	parbox=false,
+	boxrule=0mm,
+	top=0mm,bottom=0pt,left=0pt,right=0pt,
+	boxsep=0pt,
+	frame hidden,
+	finish={\fill[pattern=mystrikeout, pattern color=red] (frame.north west) rectangle (frame.south east);}
+}
+
 \newenvironment{addedblock}
 {\begingroup\color{blue!80}}
 {\endgroup}
 
 \newenvironment{deletedblock}
-{\begingroup\color{red}}
-{\endgroup}
-
+{\begin{tcbstrikeout}\color{red}}
+	{\end{tcbstrikeout}}
 
 %
 %% Ignore everything inside \deleted{}
@@ -231,7 +251,7 @@ Two properties are expected of the DDCM algorithm in this regime. First, in loca
 
 
 
-To isolate algorithmic effects from database sampling artifacts, the material database is replaced by the underlying constitutive model itself. Replacing a finite collection of data points by a material model is equivalent to considering a database with an infinitely many, densely sampled points. This corresponds to a ``best case scenario'' for the DDCM solver and thus, any failure to converge to the correct solution in this setting necessarily implies failure with a finite database. Under this substitution, the material update at each Gauss point becomes
+To isolate algorithmic effects from database sampling artifacts, the material database is replaced by the underlying constitutive model itself. Replacing a finite collection of data points by a material model is equivalent to considering a database with infinitely many, densely sampled points. This corresponds to a ``best case scenario'' for the DDCM solver and thus, any failure to converge to the correct solution in this setting necessarily implies failure with a finite database. Under this substitution, the material update at each Gauss point becomes
 \begin{equation}
 	(\epsst,\sigst) = \arg \min_{(\tilde{\epsst},\tilde{\sigst})} d(\bfeps,\bfsig,\tilde{\epsst},\tilde{\sigst}) \quad \text{   s.t.   }\quad \tilde{\sigst}=f(\tilde{\epsst};\,\mathcal{H}),
 \end{equation}
@@ -344,11 +364,19 @@ It will be assumed that the solution at some load step $n$ is known. The externa
 \end{equation}
 \added{Note that the parameters are set to $E$ only to evaluate the distance and not to compute the DDCM iterates. Second, the trajectory of the mechanical and the material states followed by the elements on corresponding branches within the mechanical-material minimization process of the DD algorithm will be presented on a $\sigma-\epsilon$ space.} 
 	
-\added{On the trajectory plot, the mechanical and the material states of the intermediate iterates separate two groups: those corresponding to the elements on the elastic branch and the one corresponding to the element on the damage branch. The evolution of the AM iterates can thus be monitored by tracking the states of each group. In line with the color scheme presented in Figure \ref{1D_bar_dam_elem}, \textbf{the states on the elastic branch are marked in blue, while those on the damage branch are marked in red. The associated material states are marked using circles $\circ$, and the mechanical states using crosses $\times$, and the initial iterate on each branch is marked with a black asterisk $\ast$}. Together with the evolution of the distance functional, this presents a complete picture of the behavior of the DDCM solver under the three cases stated earlier.}
+\added{On the trajectory plot, the mechanical and the material states of the intermediate iterates separate two groups: those corresponding to the elements on the elastic branch and the one corresponding to the element on the damage branch. The evolution of the AM iterates can thus be monitored by tracking the states of each group. In line with the color scheme presented in Figure \ref{1D_bar_dam_elem}, the states on the elastic branch are marked in blue, while those on the damage branch are marked in red. The associated material states are marked using circles $\circ$, and the mechanical states using crosses $\times$, and the initial iterate on each branch is marked with a black asterisk $\ast$. Together with the evolution of the distance functional, this presents a complete picture of the behavior of the DDCM solver under the three cases stated earlier.}
 
-\deleted{For this purpose, the trajectory of the mechanical and the material states followed by the elements on corresponding branches within the mechanical-material minimization process of the DD algorithm will be presented on a $\sigma-\epsilon$ space. As represented in Figure \ref{conv_figs_legend}, the mechanical states are represented by a cross (x) and the material states by a circle ($\circ$). Within a DD iteration, the transition between the elements on the elastic branch are indicated by a dashed arrow and that on the softening branch by a dash-dotted arrow.}
+\begin{deletedblock}
+For this purpose, the trajectory of the mechanical and the material states followed by the elements on corresponding branches within the mechanical-material minimization process of the DD algorithm will be presented on a $\sigma-\epsilon$ space. As represented in Figure \ref{conv_figs_legend}, the mechanical states are represented by a cross (x) and the material states by a circle ($\circ$). Within a DD iteration, the transition between the elements on the elastic branch are indicated by a dashed arrow and that on the softening branch by a dash-dotted arrow.
 
-For all the cases considered below, the material parameters are taken as $ E=100 \rm{\;units}, m=-7.1428\rm{\;units}, c=107.142\rm{\;units}$. The resulting stress-strain response has a maximum stress $\sig_{\rm max} = 100$, strain at damage initiation $\eps_i=1$, and strain at complete failure $\eps_f=15$. The initial mechanical and material states are taken as $\sig=\sig_1^*=\sig_2^*=99.95,\eps_1=\eps_1^* =0.9995,\eps_2=\eps_2^* =1.007$. This state corresponds to points that are just below the cusp of the damage initiation point. \deleted{For the purpose of the analytical convergence study presented in this subsection, elements are temporarily restricted to remain on their respective solution branches (elastic unloading or softening). It is thus expected that the damage level in the blue elements continues to increase while the rest of the elements undergo unloading along the elastic branch. This restriction is introduced solely to isolate the fixed-point properties of the DD alternating minimization near a given bifurcated solution and does not reflect an assumption of the general DD algorithm. In particular, branch restriction is removed in subsequent examples, where the method is allowed to select material states freely.} \added{The following analysis is performed with the \textit{branch restriction} and the admissibility constraints defined above. These restrictions are introduced solely to isolate the fixed-point properties of the DD alternating minimization near a given bifurcated solution and do not reflect an assumption of the general DD algorithm. In particular, branch restriction is removed in subsequent examples, where the method is allowed to select material states freely (albeit under admissibility constraints).}
+For all the cases considered below, the material parameters are taken as $ E=100 \rm{\;units}, m=-7.1428\rm{\;units}, c=107.142\rm{\;units}$. The resulting stress-strain response has a maximum stress $\sig_{\rm max} = 100$, strain at damage initiation $\eps_i=1$, and strain at complete failure $\eps_f=15$. The initial mechanical and material states are taken as $\sig=\sig_1^*=\sig_2^*=99.95,\eps_1=\eps_1^* =0.9995,\eps_2=\eps_2^* =1.007$. This state corresponds to points that are just below the cusp of the damage initiation point. For the purpose of the analytical convergence study presented in this subsection, elements are temporarily restricted to remain on their respective solution branches (elastic unloading or softening). It is thus expected that the damage level in the blue elements continues to increase while the rest of the elements undergo unloading along the elastic branch. This restriction is introduced solely to isolate the fixed-point properties of the DD alternating minimization near a given bifurcated solution and does not reflect an assumption of the general DD algorithm. In particular, branch restriction is removed in subsequent examples, where the method is allowed to select material states freely. 
+
+\end{deletedblock}
+
+\begin{addedblock}
+For all the cases considered below, the material parameters are taken as $ E=100 \sigma_0, m=-7.1428 \sigma_0, c=107.142 \sigma_0$, where $\sigma_0$ is a reference stress and all stresses in this section are expressed in units of $\sigma_0$. The resulting stress-strain response has a maximum stress $\sig_{\rm max} = 100 \sigma_0$, strain at damage initiation $\eps_i=1$, and strain at complete failure $\eps_f=15$. The initial mechanical and material states are taken as $\sig=\sig_1^*=\sig_2^*=99.95\sigma_0,\eps_1=\eps_1^* =0.9995,\eps_2=\eps_2^* =1.007$. This state corresponds to points that are just below the cusp of the damage initiation point. The following analysis is performed with the \textit{branch restriction} and the admissibility constraints defined above. These restrictions are introduced solely to isolate the fixed-point properties of the DD alternating minimization near a given bifurcated solution and do not reflect an assumption of the general DD algorithm. In particular, branch restriction is removed in subsequent examples, where the method is allowed to select material states freely (albeit under admissibility constraints).
+\end{addedblock}
+
 
 \subsubsection*{Behavior without snapback under displacement control}
 \added{To isolate the effect of the hyper-parameters on the convergence rate corresponding to case \ref{case:rate}, this section examines the behavior of the DDCM AM algorithm under displacement control when a snapback instability does not take place. For the setup under consideration, when $mN+E >0$, a snapback does not occur and the solution evolution is smooth, and can be captured by direct displacement control. $mN+E >0 \implies N < -E/m = 14$. So, $N=10$ will be considered. The new applied displacement is taken as $u_D=1.0104$.}
@@ -600,7 +628,7 @@ The problem of a 1D bar, $\SI{1}{\meter}$ long, subjected to a \added{unit} body
 		\State Resolve the Euler--Lagrange equations
 		\State \Return $\sigma_i,\epsilon_i$
 		\EndProcedure
-		\Procedure{Material update}{$\sigma_i,\epsilon_iD^n,\mathcal{H}^n$}
+		\Procedure{Material update}{$\sigma_i,\epsilon_i,D^n,\mathcal{H}^n$}
 		\State Apply Algorithm~\ref{alg:material_update_detailed}
 		\State \Return $(\epsst_i,\sigst_i,\mathbf{C}_i,D_i)$
 		\EndProcedure
@@ -680,7 +708,7 @@ At iteration $i$ of load step $n+1$, given the current mechanical state $(\bfeps
 		\item The closest point is computed on the elastic (degraded) branch $\bfsig^* = g(D^n) \bfC \bfeps^*$ as outlined in Part-A in Algorithm \ref{alg:material_update_detailed}. 
 		\item The closest point is computed on the softening branch $\bfsig^* = g(D(\bfeps^*)) \bfC \bfeps^*$ as outlined in Part-B in Algorithm \ref{alg:material_update_detailed}.
 		\item If the damage computed above exceeds the maximum damage (typically $D_{\rm max}=1-\texttt{TOL}$), the Part-C then computes the closest point on the branch $\bfsig^* = g(D_{\rm max}) \bfC \bfeps^*$. 
-		\item Part D then check the admissibility of the computed elastic and damage material states. The solution computed in Part-A must be such that the corresponding $\psi_0 \leq \mathcal{H}^n$ and the solution from Part-B must be such that the associated damage must be larger than or equal to $D^n$. Then depending on which states are admissible, they then return the appropriate material state $(\bfeps^*, \bfsig ^*)$, together with the updated tangent. The tangent in this case is a second-order tensor computed using equation \ref{app_damage_tangent}. In 1D, it reduces to $g(D)E$ on the elastic branch and to $m$ on the softening branch.
+		\item Part D then checks the admissibility of the computed elastic and damage material states. The solution computed in Part-A must be such that the corresponding $\psi_0 \leq \mathcal{H}^n$ and the solution from Part-B must be such that the associated damage must be larger than or equal to $D^n$. Then depending on which states are admissible, they then return the appropriate material state $(\bfeps^*, \bfsig ^*)$, together with the updated tangent. The tangent in this case is a second-order tensor computed using equation \ref{app_damage_tangent}. In 1D, it reduces to $g(D)E$ on the elastic branch and to $m$ on the softening branch.
 	\end{itemize}
 \end{enumerate}
 
@@ -1400,7 +1428,7 @@ The material updates remain unchanged and can be found by taking the variations 
 Thus, even in this case, the update can be cast into the form of equation \ref{combined_equn} and can be analyzed similarly.
 
 \section{Analysis with a different starting point\label{different_starting_point}}
-The analyses of section \ref{conv_method_rate} \added{corresponding to cases \ref{case:necessity_metric} and \ref{case:necessity_solver}} have been repeated using a different starting point that is further down the damage branch. That is, $\sig=\sig_1^*=\sig_2^*=50,\eps_1=\eps_1^* =0.5,\eps_2=\eps_2^* =7.99$. \added{$N=100$.} \deleted{Two cases have been analyzed: without snapback under displacement control, and with snapback using arc-length solver. }
+The analyses of section \ref{conv_method_rate} \added{corresponding to cases \ref{case:necessity_metric} and \ref{case:necessity_solver}} have been repeated using a different starting point that is further down the damage branch. That is, $\sig=\sig_1^*=\sig_2^*=50 \sigma_0,\eps_1=\eps_1^* =0.5,\eps_2=\eps_2^* =7.99$. \added{$N=100$.} \deleted{Two cases have been analyzed: without snapback under displacement control, and with snapback using arc-length solver. }
 
 \subsection*{Arc-length control with snapback}
 \deleted{The bar is discretized with $101$ elements. }With arc-length control and in the presence of a snapback, the trajectories of the mechanical and the material states for the elements on the elastic and the damage branch with $C_2 = g(d) E$ (the degraded modulus) and $C_2 = m$ have been presented in Figures \ref{bad_metric_snap_arc_length_diff_pt} and \ref{good_metric_snap_arc_length_diff_pt}.
@@ -1537,9 +1565,16 @@ Thus,
 \end{equation}
 and so,
 \begin{equation}
-	\inf_{\bf \Lambda} \sup _{\bfU} 	\frac{ b^h(\bfU,\bf \Lambda)}{\|\bfU \| \| \bf \Lambda\|}  \geq 1 = \beta.
+	\beta = \inf_{\bf \Lambda} \sup _{\bfU} 	\frac{ b^h(\bfU,\bf \Lambda)}{\|\bfU \| \| \bf \Lambda\|}  \geq 1.
 \end{equation}
-Thus, the displacement-strain combination satisfies the stability requirements independently of the mesh size, with a constant $\beta \geq 1$. The appropriate functional spaces of the variables and the corresponding stability conditions are beyond the scope of this article.
+Thus, the displacement-strain combination satisfies the stability requirements independently of the mesh size, with a constant $\beta \geq 1$. 
+
+The LBB condition is in general nontrivial because it requires mesh-independent invertibility of the constraint operator. In the present setting, however, the constraint takes the form
+\begin{equation*}
+	\mathbf{I}\,\bfeps - \mathbf{B}\mathbf{u} = \mathbf{0},
+\end{equation*}
+where $\mathbf{I}$ is the identity on the strain degrees of freedom-a direct point-by-point evaluation at the lip-mesh nodes rather than an operator that must itself be inverted. For every displacement $\mathbf{u}$, this fixes a unique strain $\bfeps$, so injectivity of the constraint operator is guaranteed trivially and the inf-sup bound follows from a direct substitution. A formal functional-space treatment is beyond the scope of this article.
+
 \end{addedblock}
 \subsection{Constraint imposition}
 
