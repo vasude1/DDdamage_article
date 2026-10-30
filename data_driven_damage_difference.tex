@@ -262,7 +262,7 @@ where $f$ is the constitutive model relating material stresses and strains, and 
 with $\tilde{d}(\tilde{\epsst},f(\tilde{\epsst};\mathcal{H});\bfeps,\bfsig) = d(\bfeps,\bfsig,\tilde{\epsst},\tilde{\sigst})$. The mechanical update is left unchanged. The overall alternating-minimization algorithm in this general setting is given as Algorithm~\ref{alg:the_dd_algorithm} and discussed in Sections \ref{1d_bar_with_bf} and \ref{2d_with_notch}, where it is first exercised. In the analytical study of Section~\ref{conv_method_rate} that follows, $\mathcal{H}$ is held fixed within a load step through the branch restriction and the admissibility constraints (Definition~\ref{def:branch_restrictions}), which isolates the fixed-point behavior of the alternating minimization on an already bifurcated branch.
 
 
-In a 1D setting, if the material has linear softening, substituting a collection of data points with an implicit database further allows the successive iterates of the AM algorithm to be expressed as an affine map, and the fixed-point behavior of the DDCM iteration to be characterized analytically for the combinations of update operator and continuation strategy examined below. The constitutive model, serving here as an implicit database, is represented by a set of piecewise affine relations: $\sigma = E\epsilon$ for the elastic regime, $\sigma = m\epsilon + c$ ($m<0$) for the softening regime, and $\sigma = E_i \epsilon$ for the $i$th unloading branch (see Figure \ref{database_actual}). The material update is performed directly using the analytical expression of the constitutive model, as detailed in Appendix \ref{app_mat_update}. 
+In a 1D setting, if the material has linear softening, substituting a collection of data points with an implicit database further allows the successive iterates of the AM algorithm to be expressed as an affine map, and the fixed-point behavior of the DDCM iteration to be characterized analytically for the combinations of update operator and continuation strategy examined below. The constitutive model, serving here as an implicit database, is represented by a set of piecewise affine relations (see Figure \ref{database_actual}): $\sigma = E\epsilon$ for the elastic regime, $\sigma = m\epsilon + c$ ($m<0$) for the softening regime, and $\sigma = E_i \epsilon$ for the $i$th unloading branch (the unloading branches are not considered in the analysis in Section \ref{conv_method_rate}). The material update is performed directly using the analytical expression of the constitutive model, as detailed in Appendix \ref{app_mat_update}. 
 
 \begin{figure}[h]
 	\centering
@@ -300,9 +300,9 @@ The section proceeds as follows. First, a 1D bar is considered. To analyze the r
 Since a rigorous convergence proof of the DD algorithm in the presence of damage-induced non-convexity is currently unavailable, an algorithmic analysis will be performed based on representative one-dimensional configurations. The study focuses on identifying the mechanisms governing convergence, loss of convergence, and branch selection under softening by expressing the mechanical and the material updates as affine maps. The spectral radius of the composed update operator the determines the rate of convergence and the effect of hyper-parameters on it.  
 \end{deletedblock}
 
-Consider the case of a 1D bar of unit length, meshed with $N+1$ elements, where the element in the middle (without loss of generality) stays on the damage branch and the rest of the elements unload on the elastic branch. See Figure \ref{1D_bar_dam_elem}. \added{Because the implicit local database carries no length scale, further loading concentrates straining in the middle element while the neighbors unload elastically. This section will analyze and establish the ingredients necessary for the DDCM solution to reproduce this behavior. Since the solution has already localized and is expected to remain so under further loading, elements on the elastic and damage branches are restricted to remain on those branches during the AM iterations. This restriction simplifies the analysis and makes it analytically tractable. Thus, the material state for the element on the damage branch is only searched along $\sigma^* = m\epsilon^* + c$, and for the elements on the elastic branch along $\sigma^* = E\epsilon^*$. This is referred to as \textit{branch restriction} from hereon. The conditions under which the DDCM iterates continue along this bifurcated branch are studied below. }
+Consider the case of a 1D bar of unit length, meshed with $N+1$ elements, where the element in the middle (without loss of generality) stays on the damage branch and the rest of the elements unload on the elastic branch. See Figure \ref{1D_bar_dam_elem}. \added{Because the implicit local database carries no length scale, further loading concentrates straining in the middle element while the neighbors unload elastically. This section will analyze and establish the ingredients necessary for the DDCM solution to reproduce this behavior. Since the solution has already localized and is expected to remain so under further loading, elements on the elastic and damage branches are restricted to remain on those branches during the AM iterations. This restriction simplifies the analysis and makes it analytically tractable. Thus, the material state for the element on the damage branch is only searched along $\sigma^* = m\epsilon^* + c$, and for the elements on the elastic branch along $\sigma^* = E\epsilon^*$. This is referred to as \textit{branch restriction} from hereon. The conditions under which the DDCM iterates continue along this bifurcated branch are studied below.}
 
-The objective is to evaluate the effect of hyper-parameters on the convergence rate of the data-driven solution. If the material behavior is described by a local damage model (or sometimes even with a non-local model), a snapback is expected in the load displacement response of the body in some scenarios, depending on the mesh size, and the regularization length, when present. Two scenarios can thus be considered : one with a snapback and one without. In either case, the stress state is homogeneous in the entire bar as a consequence of equilibrium. The strain is localized in the element undergoing damage (in red in Figure \ref{1D_bar_dam_elem}), while the other elements (in blue) are unloading. Thus, the mechanical state of the bar is described by a scalar stress $\sigma \in \mathbb{R}$ and strains $\epsilon_1, \epsilon_2 \in \mathbb{R}$ ($\epsilon_1$ for the undamaged elements and $\epsilon_2$ for the damaged element). The corresponding material states are defined as $(\epsilon_1^*, \sigma_1^*) \in \mathbb{R}^{2}$ for the elements in blue and $(\epsilon_2^*, \sigma_2^*) \in \mathbb{R}^{2}$ for the element in red. The displacement at the right end of the bar is given as $u_D$ and the left end is fixed. The distance function in this case is given by 
+\deleted{The objective is to evaluate the effect of hyper-parameters on the convergence rate of the data-driven solution. } \added{Under the branch restriction, the behavior of the AM iteration depends on two algorithmic choices: the hyper-parameters in the distance functional and the continuation strategy.} If the material behavior is described by a local damage model (or sometimes even with a non-local model), a snapback is expected in the load displacement response of the body in some scenarios, depending on the mesh size, and the regularization length, when present. Two scenarios can thus be considered : one with a snapback and one without. In either case, the stress state is homogeneous in the entire bar as a consequence of equilibrium. The strain is localized in the element undergoing damage (in red in Figure \ref{1D_bar_dam_elem}), while the other elements (in blue) are unloading. Thus, the mechanical state of the bar is described by a scalar stress $\sigma \in \mathbb{R}$ and strains $\epsilon_1, \epsilon_2 \in \mathbb{R}$ ($\epsilon_1$ for the undamaged elements and $\epsilon_2$ for the damaged element). The corresponding material states are defined as $(\epsilon_1^*, \sigma_1^*) \in \mathbb{R}^{2}$ for the elements in blue and $(\epsilon_2^*, \sigma_2^*) \in \mathbb{R}^{2}$ for the element in red. The displacement at the right end of the bar is given as $u_D$ and the left end is fixed. The distance function in this case is given by 
 \begin{equation}
 	d(\sigma,\epsilon_1^*,\epsilon_2^*,\epsilon_1,\epsilon_2;u_D) = \frac{N \ell_e}{2} \left[ \frac{(\sigma - \sigma_1^*)^2}{C_1} +  C_1(\epsilon_1 - \epsilon_1^*)^2 \right] + \frac{\ell_e}{2}  \left[ \frac{(\sigma - \sigma_2^*)^2}{C_2} +  C_2(\epsilon_2 - \epsilon_2^*)^2 \right]. \label{1D_short_dist_func}
 \end{equation}
@@ -386,7 +386,7 @@ For all the cases considered below, the material parameters are taken as $ E=100
 	\begin{subfigure}{0.45\textwidth}
 		\centering
 		\includegraphics[width=1.1\linewidth]{dist_evol_1.pdf}
-		\caption{Evolution of the normalized distance with iterations, all four cases on log scale.}
+		\caption{Evolution of the normalized distance with iterations, on log scale.}
 		\label{dist_evol_1}
 	\end{subfigure}
 	\hfill
@@ -396,7 +396,7 @@ For all the cases considered below, the material parameters are taken as $ E=100
 		\caption{Linear zoom of the $C_2=E$ cases over iterations 30--100. Note the different scales on the two axes: the plot compares slopes (contraction vs.\ non-contraction).}
 		\label{dist_evol_1_zoom}
 	\end{subfigure}
-	\caption{Evolution of the distance functional $d_{\rm conv}$ (equation \ref{1D_short_dist_func_conv}), normalized by its value at the first iteration, for the four cases studied in Section \ref{conv_method_rate}. No SB: displacement control with $N=10$ (no snapback). SB and AL: arc-length control with $N=100$ (snapback regime).}
+	\caption{Evolution of the distance functional $d_{\rm conv}$ (equation \ref{1D_short_dist_func_conv}), normalized by its value at the first iteration, for the cases \ref{case:rate} and \ref{case:necessity_metric} studied in Section \ref{conv_method_rate}. No SB: displacement control with $N=10$ (no snapback). SB and AL: arc-length control with $N=100$ (snapback regime).}
 	\label{fig:dist_all_cases}
 \end{figure}
 
@@ -518,7 +518,7 @@ To assess whether the arc-length solver is strictly necessary, i.e., whether the
 \begin{figure}[t!]
 	\centering
 	\includegraphics[scale=0.8]{dist_evol_2.pdf}
-	\caption{Evolution of the normalized distance functional $d_{\rm conv}$ under displacement control in the snapback regime ($N=100$). Main starting point (near cusp): $C_2 = E$ (dashed blue) stalls near $4\times 10^{-1}$; $C_2 = m$ (solid red) barely moves from its initial value. Different starting point further down the softening branch (see Appendix~\ref{different_starting_point}): $C_2 = g(d) E$ (dot-dashed brown) drops and plateaus near $10^{-1}$; $C_2 = m$ (dotted black) diverges and plateaus above $10^0$. All four curves stagnate at finite distances, indicating that the AM iteration fails to reduce the mechanical-material gap under displacement control, independent of the hyper-parameter and the initial state. \label{dist_evol_2}}
+	\caption{Evolution of the normalized distance functional $d_{\rm conv}$ under displacement control in the snapback regime ($N=100$), case \ref{case:necessity_solver}. Main starting point (near cusp): $C_2 = E$ (dashed blue) stalls near $4\times 10^{-1}$; $C_2 = m$ (solid red) barely moves from its initial value. Different starting point further down the softening branch (see Appendix~\ref{different_starting_point}): $C_2 = g(d) E$ (dot-dashed brown) drops and plateaus near $10^{-1}$; $C_2 = m$ (dotted black) diverges and plateaus above $10^0$. All four curves stagnate at finite distances, indicating that the AM iteration fails to reduce the mechanical-material gap under displacement control, independent of the hyper-parameter and the initial state. \label{dist_evol_2}}
 \end{figure}
 \end{addedblock}
 
@@ -1027,7 +1027,7 @@ Figure \ref{2d_1d_bar_damage} shows the damage distribution attached to the mate
 
 It can be seen that in all the cases, the results are independent of the mesh size. The width of the damage zone does not change as the mesh is refined. Likewise, the force-displacement curve also remains the same for all the mesh sizes. A severe snap-back can be seen in the Figure \ref{1D_force_displacement}, which has been captured by the arc length solver. The saw-tooth-like pattern observed in the 1D case (where the constraint is strictly enforced) is also present in this scenario. Perhaps testing with different values of $\mu$ in the solver or using a different arc length solver might smoothen the results. This has not been pursued further in this article and can be the focus of future work.
 
-\added{Damage models used in the constitutive-model setting typically employ a tension-compression split of the strain energy \cite{amor2009regularized, miehe2010phase} to ensure that the damage variable does not increase under compressive loading. In the DDCM setting, such a split would need to be embedded in the database itself. How such a split should be reflected in the database, and the form of the resulting data structures, is beyond the scope of this article and is left as a direction for future work. The notched-bar geometry generates a purely tensile stress state along the expected crack path, so no tension-compression split is needed for this example.}
+\added{Damage models used in the constitutive-model setting typically employ a tension-compression split of the strain energy \cite{amor2009regularized, miehe2010phase} to ensure that the damage variable does not increase under compressive loading. In the DDCM setting, a tension-compression split would most naturally be embedded in the database itself, through a stress-strain response resolved separately under tensile and compressive states, rather than through a change to the distance-minimization procedure. How such a split should be reflected in the database, and the form of the resulting data structures, raises questions that are beyond the scope of this article and are left as a direction for future work.}
 
 
 \subsection{L Beam}
@@ -1533,48 +1533,6 @@ This equation is added to the system of equations \ref{all_equations_first_one} 
 
 \section{Discrete version of the constraint\label{discrete_version_of_gradient}}
 
-\begin{addedblock}
-\subsection{Stability check \label{stab_check_lip_disp}}
-The stability of the discrete displacement-strain pairing is a special case of the Ladyzhenskaya-Babuska-Brezzi (LBB) condition for mixed finite element methods; see \cite{auricchio2017mixed} for the general theory. The stability of the displacement-strain combination used in this article will now be studied.
-
-Considering that the total energy can be expressed as a sum of quadratic energies of the strain and the strain gradient terms, the solution is the collection that renders the Lagrangian stationary. In discrete setting, using $\bfu \in \mathbb{R} ^N$ for displacement, $\bfB \bfu$ for symmetric gradient of the displacement, piecewise constant over the displacement mesh, and $\bfeps \in \mathbb{R}^M$ for strain, piecewise affine on the lip-mesh, the Lagrangian is
-\begin{equation}
-\Pi = \frac{1}{2} \bfu ^T \bfK \bfu + \frac{1}{2} \bfeps ^T \bfL \bfeps + \bf \Lambda ^T \left(\bfeps - \bfB \bfu \right),
-\end{equation}
-where $\bfK,\bfL $ denote the stiffness matrix corresponding to strain and strain gradient, respectively. $\mathbf{\Lambda} \in \mathbb{R}^M$ denotes the array of Lagrange multipliers that enforce the relation between the strain $\bfeps$ and the symmetric gradient of displacement $\bfB \bfu$. The values of $\bfB \bfu$ at the centroids of displacement mesh are used to evaluate the nodal values of $\bfeps $ on the strain mesh. The discrete form $\bf \Lambda ^T \left(\bfeps - \bfB \bfu \right)$ can thus be used to define its continuous counterpart as
-\begin{equation}
- \int \lambda \left( \eps - {\rm sym \; grad}(u) \right) \diff \Omega.
-\end{equation}
-Using $\lambda = \sum_{i=1}^{N} \Lambda_i \delta (x-x_i) $, with $x_i$ denoting the coordinates of the centroids of the displacement mesh, the discrete version of the constraint term can be obtained.
-
-
-After taking variations of $\Pi$, the bilinear term associated with constraints can be identified as
-\begin{equation}
-	b^h(\bfU,\bf \Lambda) = \bf \Lambda ^T \left(\bfeps - \bfB \bfu \right),
-\end{equation}
-where $\bfU = [\bfu ; \bfeps ]^T$. Considering the term 
-\[    \frac{ b^h(\bfU,\bf \Lambda)}{\|\bfU \| \| \bf \Lambda\|} , \]
-with $ \|\bfU \|$ denoting the norm of the vector $[\bfu ; \bfeps ]^T$, and evaluating it when $\bfu = \bf 0$, $\bfeps = \bf \Lambda$,
-\begin{equation}
-	\frac{ b^h(\bfU,\bf \Lambda)}{\|\bfU \| \| \bf \Lambda\|} =  \frac{\bf \Lambda ^T \bf \Lambda }{\| \bf \Lambda\|^2} = 1.
-\end{equation}
-Thus,
-\begin{equation}
-	\sup _{\bfU} \frac{ b^h(\bfU,\bf \Lambda)}{\|\bfU \| \| \bf \Lambda\|}  \geq 1,
-\end{equation}
-and so,
-\begin{equation}
-	\beta = \inf_{\bf \Lambda} \sup _{\bfU} 	\frac{ b^h(\bfU,\bf \Lambda)}{\|\bfU \| \| \bf \Lambda\|}  \geq 1.
-\end{equation}
-Thus, the displacement-strain combination satisfies the stability requirements independently of the mesh size, with a constant $\beta \geq 1$. 
-
-The LBB condition is in general nontrivial because it requires mesh-independent invertibility of the constraint operator. In the present setting, however, the constraint takes the form
-\begin{equation*}
-	\mathbf{I}\,\bfeps - \mathbf{B}\mathbf{u} = \mathbf{0},
-\end{equation*}
-where $\mathbf{I}$ is the identity on the strain degrees of freedom-a direct point-by-point evaluation at the lip-mesh nodes rather than an operator that must itself be inverted. For every displacement $\mathbf{u}$, this fixes a unique strain $\bfeps$, so injectivity of the constraint operator is guaranteed trivially and the inf-sup bound follows from a direct substitution. A formal functional-space treatment is beyond the scope of this article.
-
-\end{addedblock}
 \subsection{Constraint imposition}
 
 To impose the constraint on the strain variable, \deleted{a dual mesh (also called the lip mesh)} \added{the lip mesh} is defined along with the FE mesh as in \cite{Chevaugeon2021}. To compute the derivative of the strain variable, in discrete formulation, the lip mesh is used. The strain variables are computed from the displacements as $\bfeps = \bfB \bfu$, where $\bfB$ is the discrete gradient operator, computed on the FE mesh. Defining the discrete gradient operator on the lip mesh and representing it in a matrix form as $\bfG$, the gradients of strain can be expressed in terms of the displacements as 
@@ -1608,7 +1566,48 @@ Figure \ref{comparison_log_quadratic} compares the energy responses of different
 	\caption{Regularization functions comparison and the displacement, lip meshes for the notched bar.}
 \end{figure}
 
-
+\begin{addedblock}
+	\subsection{Stability check \label{stab_check_lip_disp}}
+	The stability of the discrete displacement-strain pairing is a special case of the Ladyzhenskaya-Babuska-Brezzi (LBB) condition for mixed finite element methods; see \cite{auricchio2017mixed} for the general theory. The stability of the displacement-strain combination used in this article will now be studied.
+	
+	Considering that the total energy can be expressed as a sum of quadratic energies of the strain and the strain gradient terms, the solution is the collection that renders the Lagrangian stationary. In discrete setting, using $\bfu \in \mathbb{R} ^N$ for displacement, $\bfB \bfu$ for symmetric gradient of the displacement, piecewise constant over the displacement mesh, and $\bfeps \in \mathbb{R}^M$ for strain, piecewise affine on the lip-mesh, the Lagrangian is
+	\begin{equation}
+		\Pi = \frac{1}{2} \bfu ^T \bfK \bfu + \frac{1}{2} \bfeps ^T \bfL \bfeps + \bf \Lambda ^T \left(\bfeps - \bfB \bfu \right),
+	\end{equation}
+	where $\bfK,\bfL $ denote the stiffness matrix corresponding to strain-energy and strain gradient-energy, respectively. $\mathbf{\Lambda} \in \mathbb{R}^M$ denotes the array of Lagrange multipliers that enforce the relation between the strain $\bfeps$ and the symmetric gradient of displacement $\bfB \bfu$. The values of $\bfB \bfu$ at the centroids of displacement mesh are used to evaluate the nodal values of $\bfeps $ on the strain mesh. The discrete form $\bf \Lambda ^T \left(\bfeps - \bfB \bfu \right)$ can thus be used to define its continuous counterpart as
+	\begin{equation}
+		\int \lambda \left( \eps - {\rm sym \; grad}(u) \right) \diff \Omega.
+	\end{equation}
+	Using $\lambda = \sum_{i=1}^{M} \Lambda_i \delta (x-x_i) $, with $x_i$ denoting the coordinates of the centroids of the displacement mesh, the discrete version of the constraint term can be obtained.
+	
+	
+	After taking variations of $\Pi$, the bilinear term associated with constraints can be identified as
+	\begin{equation}
+		b^h(\bfU,\bf \Lambda) = \bf \Lambda ^T \left(\bfeps - \bfB \bfu \right),
+	\end{equation}
+	where $\bfU = [\bfu ; \bfeps ]^T$. Considering the term 
+	\[    \frac{ b^h(\bfU,\bf \Lambda)}{\|\bfU \| \| \bf \Lambda\|} , \]
+	with $ \|\bfU \|$ denoting the norm of the vector $[\bfu ; \bfeps ]^T$, and evaluating it when $\bfu = \bf 0$, $\bfeps = \bf \Lambda$,
+	\begin{equation}
+		\frac{ b^h(\bfU,\bf \Lambda)}{\|\bfU \| \| \bf \Lambda\|} =  \frac{\bf \Lambda ^T \bf \Lambda }{\| \bf \Lambda\|^2} = 1.
+	\end{equation}
+	Thus,
+	\begin{equation}
+		\sup _{\bfU} \frac{ b^h(\bfU,\bf \Lambda)}{\|\bfU \| \| \bf \Lambda\|}  \geq 1,
+	\end{equation}
+	and so,
+	\begin{equation}
+		\beta = \inf_{\bf \Lambda} \sup _{\bfU} 	\frac{ b^h(\bfU,\bf \Lambda)}{\|\bfU \| \| \bf \Lambda\|}  \geq 1.
+	\end{equation}
+	Thus, the displacement-strain combination satisfies the stability requirements independently of the mesh size, with a constant $\beta \geq 1$. 
+	
+	The LBB condition is in general nontrivial because it requires mesh-independent invertibility of the constraint operator. In the present setting, however, the constraint takes the form
+	\begin{equation*}
+		\mathbf{I}\,\bfeps - \mathbf{B}\mathbf{u} = \mathbf{0},
+	\end{equation*}
+	where $\mathbf{I}$ is the identity on the strain degrees of freedom -- a direct point-by-point evaluation at the lip-mesh nodes rather than an operator that must itself be inverted. For every displacement $\mathbf{u}$, this fixes a unique strain $\bfeps$, so injectivity of the constraint operator is guaranteed trivially and the inf-sup bound follows from a direct substitution. A formal functional-space treatment is beyond the scope of this article.
+	
+\end{addedblock}
 %
 %\bibliography{library_DD}
 %\bibliography{data_driven_damage}

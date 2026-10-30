@@ -2,7 +2,7 @@
 
 \usepackage{xr-hyper}
 \usepackage[hidelinks]{hyperref}
-\externaldocument{./build/data_driven_damage}
+\externaldocument{./build/data_driven_damage_manuscript}
 
 \usepackage{sectsty}
 \usepackage{graphicx}
@@ -63,7 +63,7 @@ We thank the reviewers for their careful reading of the manuscript and for the c
 \section*{Common response regarding Section 3.1}
 The reviewers' comments indicate that Section 3.1 was insufficiently motivated in the submitted version. Accordingly, the section has been rewritten with an explicit statement of its purpose and scope.
 
-Before a length scale is introduced, it must be established that any localization-band width observed in the regularized formulation of Sections 4,5 is a consequence of the regularization itself and not of the DDCM algorithm. The DDCM algorithm, when driven by a local database, must therefore reproduce the characteristic behaviors of local damage models - mesh dependence of the localization width, and softening-induced instabilities such as snapback. Both must be shown to be handled correctly by the DDCM algorithm before a regularized formulation is proposed. This is the purpose of Section 3.1, now stated explicitly at lines 132--137 of the unmarked manuscript.
+Before a length scale is introduced, it must be established that any localization-band width observed in the regularized formulation of Sections 4,5 is a consequence of the regularization itself and not of the DDCM algorithm. The DDCM algorithm, when driven by a local database, must therefore reproduce the characteristic behaviors of local damage models - mesh dependence of the localization width, and softening-induced instabilities such as snapback. Both must be shown to be handled correctly by the DDCM algorithm before a regularized formulation is proposed. This is the purpose of Section 3.1, now stated explicitly at lines 132--137 of the new manuscript.
 
 A second concern is that the performance of the DDCM solver also depends on the resolution of the database, particularly under non-homogeneous strain increments within a load step. It is therefore necessary to determine whether a given pathology observed in a DDCM setting with a local model is a consequence of the algorithm itself or of insufficient database resolution. One way to isolate algorithmic effects from database sampling artifacts, and to make an analytical treatment tractable, is to replace the database by the underlying constitutive model. This is the motivation for using the model directly during the material update, now stated at lines 138--141 of the unmarked manuscript. On this basis, three cases are studied in Section 3.1 to analyze the effect of the hyperparameter and of the choice of solver (arc-length vs. direct displacement control): the hyperparameter choice under continuous evolution, the hyperparameter choice under snapback, and the continuation strategy under snapback. These three cases together establish the ingredients required for DDCM to inherit the correct behavior of a local damage model.
 
@@ -216,7 +216,7 @@ Figure \ref{bad_metric_no_snap} corresponds to the case ($C_2 = E$, displacement
 The same spectral analysis delivers the complete picture across the (hyper-parameter, continuation strategy) combinations examined in
 Section 3.1 and summarized in Table~\ref{tab:necessity_summary}:
 \begin{itemize}
-	\item \emph{No snapback, displacement control, $C_2 = E$}: 	$\rho \approx 0.9994$. Converges, unusably (Figure 3a).
+	\item \emph{No snapback, displacement control, $C_2 = E$}: 	$\rho \approx 0.9994$. Converges, unusably (Figure \ref{bad_metric_no_snap}).
 	\item \emph{No snapback, displacement control, $C_2 = m$}: $\rho = 1/2$. 	Converges in a handful of iterations.
 	\item \emph{Snapback, arc-length, $C_2 = E$}: $\rho \approx 1.029 > 1$. The iteration is non-contractive. It does not diverge, but freezes at a finite mechanical--material gap, because the material projection saturates at the peak stress  (constraint~\ref{br:peak_cap}) and the iteration leaves the regime governed by $\mathbf{A}\mathbf{C}$.
 	\item \emph{Snapback, arc-length, $C_2 = m$}: $\rho = 1/2$. Converges in a handful of iterations.
@@ -286,7 +286,7 @@ The specific values of $\ell_c$ used in the examples were chosen for illustratio
 \item \textit{The claim at page 28, line 713 that oscillation are reduced is not justified by the results.}
 
 \color{blue}
-\textbf{Response.} We agree. The unsupported claim has been removed. The Discussion now states that the comparison with the strict-inequality formulation is not tested here (lines 738--740):
+\textbf{Response.} We agree. The unsupported claim has been removed. The Discussion now states that the comparison with the strict-inequality formulation is not tested here (lines 739--742):
 
 \begin{quote}
 	``Whether the log-barrier reduces the oscillation amplitude relative to the strict-inequality formulation is not tested here. It is nevertheless plausible that alternative choices of the barrier parameter may further smooth the global response, a possibility that was not explored here.''
@@ -323,7 +323,7 @@ Minor remarks:
 
 \color{blue}
 
-\textbf{Response.} Corrected. The references at L923 now explicitly name the appendices: ``Appendix \ref{app_mat_update}'' for the tangent matrix and ``Appendix \ref{appen_arc_length}'' for the arc-length solver.
+\textbf{Response.} Corrected. The references at L639--640 now explicitly name the appendices: ``Appendix \ref{app_mat_update}'' for the tangent matrix and ``Appendix \ref{appen_arc_length}'' for the arc-length solver.
 
 
 \color{black}
@@ -331,7 +331,7 @@ Minor remarks:
 
 \color{blue}
 
-\textbf{Response.} Corrected. Reference 31 is now Ref. 33, and includes the full publication details (URL, ISBN).
+\textbf{Response.} Corrected. Reference 31 is now Ref. 34, and includes the full publication details (URL, ISBN).
 
 
 \color{black}
